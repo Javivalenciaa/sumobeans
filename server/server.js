@@ -1,6 +1,6 @@
 'use strict';
-/* Blob Sumo relay: el anfitrion (navegador) simula la partida; este servidor solo reenvia mensajes
-   y organiza las partidas publicas (cuenta atras y arranque). */
+/* Blob Sumo relay: el anfitrion (navegador) simula la partida; este servidor solo reenvia mensajes,
+   organiza las partidas publicas (cuenta atras y arranque) y traspasa el anfitrion si se va. */
 const http = require('http');
 
 const MAX_PLAYERS = 5;
@@ -37,12 +37,24 @@ function closeRoom(room, why) {
   if (room.host) { room.host.room = null; if (why === 'zombie') { try { room.host.close(); } catch (e) {} } }
   rooms.delete(room.code);
 }
+// El anfitrion se fue en mitad de una partida: el jugador con menor id pasa a ser el nuevo anfitrion.
+function migrateHost(room) {
+  let nh = null;
+  for (const c of room.clients.values()) if (!nh || c.pid < nh.pid) nh = c;
+  room.clients.delete(nh.pid);
+  room.host = nh;
+  send(nh, { t: 'host' });
+  for (const c of room.clients.values()) { send(nh, { t: 'peer', id: c.pid, on: 1 }); send(c, { t: 'hostchanged', id: nh.pid }); }
+  log('room', room.code, 'host migrated to player', nh.pid, '; players', room.clients.size + 1);
+}
 function leave(ws) {
   const room = ws.room;
   if (!room) return;
   ws.room = null;
-  if (room.host === ws) { closeRoom(room, 'host left'); }
-  else {
+  if (room.host === ws) {
+    if (!room.joinable && room.clients.size > 0) migrateHost(room); // partida en curso: continua
+    else closeRoom(room, 'host left');
+  } else {
     room.clients.delete(ws.pid);
     send(room.host, { t: 'peer', id: ws.pid, on: 0 });
     log('room', room.code, 'player', ws.pid, 'left; players', room.clients.size + 1);
