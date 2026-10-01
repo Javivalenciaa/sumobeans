@@ -517,7 +517,7 @@ function mk(ci,human,ang){
   bal:0,balT:0,tripT:0,resist:0,grip:1,prot:0,fly:0,hitF:0,ppe:false,missed:false,aimT:null,aimLeft:0,dsign:1,thrT:0,tfI:false,
   acx:0,acy:0,pvx:0,pvy:0,tf:ang+Math.PI,tfv:0,hf:ang+Math.PI,hfv:0,stz:0,stzv:0,stx:0,stxv:0,shz:0,shzv:0,shx:0,shxv:0,saz:0,sazv:0};
 }
-const MATCH_ROUNDS=5,TEST_COINS=/[?&]dev=1/.test(location.search)?1000:100,KILL_COINS=5,ROUND_COINS=10;
+const MATCH_ROUNDS=5,TEST_COINS=100,KILL_COINS=5,ROUND_COINS=10;
 const PLACE_COINS={duel:[60,10],melee:[80,40,20,10,10]};
 let SAVE={coins:TEST_COINS,owned:[]},mkills=[0,0,0,0,0,0,0],SUM=null;
 try{const sv=JSON.parse(localStorage.getItem('blobSumoSave')||'null');if(sv&&typeof sv.coins==='number')SAVE=sv;else localStorage.setItem('blobSumoSave',JSON.stringify(SAVE))}catch(e){}

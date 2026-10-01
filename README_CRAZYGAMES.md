@@ -8,7 +8,6 @@
 1. `cd server && npm install && npm start` (puerto 8080)
 2. En index.html, antes de `<script type="module">`, anade: `<script>window.BLOB_NET_URL='ws://localhost:8080'</script>`
 3. Sirve la carpeta (`npx serve .`) y abre dos pestanas: ONLINE > CREAR SALA / UNIRSE CON CODIGO.
-4. Anade `?dev=1` a la URL para empezar con 1000 monedas.
 
 ## Mapas (salen al azar, sin repetir hasta jugarlos todos; en local y online)
 0 Jardin de hilo · 1 Canon de retales · 2 Gruas del cielo · 3 Nevada de algodon · 4 Fabrica de juguetes · 5 Volcan de lana · 6 Camiones sin fin · 7 Azotea de carton · 8 Barco de papel · 9 Discoteca de fieltro
