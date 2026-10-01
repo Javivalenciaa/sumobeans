@@ -2,7 +2,7 @@
 /* Blob Sumo relay: el anfitrion (navegador) simula la partida; este servidor solo reenvia mensajes. */
 const http = require('http');
 
-const MAX_PLAYERS = 4;
+const MAX_PLAYERS = 5;
 const MAX_MSG = 8192;
 const RATE_LIMIT = 150;
 const ALLOWED = (process.env.ALLOWED_ORIGINS || 'crazygames.com').split(',').map(s => s.trim()).filter(Boolean);
@@ -38,6 +38,18 @@ function leave(ws) {
     send(room.host, { t: 'peer', id: ws.pid, on: 0 });
   }
 }
+function createRoom(ws, pub) {
+  const code = newCode();
+  if (!code) return send(ws, { t: 'error', msg: 'full' });
+  const room = { code, host: ws, clients: new Map(), nextId: 1, joinable: true, pub: !!pub, created: Date.now() };
+  rooms.set(code, room); ws.room = room; ws.pid = 0;
+  send(ws, { t: 'created', code, id: 0, pub: room.pub });
+}
+function joinRoom(ws, room) {
+  ws.pid = room.nextId++; ws.room = room; room.clients.set(ws.pid, ws);
+  send(ws, { t: 'joined', code: room.code, id: ws.pid, pub: room.pub });
+  send(room.host, { t: 'peer', id: ws.pid, on: 1 });
+}
 function attach(wss) {
   wss.on('connection', (ws, req) => {
     if (!originOk(req && req.headers && req.headers.origin)) { ws.close(1008, 'origin'); return; }
@@ -52,13 +64,14 @@ function attach(wss) {
       if (!m || typeof m.t !== 'string') return;
       switch (m.t) {
         case 'ping': break;
-        case 'create': {
+        case 'create': if (!ws.room) createRoom(ws, false); break;
+        case 'quick': {
           if (ws.room) return;
-          const code = newCode();
-          if (!code) return send(ws, { t: 'error', msg: 'full' });
-          const room = { code, host: ws, clients: new Map(), nextId: 1, joinable: true };
-          rooms.set(code, room); ws.room = room; ws.pid = 0;
-          send(ws, { t: 'created', code, id: 0 });
+          let best = null;
+          for (const r of rooms.values()) {
+            if (r.pub && r.joinable && r.clients.size + 1 < MAX_PLAYERS && (!best || r.created < best.created)) best = r;
+          }
+          if (best) joinRoom(ws, best); else createRoom(ws, true);
           break;
         }
         case 'join': {
@@ -67,9 +80,7 @@ function attach(wss) {
           if (!room) return send(ws, { t: 'error', msg: 'noroom' });
           if (!room.joinable) return send(ws, { t: 'error', msg: 'busy' });
           if (room.clients.size + 1 >= MAX_PLAYERS) return send(ws, { t: 'error', msg: 'full' });
-          ws.pid = room.nextId++; ws.room = room; room.clients.set(ws.pid, ws);
-          send(ws, { t: 'joined', code: room.code, id: ws.pid });
-          send(room.host, { t: 'peer', id: ws.pid, on: 1 });
+          joinRoom(ws, room);
           break;
         }
         case 'joinable': if (ws.room && ws.room.host === ws) ws.room.joinable = !!m.v; break;
