@@ -9,8 +9,6 @@
 2. En index.html, antes de `<script type="module">`, anade: `<script>window.BLOB_NET_URL='ws://localhost:8080'</script>`
 3. Sirve la carpeta (`npx serve .`) y abre dos pestanas: ONLINE > CREAR SALA / UNIRSE CON CODIGO.
 4. Anade `?dev=1` a la URL para empezar con 1000 monedas.
-5. Anade `?map=N` para forzar siempre el mapa N (tambien como anfitrion online).
-6. Pruebas automaticas: `?sim=1` desactiva el bucle de juego y expone `window.__dbg` (`start()`, `sim(segundos)`, `state`, `shot()`); `?hook=1` expone lo mismo con el juego normal.
 
 ## Mapas (salen al azar, sin repetir hasta jugarlos todos; en local y online)
 0 Jardin de hilo · 1 Canon de retales · 2 Gruas del cielo · 3 Nevada de algodon · 4 Fabrica de juguetes · 5 Volcan de lana · 6 Camiones sin fin · 7 Azotea de carton · 8 Barco de papel · 9 Discoteca de fieltro
