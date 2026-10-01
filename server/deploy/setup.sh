@@ -7,19 +7,19 @@ REPO="https://github.com/Javivalenciaa/sumobeans"
 APP=/opt/sumobeans
 ORIGINS="crazygames.com,javivalenciaa.github.io"
 
-echo "== 1/5 Paquetes base (Node, git)"
-apt-get update
-apt-get install -y nodejs npm git curl gpg debian-keyring debian-archive-keyring apt-transport-https
-node -v
+echo "== 1/5 Paquetes base"
+# Repo antiguo de Caddy (clave caducada): se elimina si quedo de un intento anterior
+rm -f /etc/apt/sources.list.d/caddy-stable.list /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+apt-get update || true
+apt-get install -y git curl
+if ! command -v node >/dev/null 2>&1; then apt-get install -y nodejs npm; fi
+if ! command -v npm >/dev/null 2>&1; then echo "ERROR: node esta instalado pero falta npm"; exit 1; fi
+NODE_BIN="$(command -v node)"
+echo "node $($NODE_BIN -v) / npm $(npm -v)"
 
-echo "== 2/5 Caddy (HTTPS automatico)"
-if ! command -v caddy >/dev/null 2>&1; then
-  curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor --yes -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-  curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' > /etc/apt/sources.list.d/caddy-stable.list
-  chmod o+r /usr/share/keyrings/caddy-stable-archive-keyring.gpg /etc/apt/sources.list.d/caddy-stable.list
-  apt-get update
-  apt-get install -y caddy
-fi
+echo "== 2/5 Caddy (HTTPS automatico, paquete de Debian)"
+if ! command -v caddy >/dev/null 2>&1; then apt-get install -y caddy; fi
+caddy version
 
 echo "== 3/5 Codigo del servidor"
 id -u blobsumo >/dev/null 2>&1 || useradd --system --create-home --shell /usr/sbin/nologin blobsumo
@@ -38,7 +38,7 @@ User=blobsumo
 WorkingDirectory=$APP/server
 Environment=PORT=8080
 Environment=ALLOWED_ORIGINS=$ORIGINS
-ExecStart=/usr/bin/node server.js
+ExecStart=$NODE_BIN server.js
 Restart=always
 RestartSec=2
 
@@ -58,7 +58,7 @@ EOF
 systemctl enable caddy
 systemctl restart caddy
 
-sleep 3
+sleep 5
 echo
 echo "Estado del servidor:"; systemctl --no-pager --lines=3 status blobsumo || true
 echo "Prueba (debe decir 'blob-sumo relay ok'):"
