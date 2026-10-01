@@ -9,6 +9,14 @@
 2. En index.html, antes de `<script type="module">`, anade: `<script>window.BLOB_NET_URL='ws://localhost:8080'</script>`
 3. Sirve la carpeta (`npx serve .`) y abre dos pestanas: ONLINE > CREAR SALA / UNIRSE CON CODIGO.
 4. Anade `?dev=1` a la URL para empezar con 1000 monedas.
+5. Anade `?map=N` para forzar siempre el mapa N (tambien como anfitrion online).
+6. Pruebas automaticas: `?sim=1` desactiva el bucle de juego y expone `window.__dbg` (`start()`, `sim(segundos)`, `state`, `shot()`); `?hook=1` expone lo mismo con el juego normal.
+
+## Mapas (salen al azar, sin repetir hasta jugarlos todos; en local y online)
+0 Jardin de hilo · 1 Canon de retales · 2 Gruas del cielo · 3 Nevada de algodon · 4 Fabrica de juguetes · 5 Volcan de lana · 6 Camiones sin fin · 7 Azotea de carton · 8 Barco de papel · 9 Discoteca de fieltro
+- 10 **Caos en la Cocina Gigante**: vitroceramica que se calienta (quema y al final lanza por los aires a quien la pisa), batidora de varillas que baja y succiona con un vortice, charcos de miel (frenan y hacen dificil que te empujen), salero/molinillo/taza/tarro como obstaculos.
+- 11 **Estacion Espacial Retro-Futurista**: baja gravedad (saltos altos, empujones mas largos), zonas holograficas de gravedad cero, paneles solares que orbitan y se voltean; si caes por el borde tienes un salto de rescate.
+- 12 **Templo Maya del Tesoro Olvidado**: piramide de 3 niveles con escaleras (los muros se trepan saltando), la lava del foso sube y se come los niveles bajos, losas sueltas con trampa de lanzas, musgo resbaladizo arriba.
 
 ## Publicar el servidor (Render)
 1. New > Web Service > este repo. Root directory: `server`. Build: `npm install`. Start: `npm start`.

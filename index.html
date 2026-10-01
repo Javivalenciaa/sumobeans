@@ -1588,10 +1588,18 @@ function stageAI(p,best,out){
  }
  return false;
 }
+const MAP_TIPS=[];MAP_TIPS[10]='La vitro quema y lanza por los aires · La batidora te succiona · La miel te frena';
+MAP_TIPS[11]='Baja gravedad · Las zonas holográficas te hacen flotar · Si caes, ¡SALTA para volver!';
+MAP_TIPS[12]='¡La lava sube: escala hacia la cima! · El musgo resbala · No te quedes quieto en las losas';
 function stageHud(){
  if(state!=='play')return;
  const u=ui().u;ctx.textAlign='left';ctx.fillStyle='rgba(255,255,255,.95)';ctx.font='800 '+(13*u)+'px system-ui';
  ctx.fillText('Mapa: '+mapNames[mapId],12,18*u);
+ ctx.textAlign='center';ctx.lineJoin='round';
+ if(MAP_TIPS[mapId]&&t<6&&!over){ctx.globalAlpha=clamp((6-t)/1.2,0,1);let fz=15*u;ctx.font='800 '+fz+'px system-ui';const mw=ctx.measureText(MAP_TIPS[mapId]).width;if(mw>W*.94){fz*=W*.94/mw;ctx.font='800 '+fz+'px system-ui'}
+  ctx.lineWidth=5;ctx.strokeStyle='rgba(40,10,80,.85)';ctx.strokeText(MAP_TIPS[mapId],W/2,H*.2+40*u);ctx.fillStyle='#ffffff';ctx.fillText(MAP_TIPS[mapId],W/2,H*.2+40*u);ctx.globalAlpha=1}
+ const me=players.find(p=>p.human&&p.alive);
+ if(me&&me.sink&&!me.recUsed&&!over){const a=.7+.3*Math.sin(performance.now()/90);ctx.globalAlpha=a;ctx.font='900 '+(30*u)+'px system-ui';ctx.lineWidth=8;ctx.strokeStyle='#1b0f40';ctx.strokeText('¡SALTA PARA VOLVER!',W/2,H*.62);ctx.fillStyle='#7fe3ff';ctx.fillText('¡SALTA PARA VOLVER!',W/2,H*.62);ctx.globalAlpha=1}
 }
 
 /* ---- Cañón de retales ---- */
@@ -2395,21 +2403,39 @@ function makeL1Top(){   // piedra con esquinas cubiertas de musgo (coinciden con
  return ctex(c,1,1);
 }
 function makeLeaf(){const c=cnv(128,256),g=c.getContext('2d');g.fillStyle='#3f8a3a';g.beginPath();g.moveTo(64,4);g.bezierCurveTo(128,70,118,200,64,252);g.bezierCurveTo(10,200,0,70,64,4);g.fill();g.strokeStyle='#7cc25a';g.lineWidth=4;g.beginPath();g.moveTo(64,10);g.lineTo(64,248);g.stroke();g.lineWidth=2;for(let y=40;y<230;y+=22){g.beginPath();g.moveTo(64,y);g.lineTo(18,y-18);g.moveTo(64,y);g.lineTo(110,y-18);g.stroke()}const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t}
-function addJungleTree(x,y,z,s,palm){
- const g=new THREE.Group();g.position.set(x,y,z);g.scale.setScalar(s);stageG.add(g);
- const bark=felt(palm?'#8a6a48':'#6d4f37');
+/* decorado estático: se funde en una malla por material (muchas menos llamadas de dibujo) */
+const FM={},feltC=c=>FM[c]||(FM[c]=felt(c));
+function bakeStatic(root,cast){
+ root.updateMatrixWorld(true);const groups=new Map();
+ root.traverse(o=>{if(!o.isMesh||Array.isArray(o.material))return;const g=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();g.applyMatrix4(o.matrixWorld);
+  if(!g.attributes.uv)g.setAttribute('uv',new THREE.BufferAttribute(new Float32Array(g.attributes.position.count*2),2));
+  const k=o.material.uuid;if(!groups.has(k))groups.set(k,{m:o.material,gs:[]});groups.get(k).gs.push(g)});
+ if(root.parent)root.parent.remove(root);
+ for(const {m,gs} of groups.values()){
+  let n=0;for(const g of gs)n+=g.attributes.position.count;
+  const pos=new Float32Array(n*3),nor=new Float32Array(n*3),uv=new Float32Array(n*2);let o=0;
+  for(const g of gs){pos.set(g.attributes.position.array,o*3);nor.set(g.attributes.normal.array,o*3);uv.set(g.attributes.uv.array,o*2);o+=g.attributes.position.count;g.dispose()}
+  const bg=new THREE.BufferGeometry();bg.setAttribute('position',new THREE.BufferAttribute(pos,3));bg.setAttribute('normal',new THREE.BufferAttribute(nor,3));bg.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+  const mesh=new THREE.Mesh(bg,m);mesh.castShadow=!!cast;mesh.receiveShadow=true;stageG.add(mesh);
+ }
+}
+function addJungleTree(x,y,z,s,palm,par){
+ const g=new THREE.Group();g.position.set(x,y,z);g.scale.setScalar(s);(par||stageG).add(g);
+ const bark=feltC(palm?'#8a6a48':'#6d4f37'),lsph=TX.lsph||(TX.lsph=new THREE.SphereGeometry(1,10,7));
  if(palm){let px=0,py=0;for(let k=0;k<7;k++){const seg=new THREE.Mesh(new THREE.CylinderGeometry(.36-k*.025,.42-k*.025,1.5,9),bark);seg.position.set(px,py+.75,0);seg.rotation.z=-.06*k;g.add(seg);px+=.1*k;py+=1.45}
-  for(let k=0;k<8;k++){const lf=new THREE.Mesh(new THREE.PlaneGeometry(1.6,5.4),new THREE.MeshStandardMaterial({map:TX.leaf,alphaTest:.5,side:THREE.DoubleSide,roughness:.8}));const a=k/8*6.28;lf.position.set(px+Math.cos(a)*2.2,py-.5,Math.sin(a)*2.2);lf.rotation.set(0,-a,0);lf.rotateX(1.15);lf.castShadow=true;g.add(lf)}}
+  TX.leafM=TX.leafM||new THREE.MeshStandardMaterial({map:TX.leaf,alphaTest:.5,side:THREE.DoubleSide,roughness:.8});
+  for(let k=0;k<8;k++){const lf=new THREE.Mesh(new THREE.PlaneGeometry(1.6,5.4),TX.leafM);const a=k/8*6.28;lf.position.set(px+Math.cos(a)*2.2,py-.5,Math.sin(a)*2.2);lf.rotation.set(0,-a,0);lf.rotateX(1.15);lf.castShadow=true;g.add(lf)}}
  else{const tr=new THREE.Mesh(new THREE.CylinderGeometry(.5,.9,9,10),bark);tr.position.y=4.5;tr.castShadow=true;g.add(tr);
   for(const s2 of [-1,1]){const br=new THREE.Mesh(new THREE.CylinderGeometry(.18,.3,4,7),bark);br.position.set(s2*1.3,7.5,0);br.rotation.z=-s2*.8;g.add(br)}
-  const cols=['#2f7a3a','#3e8f45','#24663a','#4b9a4a'];for(let k=0;k<7;k++){const b=new THREE.Mesh(G.sph,felt(cols[k%4]));const a=k*.9;b.scale.set(2.6+Math.random(),1.8+Math.random()*.6,2.6+Math.random());b.position.set(Math.cos(a)*(k?2.2:0),9.2+Math.random()*1.6+(k?0:1),Math.sin(a)*(k?2.2:0));b.castShadow=true;g.add(b)}}
+  const cols=['#2f7a3a','#3e8f45','#24663a','#4b9a4a'];for(let k=0;k<7;k++){const b=new THREE.Mesh(lsph,feltC(cols[k%4]));const a=k*.9;b.scale.set(2.6+Math.random(),1.8+Math.random()*.6,2.6+Math.random());b.position.set(Math.cos(a)*(k?2.2:0),9.2+Math.random()*1.6+(k?0:1),Math.sin(a)*(k?2.2:0));b.castShadow=true;g.add(b)}}
  return g;
 }
-function addVine(a,b,sag,leafy){
+function addVine(a,b,sag,leafy,par){
  const mid=[(a[0]+b[0])/2,(a[1]+b[1])/2-sag,(a[2]+b[2])/2];
  const curve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(...a),new THREE.Vector3(...mid),new THREE.Vector3(...b));
- const m=new THREE.Mesh(new THREE.TubeGeometry(curve,24,.07,5),TX.vineM);stageG.add(m);
- if(leafy)for(let i=1;i<10;i++){const p=curve.getPoint(i/10),l=new THREE.Mesh(G.small,TX.vineL);l.scale.set(.32,.12,.22);l.position.copy(p);l.rotation.set(Math.random()*3,Math.random()*3,0);stageG.add(l)}
+ const m=new THREE.Mesh(new THREE.TubeGeometry(curve,16,.07,5),TX.vineM);(par||stageG).add(m);
+ const lic=TX.lic||(TX.lic=new THREE.IcosahedronGeometry(1,0));
+ if(leafy)for(let i=1;i<10;i++){const p=curve.getPoint(i/10),l=new THREE.Mesh(lic,TX.vineL);l.scale.set(.32,.12,.22);l.position.copy(p);l.rotation.set(Math.random()*3,Math.random()*3,0);(par||stageG).add(l)}
 }
 function buildTemple(){
  MX.terr=true;MX.lavaY=-3.2;MX.moss=true;
@@ -2423,29 +2449,32 @@ function buildTemple(){
  mkM(new THREE.BoxGeometry(s1*2,h1,s1*2),[wall1,wall1,top1,wall1,wall1,wall1],0,h1/2,0);
  mkM(new THREE.BoxGeometry(s2*2,h2-h1,s2*2),[wall2,wall2,top2,wall2,wall2,wall2],0,h1+(h2-h1)/2,0);
  decks.push({x:0,z:0,w:s2*2,d:s2*2,h:h2,lvl:2});
+ const stepsG=new THREE.Group();stageG.add(stepsG);const stepM=st(TX.stone,1,1);
  const stairs=(sIn,len,w,hLo,hHi,lvl)=>{for(const [ax,sg] of [['z',1],['z',-1],['x',1],['x',-1]]){
   const a0=sg*(sIn+len),a1=sg*sIn,c=sg*(sIn+len/2),d=ax==='z'?{x:0,z:c,w:w,d:len}:{x:c,z:0,w:len,d:w};
   d.sl={ax,a0,a1,h0:hLo,h1:hHi};d.lvl=lvl;d.stair=true;decks.push(d);
   const n=4;for(let k=0;k<n;k++){const hh=hLo+(hHi-hLo)*(k+1)/n,dep=len*(n-k)/n,cc=sg*(sIn+dep/2);
-   const m=mkM(new THREE.BoxGeometry(ax==='z'?w:dep,hh-hLo+.02,ax==='z'?dep:w),[wall1,wall1,top0,wall1,wall1,wall1],ax==='z'?0:cc,hLo+(hh-hLo)/2,ax==='z'?cc:0)}
-  for(const q of [-1,1]){const bx=ax==='z'?q*(w/2+.25):sg*(sIn+len/2),bz=ax==='z'?sg*(sIn+len/2):q*(w/2+.25);const al=mkM(new THREE.BoxGeometry(ax==='z'?.5:len,(hHi-hLo)*.5+.3,ax==='z'?len:.5),wall1,bx,hLo+(hHi-hLo)*.25+.15,bz,null,false);al.rotation[ax==='z'?'x':'z']=(ax==='z'?sg:-sg)*Math.atan2(hHi-hLo,len)}
+   const m=mkM(new THREE.BoxGeometry(ax==='z'?w:dep,hh-hLo+.02,ax==='z'?dep:w),stepM,ax==='z'?0:cc,hLo+(hh-hLo)/2,ax==='z'?cc:0,stepsG)}
+  for(const q of [-1,1]){const bx=ax==='z'?q*(w/2+.25):sg*(sIn+len/2),bz=ax==='z'?sg*(sIn+len/2):q*(w/2+.25);const al=mkM(new THREE.BoxGeometry(ax==='z'?.5:len,(hHi-hLo)*.5+.3,ax==='z'?len:.5),stepM,bx,hLo+(hHi-hLo)*.25+.15,bz,stepsG,false);al.rotation[ax==='z'?'x':'z']=(ax==='z'?sg:-sg)*Math.atan2(hHi-hLo,len)}
  }};
  stairs(s2,2.1,3.6,h1,h2,1);
  decks.push({x:0,z:0,w:s1*2,d:s1*2,h:h1,lvl:1});
  stairs(s1,2.8,4,0,h1,0);
  decks.push({x:0,z:0,w:s0*2,d:s0*2,h:0,lvl:0});
+ bakeStatic(stepsG,true);
  // cornisas y bandas talladas
  const trim=new THREE.MeshStandardMaterial({color:0x8a8270,roughness:1});
  for(const [s,y] of [[s0,-.25],[s1,h1-.2],[s2,h2-.2]])for(const q of [-1,1]){mkM(new THREE.BoxGeometry(s*2+.4,.4,.4),trim,0,y,q*(s+.05),null,false);mkM(new THREE.BoxGeometry(.4,.4,s*2+.4),trim,q*(s+.05),y,0,null,false)}
  // cabezas de serpiente (Kukulkán) al pie de las escaleras: obstáculos
- MX.cols=[];const jade=new THREE.MeshStandardMaterial({color:0x5f8f6a,roughness:.7,bumpMap:feltBump,bumpScale:1});
+ MX.cols=[];const jade=new THREE.MeshStandardMaterial({color:0x5f8f6a,roughness:.7,bumpMap:feltBump,bumpScale:1}),snakeG=new THREE.Group(),eyeY=new THREE.MeshStandardMaterial({color:0xffd23f,emissive:0x5a3a00,roughness:.3}),fang=feltC('#f4ecd8');stageG.add(snakeG);
  for(const [ax,sg] of [['z',1],['z',-1],['x',1],['x',-1]])for(const q of [-1,1]){
-  const x=ax==='z'?q*2.75:sg*(s1+2.35),z=ax==='z'?sg*(s1+2.35):q*2.75,g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=ax==='z'?(sg>0?0:Math.PI):(sg>0?Math.PI/2:-Math.PI/2);stageG.add(g);
+  const x=ax==='z'?q*2.75:sg*(s1+2.35),z=ax==='z'?sg*(s1+2.35):q*2.75,g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=ax==='z'?(sg>0?0:Math.PI):(sg>0?Math.PI/2:-Math.PI/2);snakeG.add(g);
   const hd=new THREE.Mesh(new THREE.BoxGeometry(1.3,1.2,1.7),jade);hd.position.set(0,.6,.2);g.add(hd);const jaw=new THREE.Mesh(new THREE.BoxGeometry(1.25,.35,1.2),jade);jaw.position.set(0,.2,.75);g.add(jaw);
-  for(const e of [-1,1]){const ey=new THREE.Mesh(G.small,new THREE.MeshStandardMaterial({color:0xffd23f,emissive:0x5a3a00,roughness:.3}));ey.scale.setScalar(.15);ey.position.set(e*.45,.95,.95);g.add(ey)}
-  for(const e of [-1,1]){const f=new THREE.Mesh(new THREE.ConeGeometry(.09,.3,6),felt('#f4ecd8'));f.rotation.x=Math.PI;f.position.set(e*.35,.25,1.3);g.add(f)}
-  g.traverse(o=>{o.castShadow=true});MX.cols.push({x,z,r:.85,h:1.25});
+  for(const e of [-1,1]){const ey=new THREE.Mesh(G.small,eyeY);ey.scale.setScalar(.15);ey.position.set(e*.45,.95,.95);g.add(ey)}
+  for(const e of [-1,1]){const f=new THREE.Mesh(new THREE.ConeGeometry(.09,.3,6),fang);f.rotation.x=Math.PI;f.position.set(e*.35,.25,1.3);g.add(f)}
+  MX.cols.push({x,z,r:.85,h:1.25});
  }
+ bakeStatic(snakeG,true);
  // losas sueltas con trampa de lanzas
  MX.slabs=[];const bronze=new THREE.MeshStandardMaterial({color:0xc08a3a,metalness:.85,roughness:.35,envMap:envMap('jungle')}),shaft=felt('#6b4a2a');
  const slabTex=(()=>{const c=cnv(128,128),g=c.getContext('2d');g.fillStyle='#b7ad92';g.fillRect(0,0,128,128);g.strokeStyle='rgba(50,40,25,.7)';g.lineWidth=3;g.strokeRect(4,4,120,120);for(let i=0;i<6;i++){g.beginPath();let x=64,y=64;g.moveTo(x,y);for(let k=0;k<4;k++){x+=(Math.random()-.5)*50;y+=(Math.random()-.5)*50;g.lineTo(x,y)}g.stroke()}
@@ -2477,14 +2506,17 @@ function buildTemple(){
    if(y>=8)cr.copy(cTop);else if(y>-6)cr.copy(cRock).lerp(cTop,clamp((y-2)/6,0,1)*.7);else cr.copy(cHot).lerp(cRock,clamp((y+26)/20,0,1));colA[i*3]=cr.r;colA[i*3+1]=cr.g;colA[i*3+2]=cr.b}
   lg.setAttribute('color',new THREE.BufferAttribute(colA,3));lg.computeVertexNormals();
   const cm=new THREE.Mesh(lg,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide,flatShading:true}));cm.receiveShadow=true;stageG.add(cm)}
- // selva: árboles, palmeras, helechos, rocas y lianas
- for(let i=0;i<46;i++){const a=i*2.399+Math.random()*.3,r=48+Math.random()*60,palm=i%3===0;addJungleTree(Math.cos(a)*r,8,Math.sin(a)*r,1+Math.random()*.9,palm)}
- for(let i=0;i<30;i++){const a=Math.random()*6.283,r=44+Math.random()*10;const f=mkM(G.sph,felt(i%2?'#4f9a44':'#3a7e3a'),Math.cos(a)*r,8.6,Math.sin(a)*r,null,false);f.scale.set(2+Math.random()*2,1+Math.random(),2+Math.random()*2)}
- for(let i=0;i<22;i++){const a=i*.29,r=43+Math.random()*3,x=Math.cos(a)*r,z=Math.sin(a)*r;addVine([x,8.2,z],[x*.93,-3-Math.random()*8,z*.93],1.5,true)}
- for(const q of [-1,1])for(const w of [-1,1]){const x=q*s2,z=w*(1+Math.random()*3);addVine([x,h2,z],[q*(s2+.15),.6+Math.random()*.6,z+(Math.random()-.5)*2],.4,true);addVine([w*(1+Math.random()*3),h2,q*s2],[w*(2+Math.random()*2),h1+.1,q*(s2+.15)],.3,true)}
- for(const q of [-1,1])for(const w of [-1,1]){addVine([q*s1,h1,w*(6+Math.random()*3)],[q*(s1+.15),-2.5,w*(6+Math.random()*3)],.5,true)}
- // templos en ruinas a lo lejos y bruma de la selva
- for(let i=0;i<5;i++){const a=-2.2+i*.55,r=120+Math.random()*40,g=new THREE.Group();g.position.set(Math.cos(a)*r,6,Math.sin(a)*r);stageG.add(g);for(let k=0;k<4;k++){const b=new THREE.Mesh(new THREE.BoxGeometry(22-k*5,5,22-k*5),new THREE.MeshStandardMaterial({color:0x7d8a6e,roughness:1}));b.position.y=2.5+k*5;g.add(b)}}
+ // selva: árboles, palmeras, helechos, rocas y lianas (todo se funde en pocas mallas)
+ const deco=new THREE.Group(),near=new THREE.Group();stageG.add(deco);stageG.add(near);
+ for(let i=0;i<46;i++){const a=i*2.399+Math.random()*.3,r=48+Math.random()*60,palm=i%3===0;addJungleTree(Math.cos(a)*r,8,Math.sin(a)*r,1+Math.random()*.9,palm,deco)}
+ for(let i=0;i<30;i++){const a=Math.random()*6.283,r=44+Math.random()*10;const f=new THREE.Mesh(TX.lsph,feltC(i%2?'#4f9a44':'#3a7e3a'));f.position.set(Math.cos(a)*r,8.6,Math.sin(a)*r);f.scale.set(2+Math.random()*2,1+Math.random(),2+Math.random()*2);deco.add(f)}
+ for(let i=0;i<22;i++){const a=i*.29,r=43+Math.random()*3,x=Math.cos(a)*r,z=Math.sin(a)*r;addVine([x,8.2,z],[x*.93,-3-Math.random()*8,z*.93],1.5,true,deco)}
+ for(const q of [-1,1])for(const w of [-1,1]){const x=q*s2,z=w*(1+Math.random()*3);addVine([x,h2,z],[q*(s2+.15),.6+Math.random()*.6,z+(Math.random()-.5)*2],.4,true,near);addVine([w*(1+Math.random()*3),h2,q*s2],[w*(2+Math.random()*2),h1+.1,q*(s2+.15)],.3,true,near)}
+ for(const q of [-1,1])for(const w of [-1,1]){addVine([q*s1,h1,w*(6+Math.random()*3)],[q*(s1+.15),-2.5,w*(6+Math.random()*3)],.5,true,near)}
+ // templos en ruinas a lo lejos
+ const ruinM=new THREE.MeshStandardMaterial({color:0x7d8a6e,roughness:1});
+ for(let i=0;i<5;i++){const a=-2.2+i*.55,r=120+Math.random()*40,g=new THREE.Group();g.position.set(Math.cos(a)*r,6,Math.sin(a)*r);deco.add(g);for(let k=0;k<4;k++){const b=new THREE.Mesh(new THREE.BoxGeometry(22-k*5,5,22-k*5),ruinM);b.position.y=2.5+k*5;g.add(b)}}
+ bakeStatic(deco,false);bakeStatic(near,true);
  addClouds(8,90,190,40,70);
  MX.lavaSay=0;
  MX.spawn=[[[-12.5,-5.5],[12.5,5.5]],[[-12.5,-6],[12.5,6],[-6,12.5],[6,-12.5],[0,-1.5]]];
@@ -2684,6 +2716,10 @@ const TR_EXACT={
  '¡GANASTE LA RONDA!':'YOU WON THE ROUND!','¡SE ACABÓ EL TIEMPO!':'TIME IS UP!','¡LA ARENA VA A ENCOGERSE!':'THE ARENA IS ABOUT TO SHRINK!','¡MUERTE SÚBITA EN 3 SEGUNDOS!':'SUDDEN DEATH IN 3 SECONDS!','¡MUERTE SÚBITA!':'SUDDEN DEATH!',
  '¡AIRE!':'MISS!','¡PILLADO!':'CAUGHT!','¡ESPALDA!':'BACKSTAB!','¡AGARRADO!':'GRABBED!','¡LANZADO!':'THROWN!','¡SE ZAFA!':'BREAKS FREE!','¡RESBALÓN!':'SLIP!','¡GUANTE GIGANTE!':'GIANT GLOVE!','¡TROPIEZO!':'TRIP!','¡FUERA!':'OUT!',
  'MUERTE SÚBITA: LA ARENA SE DESPLOMA':'SUDDEN DEATH: THE ARENA COLLAPSES','MUERTE SÚBITA: VIENTO FUERTE':'SUDDEN DEATH: STRONG WIND','¡RESISTE! (machaca GOLPE)':'RESIST! (mash PUNCH)','¡LA ARENA SE INCLINA!':'THE ARENA TILTS!','¡AGÁRRATE!':'HOLD ON!','¡LA ARENA SE ENCOGE!':'THE ARENA IS SHRINKING!',
+ '¡SALTA PARA VOLVER!':'JUMP TO GET BACK!',
+ 'La vitro quema y lanza por los aires · La batidora te succiona · La miel te frena':'The stove burns and launches you · The whisk sucks you in · Honey slows you down',
+ 'Baja gravedad · Las zonas holográficas te hacen flotar · Si caes, ¡SALTA para volver!':'Low gravity · Hologram zones make you float · If you fall, JUMP to get back!',
+ '¡La lava sube: escala hacia la cima! · El musgo resbala · No te quedes quieto en las losas':'The lava is rising: climb to the top! · Moss is slippery · Don\'t stand still on loose slabs',
  '¡LA VITRO SE CALIENTA!':'THE STOVE IS HEATING UP!','¡FLAMBEADO!':'FLAMBÉED!','¡QUEMA!':'HOT HOT HOT!','¡LA BATIDORA BAJA!':'THE WHISK IS COMING DOWN!','¡BATIDO!':'WHISKED!','¡GRAVEDAD CERO!':'ZERO GRAVITY!','¡RESCATE!':'SAVED!','¡LA LAVA SUBE!':'THE LAVA IS RISING!','¡LA LAVA SUBE OTRA VEZ!':'THE LAVA RISES AGAIN!','¡LANZAS!':'SPEARS!','¡LAVA!':'LAVA!',
  '¡FUEGO!':'FIRE!','¡CAJA!':'BOX!','¡LANA!':'WOOL!','¡BOLA DE NIEVE!':'SNOWBALL!','¡CINTAS INVERTIDAS!':'BELTS REVERSED!','¡BARRIDO!':'SWEEP!','¡FRENAZO!':'BRAKE!','¡BARRERA! ¡SALTA!':'BARRIER! JUMP!','¡BARRERA!':'BARRIER!','¡RÁFAGA!':'GUST!','¡VAPOR!':'STEAM!','¡OLA GIGANTE!':'GIANT WAVE!','¡CORCHO!':'CORK!','¡BUM!':'BOOM!',
  'PUESTO':'RANK','RONDAS':'ROUNDS','Toca o pulsa ESPACIO: menú':'Tap or press SPACE: menu','Toca o pulsa ESPACIO para seguir':'Tap or press SPACE to continue',
@@ -3264,7 +3300,7 @@ if(/[?&](sim|hook)=1/.test(location.search)){
    }
    return false},
   render(){sync3D();renderer.render(scene,camera)},
-  shot(cx,cy,cz,lx,ly,lz,fov){this.frozen=true;dt=1/60;sync3D();if(cx!==undefined){camera.position.set(cx,cy,cz);camera.lookAt(lx,ly,lz);camera.fov=fov||55;camera.updateProjectionMatrix()}renderer.render(scene,camera);ctx.setTransform(DPR,0,0,DPR,0,0);ctx.clearRect(0,0,W,H);post();hud();stageHud()},
+  shot(cx,cy,cz,lx,ly,lz,fov){this.frozen=true;dt=1/60;for(let i=0;i<(cx===undefined?150:1);i++)sync3D();if(cx!==undefined){camera.position.set(cx,cy,cz);camera.lookAt(lx,ly,lz);camera.fov=fov||55;camera.updateProjectionMatrix()}renderer.render(scene,camera);ctx.setTransform(DPR,0,0,DPR,0,0);ctx.clearRect(0,0,W,H);post();hud();stageHud()},
   ev(src){return eval(src)}
  };
 }
