@@ -1977,7 +1977,7 @@ function myName(){return (CG.name||'Player').slice(0,14)}
 {const q=/[?&]room=(\w+)/.exec(location.search);if(q)setTimeout(()=>netJoin(q[1].toUpperCase()),500)}
 
 /* ---------------- ONLINE ---------------- */
-const NET_URL=window.BLOB_NET_URL||'wss://CAMBIA-ESTO.onrender.com';
+const NET_URL=window.BLOB_NET_URL||'wss://34-28-108-52.sslip.io';
 const NET={on:false,host:false,id:-1,ws:null,code:'',screen:null,err:'',status:'',peers:{},lobby:[],roster:[],ev:[],sT:0,inT:0,items:new Map(),itemSeq:0,lastIn:'',copied:0};
 const FN=['x','y','vx','vy','face','stT','fall','jumpH','squash','dizzy','bal','boost','glove','spin','hitF','hx','hy','resist','lean','stag','thrT','grip','dsign','ps'];
 function wsSend(o){try{if(NET.ws&&NET.ws.readyState===1)NET.ws.send(JSON.stringify(o))}catch(e){}}
