@@ -1,4 +1,4 @@
-# Blob Sumo 3D -> CrazyGames
+# Sumo Beans -> CrazyGames
 
 ## Archivos
 - `index.html` (el juego, se sube a mano, ver abajo)
@@ -8,6 +8,13 @@
 1. `cd server && npm install && npm start` (puerto 8080)
 2. En index.html, antes de `<script type="module">`, anade: `<script>window.BLOB_NET_URL='ws://localhost:8080'</script>`
 3. Sirve la carpeta (`npx serve .`) y abre dos pestanas: ONLINE > CREAR SALA / UNIRSE CON CODIGO.
+
+## Calidad / integracion CrazyGames
+- Musica procedural (menu, partida y tramo final) y efectos; ajustes de musica/sonidos en el menu y en pausa (se guardan).
+- Menu de pausa (boton arriba a la derecha, Esc o al salir de la pestana), tutorial "Como jugar" la primera vez, cuenta atras 3-2-1 en cada ronda.
+- SDK: loadingStart/Stop, gameplayStart/Stop correctos (tambien al pausar/salir), anuncios midgame/rewarded con audio silenciado, idioma segun el navegador/CrazyGames (ES/EN).
+- Calidad adaptativa: si los fps caen baja la resolucion y luego quita sombras.
+- Skins originales: Leno (mazo de madera) y Aleta (tiburon con zapatillas naranjas).
 
 ## Mapas (salen al azar, sin repetir hasta jugarlos todos; en local y online)
 0 Jardin de hilo · 1 Canon de retales · 2 Gruas del cielo · 3 Nevada de algodon · 4 Fabrica de juguetes · 5 Volcan de lana · 6 Camiones sin fin · 7 Azotea de carton · 8 Barco de papel · 9 Discoteca de fieltro
