@@ -38,8 +38,8 @@ const TUNE={
 };
 
 const errBox=document.getElementById('err');
-addEventListener('error',e=>{errBox.style.display='block';errBox.textContent='Error: '+e.message+' (línea '+(e.lineno||'?')+')'});
-addEventListener('unhandledrejection',e=>{errBox.style.display='block';errBox.textContent='Error: '+(e.reason&&e.reason.message||e.reason)});
+addEventListener('error',e=>{console.error(e.message);if(!window.__ok){errBox.style.display='block';errBox.textContent='Error: '+e.message}});
+addEventListener('unhandledrejection',e=>{console.error(e.reason);if(!window.__ok){errBox.style.display='block';errBox.textContent='Error: '+(e.reason&&e.reason.message||e.reason)}});
 const isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
 
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
@@ -429,7 +429,7 @@ const BL=CHARS.map((c,i)=>buildBlob(i));
 /* ---------- Estado del juego ---------- */
 const R0=330,DIFFS=[{n:'Fácil',v:.6},{n:'Normal',v:1},{n:'Difícil',v:1.6}];
 let state='menu',mode='duel',diffI=1,sel=2,players=[],ringR=R0,t=0,round=0,shake=0,msg='',msgT=0,parts=[],texts=[],wins=[0,0,0,0,0,0,0];
-let paused=false,howto=false,howtoThen=false,pauseBtns=[],CD=1.8,cdLast=-9;let over=false,overT=0,matchDone=false,freeze=0,touchMode=isTouch,dt=0,last=performance.now(),menuBtns=[];
+let endBtns=[],paused=false,howto=false,howtoThen=false,pauseBtns=[],CD=1.8,cdLast=-9;let over=false,overT=0,matchDone=false,freeze=0,touchMode=isTouch,dt=0,last=performance.now(),menuBtns=[];
 let tilt={on:false,a:0,T:0,next:8,warn:0},items=[],itemT=3,zp=0,flash=0,mouse={down:false},camYaw=0,manualT=0,tiltAmt=0,tiltTh=0;
 const itemMeshes=new Map(),itemMs=[];
 
@@ -529,6 +529,7 @@ ov.addEventListener('pointerdown',e=>{
   if(paused){for(const b of pauseBtns){if(x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h){SFX.tap();b.fn();return}}return}
   const u0=ui().u;if(!over&&Math.hypot(x-(W-34*u0),y-34*u0)<28*u0){setPaused(true);return}
  }
+ if(over&&matchDone&&!NET.on){for(const b of endBtns){if(x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h){SFX.tap();b.fn();return}}return}
  if(over){cont();return}
  if(e.pointerType==='mouse'){touchMode=false;if(e.button===0){mouse.down=true;if(!document.pointerLockElement&&ov.requestPointerLock){try{const r=ov.requestPointerLock();if(r&&r.catch)r.catch(()=>{})}catch(er){}}}return}
  const L=ui();
@@ -578,22 +579,34 @@ function onKey(c){
   if(c==='Digit1')mode='duel';if(c==='Digit2')mode='melee';
   if(c==='Enter'||c==='Space')playPressed();
  }else if(over&&(c==='Enter'||c==='Space'))cont();
- else if(c==='Escape'&&state==='play')setPaused(true);
+ else if(c==='Escape'&&state==='play'){if(over&&matchDone&&!NET.on)toMenu();else setPaused(true)}
+}
+const PAD={on:false,mx:0,my:0,rx:0,punch:false,grab:false,jump:false,a:false,start:false};
+function padPoll(){
+ let gp=null;try{const l=navigator.getGamepads?navigator.getGamepads():[];for(let i=0;i<l.length;i++)if(l[i]&&l[i].connected){gp=l[i];break}}catch(e){}
+ if(!gp){PAD.on=false;PAD.mx=PAD.my=PAD.rx=0;PAD.punch=PAD.grab=PAD.jump=PAD.a=PAD.start=false;return}
+ const dz=v=>Math.abs(v)<.2?0:v,B=i=>!!(gp.buttons[i]&&gp.buttons[i].pressed);
+ const a=B(0),st=B(9);
+ if(state==='play'||state==='menu'){if(st&&!PAD.start)onKey(state==='play'?'Escape':'Enter');else if(a&&!PAD.a&&(state==='menu'||over||howto))onKey('Enter')}
+ PAD.on=true;PAD.a=a;PAD.start=st;
+ PAD.mx=dz(gp.axes[0]||0)+(B(15)?1:0)-(B(14)?1:0);PAD.my=dz(gp.axes[1]||0)+(B(13)?1:0)-(B(12)?1:0);PAD.rx=dz(gp.axes[2]||0);
+ PAD.punch=B(2)||B(7);PAD.grab=B(1)||B(5)||B(4);PAD.jump=a||B(3);
 }
 const HIN0={mx:0,my:0,grab:false,punch:false,jump:false,fwd:0,mag:0};
 function humanInput(){
  if(paused){Object.assign(HIN,HIN0);return HIN}
  let ix=(anyKey(KM.r)?1:0)-(anyKey(KM.l)?1:0),iy=(anyKey(KM.d)?1:0)-(anyKey(KM.u)?1:0);
+ if(PAD.on){ix=clamp(ix+PAD.mx,-1,1);iy=clamp(iy+PAD.my,-1,1)}
  if(joy.id!==null){const L=ui(),dx=joy.x-joy.ox,dy=joy.y-joy.oy,m=Math.hypot(dx,dy),mx2=50*L.u;if(m>8*L.u){const k=Math.min(1,m/mx2);ix=dx/m*k;iy=dy/m*k}}
  const fx=Math.cos(camYaw),fz=Math.sin(camYaw),fw=-iy;
- HIN.mx=fx*fw-fz*ix;HIN.my=fz*fw+fx*ix;HIN.fwd=fw;HIN.mag=Math.min(1,Math.hypot(ix,iy));HIN.grab=anyKey(KM.grab)||btn.grab.id!==null;HIN.punch=anyKey(KM.punch)||btn.punch.id!==null||mouse.down;HIN.jump=anyKey(KM.jump)||btn.jump.id!==null;
+ HIN.mx=fx*fw-fz*ix;HIN.my=fz*fw+fx*ix;HIN.fwd=fw;HIN.mag=Math.min(1,Math.hypot(ix,iy));HIN.grab=anyKey(KM.grab)||btn.grab.id!==null||PAD.grab;HIN.punch=anyKey(KM.punch)||btn.punch.id!==null||mouse.down||PAD.punch;HIN.jump=anyKey(KM.jump)||btn.jump.id!==null||PAD.jump;
  return HIN;
 }
 const HIN={mx:0,my:0,grab:false,punch:false,jump:false,fwd:0,mag:0};
 
 /* ---------- Lógica ---------- */
 function mk(ci,human,ang){
- return{ci,ch:CHARS[ci],human,x:Math.cos(ang)*R0*.5,y:Math.sin(ang)*R0*.5,vx:0,vy:0,face:ang+Math.PI,
+ return{ci,ch:CHARS[ci],human,x:Math.cos(ang)*70,y:Math.sin(ang)*70,vx:0,vy:0,face:ang+Math.PI,
   st:'idle',stT:0,alive:true,fall:0,grabbed:null,heldBy:null,cd:0,dizzy:0,wob:Math.random()*9,lean:0,
   stumble:3+Math.random()*4,mash:0,pg:false,stag:0,floorT:0,gait:Math.random()*6.28,jumpH:0,jumpV:0,groundT:.1,jumpPrev:false,deck:-1,voidT:0,hx:0,hy:0,hvx:0,hvy:0,boost:0,glove:0,dustT:0,win:false,blink:2+Math.random()*3,blinkT:0,spin:0,ps:1,
   inp:{mx:0,my:0,grab:0,punch:0},ai:{think:0,act:0,react:1,mode:'go'},gt:0,squash:0,
@@ -632,7 +645,9 @@ function startRound(){
  camYaw=0;manualT=0;
  ringR=R0;t=-CD;cdLast=-9;paused=false;howto=false;lastHitT=0;twFlags=0;suddenOn=false;lastCount=-1;slowT=0;camKick.x=camKick.z=0;parts=[];texts=[];items=[];itemT=3;tilt={on:false,a:0,T:0,next:8,warn:0};zp=0;flash=0;over=false;overT=0;state='play';round++;stageStart();say('RONDA '+round+'/'+MATCH_ROUNDS+' · '+mapNames[mapId],1.8);SFX.boing();netRoundStart();
 }
-function cont(){if(overT<1.2)return;if(NET.on){if(matchDone){if(NET.host)netBackToLobby();else if(NET.pub){netLeave();NET.screen='main'}else{state='menu';NET.screen='lobby';over=false;cgStop()}}return}if(matchDone){state='menu';cgStop();cgMidgame(()=>{})}else startRound()}
+function playAgain(){if(overT<1.2||NET.on)return;cgMidgame(()=>{mode='melee';startMatch()})}
+function toMenu(){if(overT<1.2||NET.on)return;state='menu';over=false;matchDone=false;cgStop();cgMidgame(()=>{})}
+function cont(){if(overT<1.2)return;if(matchDone&&!NET.on){playAgain();return}if(NET.on){if(matchDone){if(NET.host)netBackToLobby();else if(NET.pub){netLeave();NET.screen='main'}else{state='menu';NET.screen='lobby';over=false;cgStop()}}return}if(matchDone){state='menu';cgStop();cgMidgame(()=>{})}else startRound()}
 function say(m,s){msg=m;msgT=s}
 function countBeep(){
  if(state!=='play'||over)return;
@@ -673,7 +688,7 @@ function hazardAt(x,z){
 function aiDuck(p){
  if((p.jumpH||0)>0||p.groundT<=.03||p.sink)return false;
  const ux=p.x*K,uz=p.y*K;
- if(mapId===4&&MX.arm){const r=Math.hypot(ux,uz);if(r<11.8&&r>1.4){const w=Math.min(1.7,.85+.012*mapClock),d=((Math.atan2(uz,ux)-MX.armA)%Math.PI+Math.PI)%Math.PI,tt=(d-Math.asin(Math.min(1,1.25/r)))/w;if(tt>.02&&tt<.12)return true}}
+ if(mapId===4&&MX.arm){const r=Math.hypot(ux,uz);if(r<11.8&&r>4.6){const w=Math.min(1.7,.85+.012*mapClock),d=((Math.atan2(uz,ux)-MX.armA)%Math.PI+Math.PI)%Math.PI,tt=(d-Math.asin(Math.min(1,1.25/r)))/w;if(tt>.02&&tt<.12)return true}}
  for(const b of balls){const rx=ux-b.x,rz=uz-b.z,vx=b.vx/b.v,vz=b.vz/b.v,al=rx*vx+rz*vz,lat=Math.abs(rx*vz-rz*vx);if(al>0&&lat<b.r+1.1&&al/b.v>.08&&al/b.v<.32)return true}
  if(mapId===6&&MX.bar){const tt=(MX.bar.x-ux)/32;if(tt>.12&&tt<.36&&floorAt(ux,uz)>=0)return true}
  const DK=MAP_DUCK[mapId];return DK?DK(p,ux,uz):false;
@@ -1263,6 +1278,7 @@ function sync3D(){
   stageG.visible=mapId!==0;
   for(const p of players)pose(p,dt);updateGrabFx();
   manualT-=dt;
+  if(PAD.rx){camYaw+=PAD.rx*2.4*dt;manualT=2}
   if(keys['KeyQ']||keys['ArrowLeft']){camYaw-=1.9*dt;manualT=2}
   if(keys['KeyE']||keys['ArrowRight']){camYaw+=1.9*dt;manualT=2}
   let hp=null;for(let i=0;i<players.length;i++){if(players[i].human&&players[i].alive){hp=players[i];break}}
@@ -1316,7 +1332,7 @@ function timerHud(u){
  if(suddenOn&&!over){ctx.globalAlpha=.6+.4*Math.sin(now/120);ctx.font='900 '+(15*u)+'px system-ui';ctx.fillStyle='#ff5a6e';ctx.fillText(mapId===0?'MUERTE SÚBITA: LA ARENA SE DESPLOMA':'MUERTE SÚBITA: VIENTO FUERTE',W/2,y+22*u);ctx.globalAlpha=1}
 }
 function summaryUI(u){
- const n=SUM.rows.length,pw=Math.min(340*u,W-24),rh=28*u,ph=(86+n*28+58)*u,px=W/2-pw/2,py=Math.max(H*.3,8);
+ const n=SUM.rows.length,pw=Math.min(340*u,W-24),rh=28*u,ph=(86+n*28+58)*u,px=W/2-pw/2,py=Math.max(8,Math.min(H*.3,H-ph-64*u));
  ctx.save();ctx.globalAlpha=Math.min(1,(overT-.6)*3);
  ctx.fillStyle='rgba(30,10,60,.82)';rr(px,py,pw,ph,18*u);
  ctx.textAlign='center';ctx.font='900 '+(20*u)+'px system-ui';ctx.fillStyle='#ffe66b';ctx.fillText('RESULTADO · '+MATCH_ROUNDS+' RONDAS',W/2,py+30*u);
@@ -1348,14 +1364,21 @@ function hud(){
  if(state==='play'&&!over&&!paused){const cn=t<0?Math.ceil(-t/(CD/3)):(t<.55?0:-1);
   if(cn>=0){const ph=t<0?((-t)%(CD/3))/(CD/3):t/.55,sc=1+.45*Math.pow(1-(t<0?1-ph:ph),3),txt2=cn>0?String(cn):'¡YA!';
    ctx.save();ctx.globalAlpha=t<0?1:clamp(1-(t-.25)/.3,0,1);ctx.translate(W/2,H*.4);ctx.scale(sc,sc);ctx.font='900 '+(Math.min(W,H)*(cn>0?.3:.22))+'px system-ui';ctx.lineWidth=14;ctx.lineJoin='round';ctx.strokeStyle='#3b1f6b';ctx.strokeText(txt2,0,0);ctx.fillStyle=cn>0?'#ffe66b':'#7fe3a0';ctx.fillText(txt2,0,0);ctx.restore()}}
- if(msgT>0&&!paused){let fz=Math.min(64,W/9);ctx.font='900 '+fz+'px system-ui';const mw=ctx.measureText(msg).width;if(mw>W*.92){fz*=W*.92/mw;ctx.font='900 '+fz+'px system-ui'}ctx.lineWidth=10;ctx.lineJoin='round';ctx.strokeStyle='#3b1f6b';ctx.strokeText(msg,W/2,H*.2);ctx.fillStyle='#ffe66b';ctx.fillText(msg,W/2,H*.2)}
+ if(msgT>0&&!paused&&!(matchDone&&over&&overT>.6&&SUM)){let fz=Math.min(64,W/9);ctx.font='900 '+fz+'px system-ui';const mw=ctx.measureText(msg).width;if(mw>W*.92){fz*=W*.92/mw;ctx.font='900 '+fz+'px system-ui'}ctx.lineWidth=10;ctx.lineJoin='round';ctx.strokeStyle='#3b1f6b';ctx.strokeText(msg,W/2,H*.2);ctx.fillStyle='#ffe66b';ctx.fillText(msg,W/2,H*.2)}
  if(tilt.warn>0||tilt.on){ctx.fillStyle='#fff';ctx.font='900 '+(16*u)+'px system-ui';ctx.fillText(tilt.warn>0?'¡LA ARENA SE INCLINA!':'¡AGÁRRATE!',W/2,H*.2+54*u);
   const cy=Math.cos(camYaw),sy=Math.sin(camYaw),dx=Math.cos(tilt.a),dz=Math.sin(tilt.a),sxv=dx*(-sy)+dz*cy,syv=dx*cy+dz*sy;
   ctx.save();ctx.translate(W/2,H*.2+92*u);ctx.rotate(Math.atan2(sxv,syv));ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(0,-20*u);ctx.lineTo(14*u,4*u);ctx.lineTo(5*u,4*u);ctx.lineTo(5*u,18*u);ctx.lineTo(-5*u,18*u);ctx.lineTo(-5*u,4*u);ctx.lineTo(-14*u,4*u);ctx.closePath();ctx.fill();ctx.restore()}
  if(round===1&&t<8&&!over&&!touchMode){ctx.fillStyle='rgba(255,255,255,.95)';ctx.font='800 '+(13*u)+'px system-ui';ctx.fillText('WASD mover · ESPACIO saltar · P golpear · K (mantén) agarrar · Q/E cámara',W/2,H-22*u)}
  if(mapId===0&&!over&&t>=TUNE.time.shrinkStart&&t<TUNE.time.shrinkEnd){ctx.fillStyle='rgba(255,90,120,'+(.5+.4*Math.sin(performance.now()/150))+')';ctx.font='900 '+(15*u)+'px system-ui';ctx.fillText('¡LA ARENA SE ENCOGE!',W/2,H*.2+30*u)}
  if(matchDone&&over&&overT>.6&&SUM)summaryUI(u);
- if(over&&overT>1.2){ctx.fillStyle='#fff';ctx.font='900 '+(20*u)+'px system-ui';ctx.fillText(matchDone?'Toca o pulsa ESPACIO: menú':'Toca o pulsa ESPACIO para seguir',W/2,H*.2+40*u)}
+ endBtns=[];
+ if(over&&overT>1.2){
+  if(matchDone&&!NET.on&&SUM){
+   const n2=SUM.rows.length,ph2=(86+n2*28+58)*u,py2=Math.max(8,Math.min(H*.3,H-ph2-64*u)),bw=Math.min(190*u,(W-36)/2),bh=44*u,by=py2+ph2+12*u;
+   pill(W/2-bw-6*u,by,bw,bh,'#ff6b8b','JUGAR OTRA VEZ',Math.min(16*u,bw/9),'#fff');endBtns.push({x:W/2-bw-6*u,y:by,w:bw,h:bh,fn:playAgain});
+   pill(W/2+6*u,by,bw,bh,'rgba(255,255,255,.9)','MENÚ',16*u);endBtns.push({x:W/2+6*u,y:by,w:bw,h:bh,fn:toMenu});
+  }else{ctx.fillStyle='#fff';ctx.font='900 '+(20*u)+'px system-ui';ctx.fillText(matchDone?'Toca o pulsa ESPACIO: menú':'Toca o pulsa ESPACIO para seguir',W/2,H*.2+40*u)}
+ }
  if(touchMode&&!over){
   if(joy.id!==null){ctx.fillStyle='rgba(255,255,255,.18)';ctx.beginPath();ctx.arc(joy.ox,joy.oy,50*u,0,7);ctx.fill();ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=3;ctx.stroke();
    const dx=joy.x-joy.ox,dy=joy.y-joy.oy,m=Math.min(50*u,Math.hypot(dx,dy)),a=Math.atan2(dy,dx);ctx.fillStyle='rgba(255,255,255,.7)';ctx.beginPath();ctx.arc(joy.ox+Math.cos(a)*m,joy.oy+Math.sin(a)*m,24*u,0,7);ctx.fill()}
@@ -1441,7 +1464,7 @@ function menuUI(){
  pill(cx-pw/2,y,pw,bh*.85,'rgba(255,255,255,.6)','Bots: '+DIFFS[diffI].n+'  (toca para cambiar)',13*u);menuBtns.push({x:cx-pw/2,y:y,w:pw,h:bh*.85,fn:()=>{diffI=(diffI+1)%3}});
  y+=bh*.85+22*u;
  ctx.fillStyle='#fff';ctx.font='700 '+(12*u)+'px system-ui';ctx.lineWidth=4;ctx.strokeStyle='rgba(59,31,107,.8)';
- const l1=touchMode?'Joystick izq. · arrastra a la derecha: cámara · mantén AGARRAR':'WASD mover · ESPACIO saltar · P golpear · K (mantén) agarrar · Q/E cámara';
+ const l1=PAD.on?'Mando: stick mover · A saltar · X golpear · B agarrar · Start pausa':touchMode?'Joystick izq. · arrastra a la derecha: cámara · mantén AGARRAR':'WASD mover · ESPACIO saltar · P golpear · K (mantén) agarrar · Q/E cámara';
  {const w1=ctx.measureText(l1).width,mx1=Math.min(W-12,cw);if(w1>mx1)ctx.font='700 '+(12*u*mx1/w1)+'px system-ui'}ctx.strokeText(l1,cx,y);ctx.fillText(l1,cx,y);
  const adY=land?(10+34+8)*u:10*u;
  if(CG.sdk){const aw=Math.min(170*u,Math.max(96*u,W*.3));pill(10*u,adY,aw,34*u,'#ffd93d',aw<150*u?'ANUNCIO +50 🪙':'VER ANUNCIO · +50 🪙',12*u);menuBtns.push({x:10*u,y:adY,w:aw,h:34*u,fn:cgRewarded})}
@@ -1885,7 +1908,7 @@ function snowTick(){
  tileCollapse({start:6,every:2.8});
  ballTick({cols:['#ffffff','#dbe9ff','#c3d8f5'],r:1.3,v:8,every:4.2,start:4,max:3,lines:[-8.8,-4.4,0,4.4,8.8],txt:'¡BOLA DE NIEVE!',burst:'#ffffff'});
 }
-/* ---- Fábrica de juguetes ---- */
+/* ---- Fábrica de juguetes (el centro, a menos de 4.6 del eje, es zona segura del brazo: ahí empieza la pelea) ---- */
 function buildFactory(){
  TX.wood=TX.wood||makeWood();TX.belt=TX.belt||makeBelt();
  const wt=TX.wood.clone();wt.needsUpdate=true;wt.repeat.set(21,12);
@@ -1917,12 +1940,12 @@ function factoryTick(){
  MX.bt-=dt;if(MX.bt<=0){MX.bt=7+Math.random()*3;for(const b of MX.belts)b.dir*=-1;say('¡CINTAS INVERTIDAS!',1);SFX.boing()}
  for(const b of MX.belts){b.tex.offset.x-=b.dir*dt*.6;
   for(const p of players){if(!p.alive||(p.jumpH||0)>.2||p.st==='held')continue;const ux=p.x*K,uz=p.y*K;if(Math.abs(uz-b.z)<1.8&&Math.abs(ux)<17.5)p.vx+=b.dir*560*dt}}
- MX.armA+=Math.min(1.7,.85+.012*mapClock)*dt;MX.arm.rotation.y=-MX.armA;
+ if(mapClock>1.2)MX.armA+=Math.min(1.7,.85+.012*mapClock)*dt;MX.arm.rotation.y=-MX.armA;
  const c=Math.cos(MX.armA),s=Math.sin(MX.armA);
  for(const p of players){
   if(!p.alive||(p.jumpH||0)>.6||(p.bt||0)>0)continue;
   const ux=p.x*K,uz=p.y*K,t=clamp(ux*c+uz*s,-10.9,10.9),dist=Math.hypot(ux-t*c,uz-t*s);
-  if(dist<.5+RAD(p)*K*.7){p.vx+=-s*540;p.vy+=c*540;p.stag=.5;p.dizzy=.8;p.bt=.7;burst(p.x,p.y,'#ffcf3a',10,200);txt(p.x,p.y,'¡BARRIDO!','#ffe66b');SFX.hit();shake=3}
+  if(mapClock>1.2&&Math.hypot(ux,uz)>4.6&&dist<.5+RAD(p)*K*.7){p.vx+=-s*540;p.vy+=c*540;p.stag=.5;p.dizzy=.8;p.bt=.7;burst(p.x,p.y,'#ffcf3a',10,200);txt(p.x,p.y,'¡BARRIDO!','#ffe66b');SFX.hit();shake=3}
  }
  for(const p of players)if(p.bt>0)p.bt-=dt;
  for(const g of MX.gears)g.g.rotation.z+=g.w*dt;
@@ -2720,23 +2743,17 @@ function stageStart(){
  const B=BUILDERS[mapId];if(B)B();
  const P=players;
  P.forEach(p=>{p.floorT=0;p.jumpH=0;p.jumpV=0;p.groundT=.1;p.jumpPrev=false;p.voidT=0;p.stag=0;p.deck=-1;p.bt=0;p.gh=0;p.sink=false;p.recUsed=false;p.zg=false;p.ox=undefined;p.oy=undefined;p.aiT=null;p.accK=p.mvK=p.friK=p.kbK=p.jvK=1});
- const put=(p,x,z)=>{p.x=x/K;p.y=z/K;p.vx=p.vy=0;p.face=Math.atan2(-z,-x);p.deck=floorAt(x,z);p.gh=MX.terr?Math.max(0,groundH(x,z)):0};
- if(mapId===1){const s=P.length===2?[[-18.4,0],[18.4,0]]:[[-18.4,0],[18.4,0],[0,-18.4],[0,18.4],[0,0]];P.forEach((p,i)=>put(p,...sp6(s,i)))}
- else if(mapId===2||mapId===6){
-  const offs=mapId===2?[[0,0],[5.1,5.6],[5.1,-5.6]]:[[0,0],[3.2,3.5],[3.2,-3.5]];
-  P.forEach((p,i)=>{const di=i%2,d=decks[di],k=(i/2)|0,o=offs[Math.min(k,2)];p.deck=di;
-   if(mapId===2){p.x=(d.x+d.sign*o[0])/K;p.y=(d.z+o[1])/K;p.face=di===0?0:Math.PI}
-   else{p.x=(d.x+o[1]*1.6)/K;p.y=(d.z+d.sg*o[0]*.9)/K;p.face=d.sg<0?Math.PI/2:-Math.PI/2}
-   p.vx=p.vy=0});
- }
- else if(mapId===3){const s=P.length===2?[[-8.8,0],[8.8,0]]:[0,1,2,3,4].map(i=>[Math.cos(i*1.2566)*7,Math.sin(i*1.2566)*7]);P.forEach((p,i)=>put(p,...sp6(s,i)))}
- else if(mapId===4){const s=P.length===2?[[-14.4,0],[14.4,0]]:[[-14.4,-8],[14.4,-8],[-14.4,8],[14.4,8],[0,-10.2]];P.forEach((p,i)=>put(p,...sp6(s,i)))}
- else if(mapId===5){const idx=P.length===2?[1,5]:[1,3,5,7,0];P.forEach((p,i)=>{const d=decks[idx[i%idx.length]],o5=i>=idx.length?1.6:0;put(p,d.x+o5,d.z+o5)})}
- else if(mapId===7){const s=P.length===2?[[-12.8,0],[12.8,0]]:[[-14.4,-8],[14.4,-8],[-14.4,8],[14.4,8],[0,0]];P.forEach((p,i)=>put(p,...sp6(s,i)))}
- else if(mapId===8){const s=P.length===2?[[-11.2,0],[11.2,0]]:[[-12.8,-3.2],[12.8,-3.2],[-12.8,3.2],[12.8,3.2],[0,0]];P.forEach((p,i)=>put(p,...sp6(s,i)))}
- else if(mapId===9){const s=P.length===2?[[-5.4,-1.8],[5.4,1.8]]:[[-9,-9],[9,-9],[-9,9],[9,9],[1.8,1.8]];P.forEach((p,i)=>put(p,...sp6(s,i)))}
- else if(MX.spawn){const s=P.length===2?MX.spawn[0]:MX.spawn[1];P.forEach((p,i)=>put(p,...sp6(s,i)))}
+ /* todos arrancan en un círculo en el centro del mapa, mirándose: nadie aparece junto al borde */
+ const SC=MAP_CENTER[mapId]||[0,0],n=P.length,rr=n<=2?2.3:(n<=4?3:3.5);
+ const put=(p,x,z)=>{p.x=x/K;p.y=z/K;p.vx=p.vy=0;p.face=Math.atan2(SC[1]-z,SC[0]-x);p.deck=floorAt(x,z);p.gh=MX.terr?Math.max(0,groundH(x,z)):0};
+ if(mapId===2||mapId===6){   // dos plataformas móviles: un círculo en el centro de cada una
+  const cnt=[0,0],tot=[0,0];P.forEach((p,i)=>tot[i%2]++);
+  P.forEach((p,i)=>{const di=i%2,d=decks[di],k=cnt[di]++,nd=tot[di],r2=nd<=1?0:(nd===2?1.9:2.6),a=k/nd*Math.PI*2+(di?Math.PI:0);
+   p.deck=di;p.x=(d.x+Math.cos(a)*r2)/K;p.y=(d.z+Math.sin(a)*r2)/K;p.vx=p.vy=0;p.gh=0;
+   p.face=mapId===2?(di===0?0:Math.PI):(d.sg<0?Math.PI/2:-Math.PI/2)});
+ }else P.forEach((p,i)=>{const a=i/n*Math.PI*2;put(p,SC[0]+Math.cos(a)*rr,SC[1]+Math.sin(a)*rr)});
 }
+const MAP_CENTER=[];MAP_CENTER[10]=[0,3.3];
 function fenceTick(){
  if(mapId!==2&&mapId!==6)return;
  for(const p of players){
@@ -2858,8 +2875,8 @@ const TR_EXACT={
  '¡GANASTE LA RONDA!':'YOU WON THE ROUND!','¡SE ACABÓ EL TIEMPO!':'TIME IS UP!','¡LA ARENA VA A ENCOGERSE!':'THE ARENA IS ABOUT TO SHRINK!','¡MUERTE SÚBITA EN 3 SEGUNDOS!':'SUDDEN DEATH IN 3 SECONDS!','¡MUERTE SÚBITA!':'SUDDEN DEATH!',
  '¡AIRE!':'MISS!','¡PILLADO!':'CAUGHT!','¡ESPALDA!':'BACKSTAB!','¡AGARRADO!':'GRABBED!','¡LANZADO!':'THROWN!','¡SE ZAFA!':'BREAKS FREE!','¡RESBALÓN!':'SLIP!','¡GUANTE GIGANTE!':'GIANT GLOVE!','¡TROPIEZO!':'TRIP!','¡FUERA!':'OUT!',
  'MUERTE SÚBITA: LA ARENA SE DESPLOMA':'SUDDEN DEATH: THE ARENA COLLAPSES','MUERTE SÚBITA: VIENTO FUERTE':'SUDDEN DEATH: STRONG WIND','¡RESISTE! (machaca GOLPE)':'RESIST! (mash PUNCH)','¡LA ARENA SE INCLINA!':'THE ARENA TILTS!','¡AGÁRRATE!':'HOLD ON!','¡LA ARENA SE ENCOGE!':'THE ARENA IS SHRINKING!',
- '¡SALTA PARA VOLVER!':'JUMP TO GET BACK!','PAUSA':'PAUSED','CONTINUAR':'RESUME','MÚSICA: SÍ':'MUSIC: ON','MÚSICA: NO':'MUSIC: OFF','SONIDOS: SÍ':'SOUND FX: ON','SONIDOS: NO':'SOUND FX: OFF','CÓMO JUGAR':'HOW TO PLAY','SALIR DE LA PARTIDA':'QUIT MATCH','¡ENTENDIDO!':'GOT IT!','¡YA!':'GO!','ANUNCIO +50 🪙':'AD +50 🪙',
- 'Sé el último en pie: empuja a tus rivales fuera de la plataforma.':'Be the last one standing: push your rivals off the platform.','GOLPEAR':'PUNCH','Joystick izquierdo':'Left joystick','Botón GOLPE':'PUNCH button','P o clic':'P or click','Mantén AGARRAR':'Hold GRAB','Mantén K':'Hold K','Botón SALTAR':'JUMP button','ESPACIO':'SPACE',
+ '¡SALTA PARA VOLVER!':'JUMP TO GET BACK!','PAUSA':'PAUSED','CONTINUAR':'RESUME','MÚSICA: SÍ':'MUSIC: ON','MÚSICA: NO':'MUSIC: OFF','SONIDOS: SÍ':'SOUND FX: ON','SONIDOS: NO':'SOUND FX: OFF','CÓMO JUGAR':'HOW TO PLAY','SALIR DE LA PARTIDA':'QUIT MATCH','¡ENTENDIDO!':'GOT IT!','¡YA!':'GO!','ANUNCIO +50 🪙':'AD +50 🪙','JUGAR OTRA VEZ':'PLAY AGAIN','MENÚ':'MENU',
+ 'Mando: stick mover · A saltar · X golpear · B agarrar · Start pausa':'Gamepad: stick move · A jump · X punch · B grab · Start pause','Sé el último en pie: empuja a tus rivales fuera de la plataforma.':'Be the last one standing: push your rivals off the platform.','GOLPEAR':'PUNCH','Joystick izquierdo':'Left joystick','Botón GOLPE':'PUNCH button','P o clic':'P or click','Mantén AGARRAR':'Hold GRAB','Mantén K':'Hold K','Botón SALTAR':'JUMP button','ESPACIO':'SPACE',
  'Cada golpe desequilibra al rival: si ya se tambalea, sale volando.':'Every hit unbalances your rival: if they are already wobbling, they fly.','Arrastra a un rival hasta el borde y pulsa GOLPE para lanzarlo.':'Drag a rival to the edge and press PUNCH to throw them.','¡Cuidado cerca del borde: puedes caer!':'Careful near the edge: you can fall!','Esquiva peligros y salta entre plataformas.':'Dodge hazards and jump between platforms.','Cada mapa tiene sus propios peligros: ¡lee el aviso al empezar la ronda!':'Every map has its own hazards: read the tip at the start of each round!',
  'La vitro quema y lanza por los aires · La batidora te succiona · La miel te frena':'The stove burns and launches you · The whisk sucks you in · Honey slows you down',
  'Baja gravedad · Las zonas holográficas te hacen flotar · Si caes, ¡SALTA para volver!':'Low gravity · Hologram zones make you float · If you fall, JUMP to get back!',
@@ -3242,7 +3259,7 @@ function netClientStage(){
    if(MX.waves)for(const w of MX.waves)w.m.position.y=w.by+Math.sin(mapClock*1.6+w.ph)*.25;
   }
   if(mapId===4){
-   MX.armA+=Math.min(1.7,.85+.012*mapClock)*dt;MX.arm.rotation.y=-MX.armA;
+   if(mapClock>1.2)MX.armA+=Math.min(1.7,.85+.012*mapClock)*dt;MX.arm.rotation.y=-MX.armA;
    for(const b of MX.belts)b.tex.offset.x-=b.dir*dt*.6;
    for(const g of MX.gears)g.g.rotation.z+=g.w*dt;
   }else if(mapId===5){
@@ -3407,7 +3424,7 @@ function loop(now){
  ctx.setTransform(DPR,0,0,DPR,0,0);ctx.clearRect(0,0,W,H);
  if(state==='play'&&!(paused&&!NET.on)){if(NET.on&&!NET.host)netClientTick();else{update();stageTick();netHostTick()}}
  MU.want=(state==='menu'||over)?'menu':((TUNE.time.limit-t<=TUNE.time.warn||suddenOn)?'final':'play');
- qualityTick(raw);
+ qualityTick(raw);padPoll();
  sync3D();
  renderer.render(scene,camera);
  if(state==='menu')menuUI();else{post();hud();stageHud();if(paused)pauseUI();else pauseBtns=[]}
