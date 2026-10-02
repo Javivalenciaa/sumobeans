@@ -14,7 +14,7 @@
 - Menu de pausa (boton arriba a la derecha, Esc o al salir de la pestana), tutorial "Como jugar" la primera vez, cuenta atras 3-2-1 en cada ronda.
 - SDK: loadingStart/Stop, gameplayStart/Stop correctos (tambien al pausar/salir), anuncios midgame/rewarded con audio silenciado, idioma segun el navegador/CrazyGames (ES/EN).
 - Calidad adaptativa: si los fps caen baja la resolucion y luego quita sombras.
-- Todos empiezan en un circulo en el centro del mapa (nadie aparece junto al borde).
+- Partidas de 5 jugadores (tu + 4 bots; online hasta 5). Todos empiezan en un circulo en el centro del mapa (nadie aparece junto al borde).
 - Mando (gamepad): stick mover, A saltar, X golpear, B agarrar, Start pausa; al acabar una partida: Jugar otra vez / Menu.
 - Skins originales: Leno (mazo de madera) y Aleta (tiburon con zapatillas naranjas).
 

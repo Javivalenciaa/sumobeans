@@ -638,7 +638,7 @@ function startMatch(){if(!isOwned(sel))return;mapBag.length=0;wins=[0,0,0,0,0,0,
 function startRound(){
  const D=DIFFS[diffI].v;players=[];
  if(NET.on){netBuildPlayers()}else if(mode==='duel'){let o;do{o=Math.floor(Math.random()*5)}while(o===sel);players.push(mk(sel,true,Math.PI));players.push(mk(o,false,0))}
- else{const others=CHARS.map((c,i)=>i).filter(i=>i!==sel);for(let i=others.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)),x=others[i];others[i]=others[j];others[j]=x}const ord=[sel,...others.slice(0,5)];ord.forEach((ci,i)=>players.push(mk(ci,i===0,Math.PI+i/ord.length*Math.PI*2)))}
+ else{const others=CHARS.map((c,i)=>i).filter(i=>i!==sel);for(let i=others.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)),x=others[i];others[i]=others[j];others[j]=x}const ord=[sel,...others.slice(0,4)];ord.forEach((ci,i)=>players.push(mk(ci,i===0,Math.PI+i/ord.length*Math.PI*2)))}
  players.forEach(p=>p.diff=p.hard?2.2:D);
  BL.forEach(o=>{o.g.visible=false;o.sh.visible=false});
  players.forEach(p=>{BL[p.ci].g.visible=true;BL[p.ci].plate.visible=p.human});
