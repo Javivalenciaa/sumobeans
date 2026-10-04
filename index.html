@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Gem Miner Tycoon</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#120b1f">
+<script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
+<script>
+// CrazyGames SDK: starts as early as possible; the game also works without it (other sites, blockers)
+window.__cgInit = (function () {
+  var K = window.CrazyGames && window.CrazyGames.SDK; if (!K) return Promise.resolve(null);
+  return K.init().then(function () { try { K.game.loadingStart(); } catch (e) {} return K; }).catch(function () { return null; });
+})();
+</script>
+<style>
+[hidden]{display:none!important}
+:root{--bg:#120b1f;--panel:#1d1330;--panel2:#271a40;--line:#3a2a5c;--tx:#f4eefc;--mu:#a99bc8;--gold:#ffc83d;--gold2:#ff9d1c;--ok:#47e0a0;--acc:#b66bff;--bad:#ff5d7a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden;touch-action:manipulation}
+body{background:radial-gradient(120% 90% at 30% 0%,#2a1650 0%,#160d29 55%,#0b0614 100%)}
+button{font:inherit;color:inherit;cursor:pointer;border:0}
+#app{position:fixed;inset:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,430px);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"top top" "mine shop"}
+#top{grid-area:top;display:flex;align-items:center;gap:12px;padding:10px 14px;padding-top:max(10px,env(safe-area-inset-top));background:linear-gradient(#0000,#0000);z-index:3}
+#top .score{flex:1;min-width:0}
+#gold{font-size:clamp(26px,5vw,40px);font-weight:800;color:var(--gold);text-shadow:0 2px 0 #7a4a00,0 0 18px #ffb30055;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#gold i{font-style:normal;margin-right:6px}
+#ps{color:var(--mu);font-size:14px;font-weight:600}
+#ps b{color:var(--ok)}
+.ibtn{width:42px;height:42px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);font-size:19px;display:grid;place-items:center;position:relative}
+.ibtn:active{transform:scale(.94)}
+.dot{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:var(--bad);font-size:10px;font-weight:800;display:grid;place-items:center;padding:0 4px;animation:pulse 1.2s infinite}
+#mine{grid-area:mine;position:relative;min-height:0}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:pointer}
+#hint{position:absolute;left:0;right:0;top:20%;text-align:center;font-weight:700;color:#fff;text-shadow:0 2px 8px #000a;pointer-events:none;animation:pulse 1.4s infinite;font-size:18px}
+#side{position:absolute;right:10px;top:56px;display:flex;flex-direction:column;gap:8px;z-index:2}
+#actions{position:absolute;left:12px;right:12px;bottom:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;pointer-events:none}
+.act{pointer-events:auto;padding:10px 14px;border-radius:14px;font-weight:700;font-size:14px;background:var(--panel2);border:1px solid var(--line);display:flex;align-items:center;gap:8px;box-shadow:0 4px 14px #0006}
+.act:active{transform:scale(.97)}
+.act.hot{background:linear-gradient(#7a3cf0,#5b25c4);border-color:#a77bff}
+.act.ad{background:linear-gradient(#ff9d1c,#e0620a);border-color:#ffc27a;color:#2b1200}
+.act.glow{animation:glow 1.3s infinite}
+.act[disabled]{opacity:.45;pointer-events:none}
+#shop{grid-area:shop;display:flex;flex-direction:column;min-height:0;background:var(--panel);border-left:1px solid var(--line);z-index:2}
+#tabs{display:flex;gap:4px;padding:8px 8px 0}
+#tabs button{flex:1;padding:10px 4px;border-radius:12px 12px 0 0;background:#160d27;color:var(--mu);font-weight:700;font-size:13px;position:relative}
+#tabs button.on{background:var(--panel2);color:#fff}
+#buyq{display:flex;gap:6px;padding:8px;background:var(--panel2)}
+#buyq button{flex:1;padding:6px 0;border-radius:8px;background:#160d27;color:var(--mu);font-weight:700;font-size:13px}
+#buyq button.on{background:var(--acc);color:#1a0a33}
+#list{flex:1;overflow-y:auto;padding:8px;background:var(--panel2);display:flex;flex-direction:column;gap:7px;overscroll-behavior:contain;padding-bottom:max(8px,env(safe-area-inset-bottom))}
+.row{flex-shrink:0;display:grid;grid-template-columns:48px 1fr auto;gap:10px;align-items:center;padding:9px 10px;border-radius:14px;background:#1b1230;border:1px solid var(--line);text-align:left;width:100%;position:relative;overflow:hidden}
+.row.can{border-color:#6c4bd0;background:linear-gradient(#2a1d4d,#22173f)}
+.row.can .cost{color:var(--ok)}
+.row.lock{opacity:.45}
+.row:active.can{transform:scale(.985)}
+.ico{width:48px;height:48px;border-radius:13px;display:grid;place-items:center;font-size:26px;background:linear-gradient(#3b2a66,#2a1c4c);border:1px solid #4d3a80}
+.nm{font-weight:800;font-size:15px}
+.ds{font-size:12px;color:var(--mu);margin-top:2px}
+.ds b{color:#fff}
+.cost{font-weight:800;font-size:14px;color:#ffb3c0;text-align:right;white-space:nowrap}
+.cost small{display:block;color:var(--mu);font-size:11px;font-weight:600}
+.owned{position:absolute;left:44px;top:34px;min-width:22px;padding:1px 5px;border-radius:9px;background:var(--acc);color:#1a0a33;font-size:11px;font-weight:800;text-align:center}.owned:empty{display:none}
+.row[data-c] .owned{left:auto;right:10px;top:6px;background:none;color:var(--mu)}
+.ms{height:4px;border-radius:2px;background:#0004;margin-top:5px;overflow:hidden}
+.ms i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--gold));width:0}
+.sec{font-size:12px;font-weight:800;color:var(--mu);letter-spacing:1px;text-transform:uppercase;margin:6px 2px 0}
+.pop{animation:pop .25s}
+#toasts{position:fixed;left:50%;top:auto;bottom:84px;transform:translateX(-50%);display:flex;flex-direction:column-reverse;gap:8px;align-items:center;z-index:30;pointer-events:none;width:min(92vw,420px)}
+.toast{background:#000c;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-weight:700;font-size:14px;text-align:center;animation:tin .25s,tout .4s 2.6s forwards;backdrop-filter:blur(6px)}
+.toast.good{border-color:var(--ok)}.toast.gold{border-color:var(--gold);color:var(--gold)}
+#modal{position:fixed;inset:0;background:#0009;z-index:20;display:grid;place-items:center;padding:16px;backdrop-filter:blur(3px)}
+.card{width:min(94vw,440px);max-height:90vh;overflow:auto;background:linear-gradient(#2a1b4a,#1d1330);border:1px solid #5a3fa0;border-radius:20px;padding:20px;box-shadow:0 20px 60px #000a;animation:pop .25s}
+.card h2{margin:0 0 6px;font-size:22px}
+.card p{color:var(--mu);margin:6px 0 14px;font-size:14px;line-height:1.4}
+.big{font-size:32px;font-weight:800;color:var(--gold);margin:8px 0}
+.btns{display:flex;gap:8px;flex-direction:column}
+.btns button{padding:13px;border-radius:14px;font-weight:800;font-size:15px;background:var(--panel2);border:1px solid var(--line)}
+.btns .pri{background:linear-gradient(#7a3cf0,#5b25c4);border-color:#a77bff}
+.btns .adb{background:linear-gradient(#ff9d1c,#e0620a);border-color:#ffc27a;color:#2b1200}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin:10px 0}
+.day{padding:8px 0;text-align:center;border-radius:10px;background:#160d27;border:1px solid var(--line);font-size:11px;font-weight:700;color:var(--mu)}
+.day.now{border-color:var(--gold);color:var(--gold);animation:glow 1.3s infinite}.day.done{background:#143d33;color:var(--ok);border-color:var(--ok)}
+#loading{position:fixed;inset:0;background:var(--bg);display:grid;place-items:center;z-index:50;font-weight:800;font-size:22px;color:var(--gold)}
+@keyframes pulse{50%{opacity:.55;transform:scale(1.04)}}
+@keyframes glow{50%{box-shadow:0 0 0 3px #ffc83d55,0 4px 14px #0006}}
+@keyframes pop{0%{transform:scale(.92);opacity:.5}100%{transform:scale(1);opacity:1}}
+@keyframes tin{from{transform:translateY(-10px);opacity:0}}
+@keyframes tout{to{opacity:0;transform:translateY(-8px)}}
+@media (max-aspect-ratio:1/1),(max-width:760px){
+ #app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(190px,40%) minmax(0,1fr);grid-template-areas:"top" "mine" "shop"}
+ #shop{border-left:0;border-top:1px solid var(--line)}
+ #hint{top:19%;font-size:15px}
+ .act{padding:8px 10px;font-size:12px}
+ .row{grid-template-columns:42px 1fr auto;padding:7px 8px}.ico{width:42px;height:42px;font-size:22px}
+}
+</style>
+</head>
+<body>
+<div id="loading">⛏️ Gem Miner Tycoon…</div>
+<div id="app" hidden>
+  <header id="top">
+    <div class="score"><div id="gold"></div><div id="ps"></div></div>
+    <button class="ibtn" id="bAch" aria-label="Achievements">🏆</button>
+    <button class="ibtn" id="bDaily" aria-label="Daily reward">📅<span class="dot" id="dDaily" hidden>!</span></button>
+    <button class="ibtn" id="bMute" aria-label="Sound">🔊</button>
+  </header>
+  <section id="mine">
+    <canvas id="cv"></canvas>
+    <div id="side"><button class="ibtn" id="bArt" aria-label="Collection">🏺</button><button class="ibtn" id="bQ" aria-label="Quests">📜<span class="dot" id="dQ" hidden>!</span></button></div>
+    <div id="hint"></div>
+    <div id="actions"></div>
+  </section>
+  <aside id="shop">
+    <div id="tabs"></div>
+    <div id="buyq"></div>
+    <div id="list"></div>
+  </aside>
+</div>
+<div id="toasts"></div>
+<div id="modal" hidden></div>
+<script>
+'use strict';
+/* ============================== util ============================== */
+const $ = (s) => document.querySelector(s);
+const LANG = /^es/i.test(navigator.language || '') ? 'es' : 'en';
+const TX = {
+  en: { gold: 'gold', ps: 'per second', tap: 'TAP THE GEM!', buy: 'Buy your first miner →', miners: 'Miners', upg: 'Upgrades', crys: 'Crystals', ach: 'Achievements', max: 'Max',
+    boost: 'Boost ×2', boostOn: 'Boost ×2', gift: 'Free gift', ascend: 'Ascend', ascendN: 'Ascend +%n 💎', daily: 'Daily reward', claim: 'Claim', claimAd: 'Claim ×2 (watch ad)', close: 'Close',
+    welcome: 'Welcome back!', away: 'Your miners worked while you were away', collect: 'Collect', collect2: 'Collect ×2 (watch ad)', owned: 'Owned', next: 'next ×2 at', each: 'each',
+    clickPow: 'per tap', locked: 'Locked', ascTitle: 'Ascend?', ascTxt: 'You will restart with 0 gold and no miners, but keep your crystals. Every 💎 gives +10% to everything, forever.', ascGo: 'Ascend now', cancel: 'Not yet',
+    gain: 'You will gain', crysHave: 'Crystals', crysBonus: 'bonus', golden: 'Golden gem!', frenzy: 'FRENZY ×7 for 30s!', lucky: 'Lucky! +%n gold', ach1: 'Achievement', noad: 'No ad available right now', boostAdd: '+2 min of ×2 boost!',
+    gifttoast: 'Gift: +%n gold', giftIn: 'Gift in', giftReady: 'Gift ready!', dayN: 'Day', reward: 'Reward', ascendNeed: 'Earn more gold to ascend', ascended: 'Ascended! +%n 💎', lvl: 'Lv', buyC: 'Buy', maxed: 'MAX', allMult: 'All production', click: 'Click value', mult: 'multiplier', soundOn: 'Sound on', soundOff: 'Sound off', depth: 'Depth', boss: 'BOSS', bossFail: 'The boss won! Back one level, get stronger', bossWin: 'BOSS DEFEATED!', artf: 'Artifact found!', coll: 'Collection', quests: 'Daily quests', qTaps: 'Tap the gem', qRocks: 'Break rocks', qBuy: 'Hire miners', qAll: 'All done: +2 💎', fury: 'Fury', dyn: 'Dynamite', mag: 'Magnet', furyT: '🔥 FURY! Everything ×5 for 10s', dynT: '💥 BOOM!', magT: '🧲 A golden gem is coming!', artBonus: 'each artifact: +3% to everything', claimed: 'Claimed' },
+  es: { gold: 'oro', ps: 'por segundo', tap: '¡TOCA LA GEMA!', buy: 'Compra tu primer minero →', miners: 'Mineros', upg: 'Mejoras', crys: 'Cristales', ach: 'Logros', max: 'Máx',
+    boost: 'Turbo ×2', boostOn: 'Turbo ×2', gift: 'Regalo', ascend: 'Ascender', ascendN: 'Ascender +%n 💎', daily: 'Premio diario', claim: 'Recoger', claimAd: 'Recoger ×2 (ver anuncio)', close: 'Cerrar',
+    welcome: '¡Bienvenido de nuevo!', away: 'Tus mineros han trabajado mientras no estabas', collect: 'Recoger', collect2: 'Recoger ×2 (ver anuncio)', owned: 'Tienes', next: 'siguiente ×2 en', each: 'c/u',
+    clickPow: 'por toque', locked: 'Bloqueado', ascTitle: '¿Ascender?', ascTxt: 'Empiezas de cero (sin oro ni mineros), pero conservas tus cristales. Cada 💎 da +10% a todo, para siempre.', ascGo: 'Ascender ya', cancel: 'Aún no',
+    gain: 'Ganarás', crysHave: 'Cristales', crysBonus: 'bonus', golden: '¡Gema dorada!', frenzy: '¡FRENESÍ ×7 durante 30 s!', lucky: '¡Suerte! +%n de oro', ach1: 'Logro', noad: 'No hay anuncio disponible ahora', boostAdd: '¡+2 min de turbo ×2!',
+    gifttoast: 'Regalo: +%n de oro', giftIn: 'Regalo en', giftReady: '¡Regalo listo!', dayN: 'Día', reward: 'Premio', ascendNeed: 'Consigue más oro para ascender', ascended: '¡Has ascendido! +%n 💎', lvl: 'Nv', buyC: 'Comprar', maxed: 'MÁX', allMult: 'Toda la producción', click: 'Valor del toque', mult: 'multiplicador', soundOn: 'Sonido activado', soundOff: 'Sonido desactivado', depth: 'Profundidad', boss: 'JEFE', bossFail: '¡El jefe ganó! Bajas un nivel, hazte más fuerte', bossWin: '¡JEFE DERROTADO!', artf: '¡Artefacto encontrado!', coll: 'Colección', quests: 'Misiones diarias', qTaps: 'Toca la gema', qRocks: 'Rompe rocas', qBuy: 'Contrata mineros', qAll: 'Todo hecho: +2 💎', fury: 'Furia', dyn: 'Dinamita', mag: 'Imán', furyT: '🔥 ¡FURIA! Todo ×5 durante 10 s', dynT: '💥 ¡BOOM!', magT: '🧲 ¡Viene una gema dorada!', artBonus: 'cada artefacto: +3% a todo', claimed: 'Recogido' },
+};
+const t = (k, n) => { const s = (TX[LANG][k] != null ? TX[LANG][k] : TX.en[k]) || k; return n != null ? s.replace('%n', n) : s; };
+const SUF = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc', 'Ud', 'Dd'];
+function fmt(n) {
+  if (!isFinite(n)) return '∞'; if (n < 0) n = 0;
+  if (n < 1000) return n < 10 && n % 1 ? n.toFixed(1).replace(/\.0$/, '') : String(Math.floor(n));
+  const e = Math.floor(Math.log10(n) / 3); if (e >= SUF.length) return n.toExponential(2).replace('+', '');
+  const v = n / Math.pow(1000, e); return (v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2)) + SUF[e];
+}
+const fmtT = (s) => { s = Math.max(0, Math.ceil(s)); const m = Math.floor(s / 60); return m + ':' + String(s % 60).padStart(2, '0'); };
+
+/* ============================== storage ============================== */
+let cgData = null;
+const store = {
+  get(k) { try { if (cgData) { const v = cgData.getItem(k); if (v != null) return v; } } catch (e) {} try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { if (cgData) cgData.setItem(k, v); } catch (e) {} try { localStorage.setItem(k, v); } catch (e) {} },
+};
+
+/* ============================== game data ============================== */
+const GENS = [
+  { n: ['Apprentice Digger', 'Aprendiz Cavador'], i: '⛏️', base: 15, rate: 0.1 },
+  { n: ['Pickaxe Crew', 'Cuadrilla de Picos'], i: '👷', base: 100, rate: 1 },
+  { n: ['Dynamite Cart', 'Vagoneta de Dinamita'], i: '🧨', base: 1100, rate: 8 },
+  { n: ['Mining Drill', 'Taladro Minero'], i: '🔩', base: 12000, rate: 47 },
+  { n: ['Excavator', 'Excavadora'], i: '🚜', base: 130000, rate: 260 },
+  { n: ['Gem Refinery', 'Refinería de Gemas'], i: '🏭', base: 1.4e6, rate: 1400 },
+  { n: ['Lava Tunneler', 'Túnel de Lava'], i: '🌋', base: 20e6, rate: 7800 },
+  { n: ['Crystal Reactor', 'Reactor de Cristal'], i: '⚛️', base: 330e6, rate: 44000 },
+  { n: ['Dimension Rig', 'Torre Dimensional'], i: '🌀', base: 5.1e9, rate: 260000 },
+  { n: ['Star Harvester', 'Cosechador de Estrellas'], i: '⭐', base: 75e9, rate: 1.6e6 },
+];
+GENS.forEach((g) => { g.rate *= 4; });   // pacing: first ascension around 20-25 min of active play
+const GROW = 1.15;
+const MILES = [10, 25, 50, 100, 150, 200, 250, 300, 400, 500];
+const UPGS = [];
+['Sturdy Pickaxe|Pico Reforzado', 'Titanium Tip|Punta de Titanio', 'Diamond Edge|Filo de Diamante', 'Plasma Pick|Pico de Plasma', 'Quantum Pick|Pico Cuántico', 'Cosmic Pick|Pico Cósmico']
+  .forEach((s, i) => UPGS.push({ id: 'k' + i, line: 'k', ico: '👆', n: s.split('|'), cost: 200 * Math.pow(20, i), d: ['Taps are worth ×2', 'Los toques valen ×2'] }));
+['Quick Hands|Manos Rápidas', 'Gem Whisperer|Susurra Gemas', 'Rock Breaker|Rompe Rocas', 'Earthshaker|Sacudetierra', 'World Cracker|Parte Mundos']
+  .forEach((s, i) => UPGS.push({ id: 'p' + i, line: 'p', ico: '✋', n: s.split('|'), cost: 5000 * Math.pow(100, i), d: ['Each tap also gives +1% of your gold per second', 'Cada toque da además +1% de tu oro por segundo'] }));
+['Brighter Lamps|Lámparas Brillantes', 'Rail Network|Red de Raíles', 'Ventilation|Ventilación', 'Union Contracts|Contratos Laborales', 'Deep Veins|Vetas Profundas', 'Gem Market|Mercado de Gemas', 'Mining Empire|Imperio Minero', 'Golden Age|Edad Dorada']
+  .forEach((s, i) => UPGS.push({ id: 'a' + i, line: 'a', ico: '💡', n: s.split('|'), cost: 1e4 * Math.pow(100, i), d: ['All production ×2', 'Toda la producción ×2'] }));
+GENS.forEach((g, i) => {
+  UPGS.push({ id: 'o' + i, line: 'o' + i, ico: g.i, n: ['Overclock: ' + g.n[0], 'Sobrecarga: ' + g.n[1]], cost: g.base * 100, d: [g.n[0] + ' ×2', g.n[1] + ' ×2'], need: [i, 5] });
+  UPGS.push({ id: 'q' + i, line: 'o' + i, ico: g.i, n: ['Mega Overclock: ' + g.n[0], 'Sobrecarga Mega: ' + g.n[1]], cost: g.base * 10000, d: [g.n[0] + ' ×2', g.n[1] + ' ×2'], need: [i, 25] });
+});
+const CRYS = [
+  { id: 'start', ico: '🎒', n: ['Head Start', 'Ventaja Inicial'], d: ['Start each run with more gold', 'Empiezas cada partida con más oro'], max: 6, cost: (l) => 3 * Math.pow(2.2, l) },
+  { id: 'off', ico: '🌙', n: ['Night Shift', 'Turno de Noche'], d: ['+2h offline limit and +10% offline gold', '+2 h de límite sin conexión y +10% de oro'], max: 5, cost: (l) => 4 * Math.pow(2.4, l) },
+  { id: 'gold', ico: '✨', n: ['Prospector', 'Prospector'], d: ['Golden gems appear 20% more often', 'Las gemas doradas salen un 20% más a menudo'], max: 5, cost: (l) => 3 * Math.pow(2.2, l) },
+  { id: 'click', ico: '💪', n: ['Titan Grip', 'Agarre Titán'], d: ['Taps are worth ×2', 'Los toques valen ×2'], max: 6, cost: (l) => 5 * Math.pow(2.6, l) },
+  { id: 'auto', ico: '🤖', n: ['Auto-Tapper', 'Auto-Toque'], d: ['+1 automatic tap per second', '+1 toque automático por segundo'], max: 5, cost: (l) => 8 * Math.pow(2.8, l) },
+];
+const ACHS = [
+  ['taps', 100, 'Warming Up|Calentando'], ['taps', 1000, 'Tap Machine|Máquina de Toques'], ['taps', 10000, 'Finger of Steel|Dedo de Acero'],
+  ['tot', 1e3, 'First Riches|Primeras Riquezas'], ['tot', 1e6, 'Millionaire|Millonario'], ['tot', 1e9, 'Billionaire|Milmillonario'], ['tot', 1e12, 'Trillionaire|Billonario'], ['tot', 1e15, 'Gem Tycoon|Magnate de Gemas'],
+  ['gens', 50, 'Small Crew|Pequeña Cuadrilla'], ['gens', 200, 'Mining Company|Empresa Minera'], ['gens', 600, 'Industrial Giant|Gigante Industrial'],
+  ['asc', 1, 'Reborn|Renacido'], ['asc', 5, 'Eternal Miner|Minero Eterno'], ['gold', 10, 'Lucky Finder|Buscador Afortunado'],
+].map((a, i) => ({ id: i, k: a[0], v: a[1], n: a[2].split('|') }));
+const ARTS = [['Miner Lantern|Linterna del Minero', '🏮'], ['Ancient Pickaxe|Pico Ancestral', '⛏️'], ['Dragon Tooth|Diente de Dragón', '🦷'], ['Golden Skull|Calavera Dorada', '💀'], ['Meteor Shard|Fragmento de Meteorito', '☄️'], ['Crystal Crown|Corona de Cristal', '👑'], ['Lava Heart|Corazón de Lava', '🔥'], ['Frozen Rune|Runa Helada', '❄️'], ['Void Orb|Orbe del Vacío', '🔮'], ['Star Map|Mapa Estelar', '🗺️'], ['Phoenix Feather|Pluma de Fénix', '🦅'], ['Time Sand|Arena del Tiempo', '⏳']].map((a, i) => ({ id: i, n: a[0].split('|'), e: a[1] }));
+const SKILLS = [{ id: 'f', e: '🔥', k: 'fury', cd: 60 }, { id: 'd', e: '🧨', k: 'dyn', cd: 90 }, { id: 'm', e: '🧲', k: 'mag', cd: 180 }];
+const GEMCOL = [['#ff6b8b', '#a01c45'], ['#ffb347', '#b25a00'], ['#ffe14d', '#a88300'], ['#5df08a', '#0c7a3a'], ['#4fd8ff', '#0a6c93'], ['#6b8bff', '#1e2f9c'], ['#c06bff', '#5a1a96'], ['#ff6bf0', '#8d1a85'], ['#ffffff', '#7a7a9a'], ['#ffd76b', '#b0640a']];
+
+/* ============================== state ============================== */
+const KEY = 'gmt-v1';
+const fresh = () => ({ g: 0, tot: 0, run: 0, c: GENS.map(() => 0), u: [], cr: 0, crs: 0, cu: {}, ach: [], taps: 0, asc: 0, gold: 0, last: Date.now(), dayN: 0, dayDate: '', boostEnd: 0, gift: Date.now() + 60000, mute: false, seen: 0, d: 1, dmax: 1, rhp: 0, rocks: 0, art: [], sk: {}, q: { d: '', l: [] } });
+let S = fresh();
+function load() {
+  try { const raw = store.get(KEY); if (raw) { const o = JSON.parse(raw); S = Object.assign(fresh(), o); S.c = GENS.map((_, i) => +S.c[i] || 0); if (!isFinite(S.g)) S.g = 0; } } catch (e) { S = fresh(); }
+}
+function save() { S.last = Date.now(); store.set(KEY, JSON.stringify(S)); }
+
+/* ============================== maths ============================== */
+const has = (id) => S.u.indexOf(id) >= 0;
+const cnt = (line) => UPGS.filter((u) => u.line === line && has(u.id)).length;
+const mileMult = (n) => { let m = 1; for (const x of MILES) if (n >= x) m *= 2; return m; };
+const crysLv = (id) => S.cu[id] || 0;
+let frenzyEnd = 0, furyEnd = 0, bossEnd = 0;
+const now = () => Date.now();
+const boostOn = () => S.boostEnd > now();
+function globalMult() {
+  return (1 + 0.1 * S.cr) * (1 + 0.03 * S.art.length) * (1 + 0.02 * S.ach.length) * Math.pow(2, cnt('a')) * (boostOn() ? 2 : 1) * (frenzyEnd > now() ? 7 : 1);
+}
+function genRate(i) { return GENS[i].rate * S.c[i] * mileMult(S.c[i]) * Math.pow(2, cnt('o' + i)); }
+function baseps() { let s = 0; for (let i = 0; i < GENS.length; i++) s += genRate(i); return s; }
+let PS = 0;
+function recalc() { PS = baseps() * globalMult(); }
+function clickVal() {
+  const pct = cnt('p') * 0.01;
+  return (1 * Math.pow(2, cnt('k') + crysLv('click')) + PS * pct) * (frenzyEnd > now() ? 7 : 1) * (furyEnd > now() ? 5 : 1);
+}
+function costN(i, n) { const b = GENS[i].base * Math.pow(GROW, S.c[i]); return b * (Math.pow(GROW, n) - 1) / (GROW - 1); }
+function maxN(i) { const b = GENS[i].base * Math.pow(GROW, S.c[i]); return Math.max(0, Math.floor(Math.log(1 + S.g * (GROW - 1) / b) / Math.log(GROW))); }
+const crysGain = () => Math.floor(Math.sqrt(S.run / 1e7));
+const offCap = () => (4 + 2 * crysLv('off')) * 3600;
+let BUYQ = 1;
+
+function earn(x) { S.g += x; S.tot += x; S.run += x; }
+
+/* ============================== deep dive: rocks, bosses, artifacts ============================== */
+const isBoss = (d) => d % 10 === 0;
+const rockMax = (d) => 10 * Math.pow(1.55, d - 1) * (isBoss(d) ? 6 : 1);
+function ensureRock() { if (!(S.rhp > 0)) S.rhp = rockMax(S.d); bossEnd = isBoss(S.d) ? (bossEnd > now() ? bossEnd : now() + 30000) : 0; }
+function damage(x) { S.rhp -= x; let n = 0; while (S.rhp <= 0 && n++ < 6) breakRock(); }
+function breakRock() {
+  const boss = isBoss(S.d), mx = rockMax(S.d), reward = mx * 0.6 + PS * (boss ? 30 : 3);
+  earn(reward); S.rocks++; quest('rocks', 1);
+  floatTxt(cxm, cym - R * 1.1, '+' + fmt(reward) + ' 🪙', '#ffd76b'); burst(cxm, cym, boss ? 90 : 36, boss ? '#ff6b6b' : '#ffd76b'); shake(boss ? 10 : 4);
+  if (boss) { toast('👑 ' + t('bossWin'), 'gold'); sfx.asc(); happy(); } else sfx.gem();
+  if (boss || Math.random() < 0.03) dropArt();
+  if (S.d > S.dmax) S.dmax = S.d; S.d++; S.rhp = rockMax(S.d); bossEnd = isBoss(S.d) ? now() + 30000 : 0; checkAch();
+}
+function dropArt() {
+  const free = ARTS.filter((a) => S.art.indexOf(a.id) < 0); if (!free.length) { earn(PS * 600); return; }
+  const a = free[(Math.random() * free.length) | 0]; S.art.push(a.id); recalc(); toast(a.e + ' ' + t('artf') + ' ' + a.n[LANG === 'es' ? 1 : 0] + ' (+3%)', 'gold'); sfx.ach(); happy(); save();
+}
+function bossTick() { if (bossEnd && now() > bossEnd) { S.d = Math.max(1, S.d - 1); S.rhp = rockMax(S.d); bossEnd = 0; toast('💀 ' + t('bossFail'), ''); sfx.no(); shake(8); } }
+/* ============================== daily quests ============================== */
+const QK = { taps: 'qTaps', rocks: 'qRocks', buy: 'qBuy' };
+function newQuests() {
+  const d = todayStr(); if (S.q.d === d) return; const r = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  S.q = { d, l: [{ k: 'taps', need: r(4, 8) * 50, got: 0, c: 0 }, { k: 'rocks', need: r(8, 14), got: 0, c: 0 }, { k: 'buy', need: r(3, 6) * 10, got: 0, c: 0 }], bonus: 0 };
+}
+function quest(k, n) { for (const q of S.q.l) if (q.k === k && q.got < q.need) q.got = Math.min(q.need, q.got + n); }
+const qVal = () => Math.max(2000, PS * 1200);
+function openQuests() {
+  newQuests(); const v = qVal();
+  const rows = S.q.l.map((q, i) => '<div class="row ' + (q.got >= q.need && !q.c ? 'can' : '') + '" style="grid-template-columns:1fr auto;margin-bottom:6px"><div><div class="nm">' + t(QK[q.k]) + ' · ' + q.got + '/' + q.need + '</div><div class="ms"><i style="width:' + (q.got / q.need * 100) + '%"></i></div></div><button class="act ' + (q.c ? '' : 'hot') + '" data-q="' + i + '"' + (q.c || q.got < q.need ? ' disabled' : '') + '>' + (q.c ? t('claimed') : '+' + fmt(v) + ' 🪙') + '</button></div>').join('');
+  openModal('<h2>📜 ' + t('quests') + '</h2>' + rows + '<p>' + t('qAll') + '</p><div class="btns"><button id="m3">' + t('close') + '</button></div>', (m) => {
+    m.querySelector('#m3').onclick = closeModal;
+    m.querySelectorAll('[data-q]').forEach((b) => { b.onclick = () => { const q = S.q.l[+b.dataset.q]; if (q.c || q.got < q.need) return; q.c = 1; earn(v); sfx.gem(); if (S.q.l.every((x) => x.c)) { S.cr += 2; S.q.bonus = 1; toast('📜 ' + t('qAll'), 'gold'); happy(); recalc(); } refreshTop(); save(); openQuests(); }; });
+  });
+}
+function openColl() {
+  const g = ARTS.map((a) => { const o = S.art.indexOf(a.id) >= 0; return '<div class="day ' + (o ? 'done' : '') + '" style="padding:12px 4px"><div style="font-size:30px">' + (o ? a.e : '🔒') + '</div>' + (o ? a.n[LANG === 'es' ? 1 : 0] : '???') + '</div>'; }).join('');
+  openModal('<h2>🏺 ' + t('coll') + ' (' + S.art.length + '/' + ARTS.length + ')</h2><p>' + t('artBonus') + '</p><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px">' + g + '</div><div class="btns"><button id="m3">' + t('close') + '</button></div>', (m) => { m.querySelector('#m3').onclick = closeModal; });
+}
+/* ============================== audio ============================== */
+let AC = null, CG_MUTE = false, adOn = false;
+const muted = () => S.mute || CG_MUTE || adOn;
+function actx() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (AC && AC.state === 'suspended' && !muted()) AC.resume(); return AC; }
+function tone(f, d, type, vol, slide) {
+  if (muted()) return; const a = actx(); if (!a) return;
+  const o = a.createOscillator(), g = a.createGain(), n = a.currentTime;
+  o.type = type || 'sine'; o.frequency.setValueAtTime(f, n); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f * slide), n + d);
+  g.gain.setValueAtTime(vol || .08, n); g.gain.exponentialRampToValueAtTime(.0001, n + d); o.connect(g); g.connect(a.destination); o.start(n); o.stop(n + d + .02);
+}
+let combo = 0, comboT = 0;
+const sfx = {
+  tap() { const f = 330 * Math.pow(2, Math.min(combo, 12) / 12 * 1); tone(f, .09, 'triangle', .07, 1.5); tone(f * 2, .05, 'square', .02); },
+  buy() { tone(520, .08, 'square', .05); setTimeout(() => tone(780, .1, 'square', .05), 60); },
+  gem() { [660, 880, 1320].forEach((f, i) => setTimeout(() => tone(f, .18, 'sine', .08), i * 70)); },
+  ach() { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, .22, 'triangle', .09), i * 90)); },
+  asc() { tone(200, .9, 'sawtooth', .07, 6); setTimeout(() => sfx.ach(), 400); },
+  no() { tone(180, .12, 'square', .05); },
+};
+
+/* ============================== CrazyGames ============================== */
+const CG = { ok: false, playing: false, lastAd: 0, user: null };
+const sdk = () => (CG.ok && window.CrazyGames && window.CrazyGames.SDK) || null;
+function gameplay(on) {
+  if (on === CG.playing) return; CG.playing = on;
+  try { const k = sdk(); if (k) k.game[on ? 'gameplayStart' : 'gameplayStop'](); } catch (e) {}
+}
+function happy() { try { const k = sdk(); if (k) k.game.happytime(); } catch (e) {} }
+function adBegin() { adOn = true; gameplay(false); try { if (AC) AC.suspend(); } catch (e) {} }
+function adEnd() { adOn = false; try { if (AC && !muted()) AC.resume(); } catch (e) {} if (modalDepth === 0) gameplay(true); }
+function showAd(type, onReward, onFail) {
+  const k = sdk(); let done = false;
+  const ok = () => { if (done) return; done = true; adEnd(); CG.lastAd = now(); onReward && onReward(); };
+  const bad = () => { if (done) return; done = true; adEnd(); if (type === 'rewarded') { toast(t('noad')); onFail && onFail(); } else { onReward && onReward(); } };
+  if (!k) { onReward && onReward(); return; }                       // outside CrazyGames: no ads, reward directly
+  try { k.ad.requestAd(type, { adStarted: adBegin, adFinished: ok, adError: bad }); } catch (e) { bad(); }
+  setTimeout(() => { if (!done) { done = true; adEnd(); } }, 120000);
+}
+async function cgBoot() {
+  let k = null; try { k = await Promise.race([window.__cgInit, new Promise((r) => setTimeout(() => r(null), 2500))]); } catch (e) {}
+  if (!k) return; CG.ok = true;
+  try { if (k.environment !== 'disabled') cgData = k.data || null; } catch (e) {}
+  try { const st = k.game.settings || {}; CG_MUTE = !!st.muteAudio; k.game.addSettingsChangeListener((n) => { CG_MUTE = !!n.muteAudio; paintMute(); }); } catch (e) {}
+}
+
+/* ============================== UI helpers ============================== */
+function toast(msg, cls) {
+  const d = document.createElement('div'); d.className = 'toast ' + (cls || ''); d.textContent = msg; $('#toasts').appendChild(d);
+  setTimeout(() => d.remove(), 3100); while ($('#toasts').children.length > 3) $('#toasts').firstChild.remove();
+}
+let modalDepth = 0;
+function openModal(html, wire) {
+  const m = $('#modal'); m.innerHTML = '<div class="card">' + html + '</div>'; m.hidden = false; modalDepth = 1; gameplay(false);
+  wire && wire(m);
+  m.onclick = (e) => { if (e.target === m) closeModal(); };
+}
+function closeModal() { const m = $('#modal'); m.hidden = true; m.innerHTML = ''; modalDepth = 0; if (!document.hidden && !adOn) gameplay(true); }
+
+/* ============================== shop UI ============================== */
+const TABS = ['miners', 'upg', 'crys'];
+let tab = 'miners', rowsG = [], upgSig = '';
+function buildTabs() {
+  const el = $('#tabs'); el.innerHTML = '';
+  TABS.forEach((k) => { const b = document.createElement('button'); b.dataset.k = k; b.textContent = t(k === 'miners' ? 'miners' : k === 'upg' ? 'upg' : 'crys'); b.onclick = () => { tab = k; buildList(); paintTabs(); sfx.buy(); }; el.appendChild(b); });
+  const q = $('#buyq'); q.innerHTML = '';
+  [1, 10, 100, 0].forEach((n) => { const b = document.createElement('button'); b.textContent = n ? '×' + n : t('max'); b.dataset.n = n; b.onclick = () => { BUYQ = n; paintBuyq(); }; q.appendChild(b); });
+  paintTabs(); paintBuyq();
+}
+const paintTabs = () => { document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.k === tab)); $('#buyq').hidden = tab !== 'miners'; };
+const paintBuyq = () => document.querySelectorAll('#buyq button').forEach((b) => b.classList.toggle('on', +b.dataset.n === BUYQ));
+function buildList() {
+  const L = $('#list'); L.innerHTML = ''; rowsG = [];
+  if (tab === 'miners') {
+    GENS.forEach((g, i) => {
+      const r = document.createElement('button'); r.className = 'row lock';
+      r.innerHTML = '<div class="ico">' + g.i + '</div><div><div class="nm">' + g.n[LANG === 'es' ? 1 : 0] + '</div><div class="ds"></div><div class="ms"><i></i></div></div><div class="cost"></div><span class="owned"></span>';
+      r.onclick = () => buyGen(i); L.appendChild(r); rowsG.push(r);
+    });
+  } else if (tab === 'upg') { buildUpgs(); } else { buildCrys(); }
+  refreshShop();
+}
+function visibleUpgs() {
+  const out = [], seen = {};
+  for (const u of UPGS) {
+    if (has(u.id) || seen[u.line]) continue; seen[u.line] = 1;
+    if (u.need && S.c[u.need[0]] < u.need[1]) continue;
+    out.push(u);
+  }
+  return out.sort((a, b) => a.cost - b.cost);
+}
+function buildUpgs() {
+  const L = $('#list'); L.innerHTML = ''; const vis = visibleUpgs(); upgSig = vis.map((u) => u.id).join();
+  if (!vis.length) { L.innerHTML = '<div class="ds" style="padding:14px;text-align:center">—</div>'; return; }
+  vis.slice(0, 14).forEach((u) => {
+    const r = document.createElement('button'); r.className = 'row lock'; r.dataset.u = u.id;
+    r.innerHTML = '<div class="ico">' + u.ico + '</div><div><div class="nm">' + u.n[LANG === 'es' ? 1 : 0] + '</div><div class="ds">' + u.d[LANG === 'es' ? 1 : 0] + '</div></div><div class="cost">' + fmt(u.cost) + '</div>';
+    r.onclick = () => buyUpg(u.id); L.appendChild(r);
+  });
+}
+function buildCrys() {
+  const L = $('#list'); L.innerHTML = '';
+  const h = document.createElement('div'); h.className = 'sec'; h.id = 'crysHead'; L.appendChild(h);
+  CRYS.forEach((c) => {
+    const r = document.createElement('button'); r.className = 'row lock'; r.dataset.c = c.id;
+    r.innerHTML = '<div class="ico">' + c.ico + '</div><div><div class="nm">' + c.n[LANG === 'es' ? 1 : 0] + '</div><div class="ds">' + c.d[LANG === 'es' ? 1 : 0] + '</div></div><div class="cost"></div><span class="owned"></span>';
+    r.onclick = () => buyCrys(c.id); L.appendChild(r);
+  });
+}
+function refreshShop() {
+  if (tab === 'miners') {
+    GENS.forEach((g, i) => {
+      const r = rowsG[i]; if (!r) return;
+      const n = BUYQ || Math.max(1, maxN(i)); const c = costN(i, n); const can = S.g >= c;
+      const vis = i === 0 || S.c[i] > 0 || S.tot >= GENS[i].base * 0.4;
+      r.classList.toggle('can', can); r.classList.toggle('lock', !vis && !can);
+      r.querySelector('.cost').innerHTML = (vis || can ? fmt(c) : '???') + '<small>×' + n + '</small>';
+      const mm = mileMult(S.c[i]); const nx = MILES.find((m) => m > S.c[i]);
+      const per = g.rate * mm * Math.pow(2, cnt('o' + i)) * globalMult();
+      r.querySelector('.ds').innerHTML = vis || can ? '<b>' + fmt(per) + '</b> ' + t('each') + (mm > 1 ? ' · ×' + mm : '') : t('locked');
+      r.querySelector('.owned').textContent = S.c[i] ? '×' + S.c[i] : '';
+      const prev = MILES.filter((m) => m <= S.c[i]).pop() || 0;
+      r.querySelector('.ms i').style.width = nx ? ((S.c[i] - prev) / (nx - prev) * 100) + '%' : '100%';
+    });
+  } else if (tab === 'upg') {
+    if (visibleUpgs().map((u) => u.id).join() !== upgSig) buildUpgs();
+    document.querySelectorAll('#list .row[data-u]').forEach((r) => { const u = UPGS.find((x) => x.id === r.dataset.u); r.classList.toggle('can', S.g >= u.cost); r.classList.toggle('lock', S.g < u.cost * 0.1); });
+  } else {
+    const hd = $('#crysHead'); if (hd) hd.textContent = t('crysHave') + ': ' + (S.cr - S.crs) + ' 💎 · ' + t('crysBonus') + ' +' + (S.cr * 10) + '%';
+    document.querySelectorAll('#list .row[data-c]').forEach((r) => {
+      const c = CRYS.find((x) => x.id === r.dataset.c); const l = crysLv(c.id); const mx = l >= c.max; const cost = Math.ceil(c.cost(l));
+      r.classList.toggle('can', !mx && S.cr - S.crs >= cost); r.classList.toggle('lock', false);
+      r.querySelector('.cost').innerHTML = mx ? t('maxed') : cost + ' 💎'; r.querySelector('.owned').textContent = t('lvl') + ' ' + l + '/' + c.max;
+    });
+  }
+}
+function buyGen(i) {
+  const n = BUYQ || maxN(i); if (n < 1) { sfx.no(); return; } const c = costN(i, n);
+  if (S.g < c) { sfx.no(); shake(3); return; }
+  const before = mileMult(S.c[i]); S.g -= c; S.c[i] += n; quest('buy', n); sfx.buy(); recalc(); checkAch();
+  if (mileMult(S.c[i]) > before) { toast('⚡ ' + GENS[i].n[LANG === 'es' ? 1 : 0] + ' ×2!', 'gold'); sfx.gem(); burst(W * .5, H * .5, 24, '#ffd76b'); }
+  const r = rowsG[i]; if (r) { r.classList.remove('pop'); void r.offsetWidth; r.classList.add('pop'); }
+  refreshShop(); refreshTop(); save();
+}
+function buyUpg(id) {
+  const u = UPGS.find((x) => x.id === id); if (!u || has(id)) return; if (S.g < u.cost) { sfx.no(); shake(3); return; }
+  S.g -= u.cost; S.u.push(id); sfx.buy(); recalc(); buildUpgs(); refreshShop(); refreshTop(); save();
+}
+function buyCrys(id) {
+  const c = CRYS.find((x) => x.id === id); const l = crysLv(id); if (l >= c.max) return; const cost = Math.ceil(c.cost(l));
+  if (S.cr - S.crs < cost) { sfx.no(); return; }
+  S.crs += cost; S.cu[id] = l + 1; sfx.gem(); recalc(); refreshShop(); save();
+}
+function refreshTop() {
+  $('#gold').innerHTML = '<i>🪙</i>' + fmt(S.g);
+  $('#ps').innerHTML = '<b>' + fmt(PS) + '</b> ' + t('ps') + (boostOn() ? ' · ×2' : '') + (frenzyEnd > now() ? ' · ×7🔥' : '');
+}
+
+/* ============================== actions bar ============================== */
+let giftBtn, boostBtn, ascBtn, skBtns = [];
+function buildActions() {
+  const A = $('#actions'); A.innerHTML = '';
+  boostBtn = mkAct('act ad', '', () => { showAd('rewarded', () => { S.boostEnd = Math.max(now(), S.boostEnd) + 120000; if (S.boostEnd - now() > 1800000) S.boostEnd = now() + 1800000; recalc(); toast(t('boostAdd'), 'gold'); sfx.gem(); save(); }); });
+  giftBtn = mkAct('act', '', onGift);
+  ascBtn = mkAct('act hot', '', onAscend);
+  skBtns = SKILLS.map((k) => mkAct('act', '', () => useSkill(k)));
+  A.append(...skBtns, boostBtn, giftBtn, ascBtn);
+}
+function mkAct(cls, txt, fn) { const b = document.createElement('button'); b.className = cls; b.textContent = txt; b.onclick = fn; return b; }
+function refreshActions() {
+  boostBtn.textContent = boostOn() ? '⚡ ' + t('boostOn') + ' ' + fmtT((S.boostEnd - now()) / 1000) : '📺 ' + t('boost');
+  const gl = (S.gift - now()) / 1000;
+  giftBtn.textContent = gl <= 0 ? '🎁 ' + t('giftReady') : '🎁 ' + t('giftIn') + ' ' + fmtT(gl); giftBtn.classList.toggle('glow', gl <= 0); giftBtn.disabled = gl > 0;
+  const g = crysGain(); ascBtn.hidden = S.run < 2e6 && S.asc === 0 && g < 1; ascBtn.textContent = g >= 1 ? '🔮 ' + t('ascendN', g) : '🔮 ' + t('ascend'); ascBtn.classList.toggle('glow', g >= Math.max(10, S.cr * 0.5));
+  SKILLS.forEach((k, i) => { const b = skBtns[i], cd = ((S.sk[k.id] || 0) - now()) / 1000; b.hidden = S.taps < 15; b.textContent = k.e + ' ' + (cd > 0 ? fmtT(cd) : t(k.k)); b.disabled = cd > 0; b.classList.toggle('glow', cd <= 0 && !b.hidden && k.id === 'f' && furyEnd < now()); });
+  $('#dDaily').hidden = !dailyReady(); newQuests(); $('#dQ').hidden = !S.q.l.some((q) => q.got >= q.need && !q.c);
+}
+function useSkill(k) {
+  if ((S.sk[k.id] || 0) > now()) return; S.sk[k.id] = now() + k.cd * 1000;
+  if (k.id === 'f') { furyEnd = now() + 10000; recalc(); toast(t('furyT'), 'gold'); sfx.asc(); burst(cxm, cym, 40, '#ff9d1c'); }
+  else if (k.id === 'd') { earn(PS * 60 + 100); damage(rockMax(S.d) * 0.4); toast(t('dynT'), 'gold'); sfx.no(); shake(12); burst(cxm, cym, 70, '#ffb347'); }
+  else { goldenT = 1e9; toast(t('magT'), 'gold'); sfx.gem(); }
+  refreshTop(); save();
+}
+function onGift() {
+  if (S.gift > now()) return; const val = Math.max(200, PS * 300);
+  openModal('<h2>🎁 ' + t('gift') + '</h2><div class="big">+' + fmt(val) + ' 🪙</div><div class="btns"><button class="pri" id="m1">' + t('collect') + '</button><button class="adb" id="m2">' + t('collect2') + '</button></div>', (m) => {
+    m.querySelector('#m1').onclick = () => { earn(val); S.gift = now() + 180000; closeModal(); sfx.gem(); burst(W * .5, H * .5, 30, '#ffd76b'); refreshTop(); save(); };
+    m.querySelector('#m2').onclick = () => showAd('rewarded', () => { earn(val * 3); S.gift = now() + 180000; closeModal(); sfx.gem(); burst(W * .5, H * .5, 50, '#ffd76b'); refreshTop(); save(); });
+  });
+}
+function onAscend() {
+  const g = crysGain(); if (g < 1) { toast(t('ascendNeed')); return; }
+  openModal('<h2>🔮 ' + t('ascTitle') + '</h2><p>' + t('ascTxt') + '</p><div class="big">' + t('gain') + ' +' + g + ' 💎</div><div class="btns"><button class="pri" id="m1">' + t('ascGo') + '</button><button id="m2">' + t('cancel') + '</button></div>', (m) => {
+    m.querySelector('#m2').onclick = closeModal;
+    m.querySelector('#m1').onclick = () => { closeModal(); const go = () => doAscend(g); if (now() - CG.lastAd > 150000) showAd('midgame', go); else go(); };
+  });
+}
+function doAscend(g) {
+  S.cr += g; S.asc++; S.g = crysLv('start') ? 500 * Math.pow(5, crysLv('start')) : 0; S.run = 0; S.c = GENS.map(() => 0); S.u = []; frenzyEnd = 0; S.d = 1; S.rhp = 0; ensureRock();
+  recalc(); checkAch(); buildList(); refreshTop(); sfx.asc(); happy(); burst(W * .5, H * .5, 80, '#c06bff'); toast(t('ascended', g), 'gold'); tab = 'crys'; buildList(); paintTabs(); save();
+}
+
+/* ============================== daily & achievements ============================== */
+const todayStr = () => new Date().toISOString().slice(0, 10);
+const dailyReady = () => S.dayDate !== todayStr();
+function dailyVal(day) { return Math.max(500, PS * 600) * (1 + day * 0.5); }
+function openDaily() {
+  const ready = dailyReady(); const prevStreak = (() => { const y = new Date(Date.now() - 864e5).toISOString().slice(0, 10); return S.dayDate === y ? S.dayN : (S.dayDate === todayStr() ? S.dayN : 0); })();
+  const day = ready ? (prevStreak % 7) + 1 : ((S.dayN - 1) % 7) + 1; const val = dailyVal(day);
+  let days = ''; for (let d = 1; d <= 7; d++) days += '<div class="day ' + (d < day || (!ready && d === day) ? 'done' : d === day ? 'now' : '') + '">' + t('dayN') + ' ' + d + '<br>' + (d === 7 ? '💎' : '🪙') + '</div>';
+  openModal('<h2>📅 ' + t('daily') + '</h2><div class="days">' + days + '</div>' + (ready ? '<div class="big">+' + fmt(val) + ' 🪙' + (day === 7 ? ' +3 💎' : '') + '</div><div class="btns"><button class="pri" id="m1">' + t('claim') + '</button><button class="adb" id="m2">' + t('claimAd') + '</button></div>' : '<div class="btns"><button id="m3">' + t('close') + '</button></div>'), (m) => {
+    const claim = (mult) => { earn(val * mult); if (day === 7) S.cr += 3 * mult; S.dayN = day; S.dayDate = todayStr(); closeModal(); sfx.gem(); happy(); refreshTop(); save(); };
+    const a = m.querySelector('#m1'); if (a) { a.onclick = () => claim(1); m.querySelector('#m2').onclick = () => showAd('rewarded', () => claim(2)); }
+    const c = m.querySelector('#m3'); if (c) c.onclick = closeModal;
+  });
+}
+function achVal(k) { return k === 'taps' ? S.taps : k === 'tot' ? S.tot : k === 'gens' ? S.c.reduce((a, b) => a + b, 0) : k === 'asc' ? S.asc : S.gold; }
+function checkAch() {
+  for (const a of ACHS) if (S.ach.indexOf(a.id) < 0 && achVal(a.k) >= a.v) { S.ach.push(a.id); toast('🏆 ' + a.n[LANG === 'es' ? 1 : 0] + '  (+2%)', 'gold'); sfx.ach(); happy(); recalc(); }
+}
+function openAch() {
+  const rows = ACHS.map((a) => '<div class="row ' + (S.ach.indexOf(a.id) >= 0 ? 'can' : 'lock') + '" style="grid-template-columns:36px 1fr auto;margin-bottom:6px"><div class="ico" style="width:36px;height:36px;font-size:18px">' + (S.ach.indexOf(a.id) >= 0 ? '🏆' : '🔒') + '</div><div><div class="nm">' + a.n[LANG === 'es' ? 1 : 0] + '</div><div class="ds">' + fmt(Math.min(achVal(a.k), a.v)) + ' / ' + fmt(a.v) + '</div></div><div class="cost">+2%</div></div>').join('');
+  openModal('<h2>🏆 ' + t('ach') + ' (' + S.ach.length + '/' + ACHS.length + ')</h2>' + rows + '<div class="btns"><button id="m3">' + t('close') + '</button></div>', (m) => { m.querySelector('#m3').onclick = closeModal; });
+}
+
+/* ============================== canvas / fx ============================== */
+const cv = $('#cv'), cx = cv.getContext('2d'); let W = 300, H = 300, DPR = 1, cxm = 150, cym = 150, R = 100;
+function resize() {
+  DPR = Math.min(2, window.devicePixelRatio || 1); const r = cv.getBoundingClientRect(); W = Math.max(100, r.width); H = Math.max(100, r.height);
+  cv.width = W * DPR; cv.height = H * DPR; cx.setTransform(DPR, 0, 0, DPR, 0, 0); cxm = W / 2; cym = H * 0.46; R = Math.min(W * 0.34, H * 0.34);
+  dust.length = 0; for (let i = 0; i < 40; i++) dust.push({ x: Math.random() * W, y: Math.random() * H, r: Math.random() * 1.8 + .4, v: Math.random() * 6 + 2, a: Math.random() * .5 + .1 });
+}
+const dust = [], parts = [], floats = []; let squash = 0, shk = 0, pulse = 0;
+function shake(n) { shk = Math.max(shk, n); }
+function burst(x, y, n, col) {
+  for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, s = 80 + Math.random() * 260; parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 90, life: .5 + Math.random() * .5, max: 1, c: col || '#ffd76b', s: 2 + Math.random() * 4, g: 600 }); }
+  if (parts.length > 400) parts.splice(0, parts.length - 400);
+}
+function floatTxt(x, y, txt, col) { floats.push({ x, y, txt, col: col || '#fff', life: 1 }); if (floats.length > 40) floats.shift(); }
+const rockCol = () => isBoss(S.d) ? ['#ff5a4d', '#4a0808'] : GEMCOL[Math.floor((S.d - 1) / 4) % GEMCOL.length];
+function drawRock(time) {
+  const [c1, c2] = rockCol();
+  const sc = (1 - squash * 0.12 + Math.sin(time / 600) * 0.012) * (isBoss(S.d) ? 1.18 : 1); const x = cxm, y = cym + R * 0.1;
+  cx.save(); cx.translate(x, y); cx.scale(sc, 1 + squash * 0.1 + (1 - sc)); cx.translate(0, 0);
+  const gl = cx.createRadialGradient(0, 0, R * .2, 0, 0, R * 1.7); gl.addColorStop(0, c1 + '77'); gl.addColorStop(1, c1 + '00'); cx.fillStyle = gl; cx.beginPath(); cx.arc(0, 0, R * 1.7, 0, 6.283); cx.fill();
+  cx.fillStyle = '#00000055'; cx.beginPath(); cx.ellipse(0, R * .95, R * .95, R * .2, 0, 0, 6.283); cx.fill();
+  const spikes = [[-.62, .85, .28, -.45, -.5], [.6, .9, .3, .5, -.35], [-.2, .95, .34, -.1, -1.0], [.25, .95, .3, .2, -.8], [0, .9, .46, 0, -1.2]];
+  spikes.forEach((s, k) => {
+    const bx = s[0] * R, by = s[1] * R, w = s[2] * R, tx = bx + s[3] * R * .6, ty = by + s[4] * R * 1.5;
+    const g = cx.createLinearGradient(bx - w, ty, bx + w, by); g.addColorStop(0, c1); g.addColorStop(1, c2);
+    cx.fillStyle = g; cx.beginPath(); cx.moveTo(bx - w, by); cx.lineTo(bx - w * .8, by + (ty - by) * .6); cx.lineTo(tx, ty); cx.lineTo(bx + w * .8, by + (ty - by) * .6); cx.lineTo(bx + w, by); cx.closePath(); cx.fill();
+    cx.fillStyle = '#ffffff33'; cx.beginPath(); cx.moveTo(bx - w * .8, by + (ty - by) * .6); cx.lineTo(tx, ty); cx.lineTo(bx - w * .1, by + (ty - by) * .5); cx.closePath(); cx.fill();
+    cx.strokeStyle = '#00000044'; cx.lineWidth = 2; cx.stroke();
+  });
+  const sp = (Math.sin(time / 420) + 1) / 2; cx.fillStyle = '#ffffffcc'; cx.beginPath(); cx.arc(-R * .15, -R * .55, 3 + sp * 3, 0, 6.283); cx.fill();
+  cx.restore();
+}
+let last = performance.now(), saveT = 0, shopT = 0, autoT = 0, goldenT = 0, goldenAt = 0, golden = null;
+function frame(tm) {
+  const dt = Math.min(0.25, (tm - last) / 1000); last = tm;
+  if (!document.hidden) {
+    if (PS > 0) { earn(PS * dt); damage(PS * 0.2 * dt); } bossTick();
+    squash = Math.max(0, squash - dt * 5); shk = Math.max(0, shk - dt * 14); if (combo > 0 && now() - comboT > 900) combo = 0;
+    const au = crysLv('auto'); if (au) { autoT += dt; if (autoT > 1 / au) { autoT = 0; doTap(cxm + (Math.random() - .5) * R, cym + (Math.random() - .5) * R, true); } }
+    goldenTick(dt);
+    cx.clearRect(0, 0, W, H); cx.save(); if (shk) cx.translate((Math.random() - .5) * shk, (Math.random() - .5) * shk);
+    cx.fillStyle = '#ffffff'; dust.forEach((d) => { d.y -= d.v * dt; if (d.y < -4) { d.y = H + 4; d.x = Math.random() * W; } cx.globalAlpha = d.a; cx.beginPath(); cx.arc(d.x, d.y, d.r, 0, 6.283); cx.fill(); }); cx.globalAlpha = 1;
+    drawRock(tm); drawHud();
+    for (let i = parts.length - 1; i >= 0; i--) { const p = parts[i]; p.life -= dt; if (p.life <= 0) { parts.splice(i, 1); continue; } p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; cx.globalAlpha = Math.min(1, p.life * 2); cx.fillStyle = p.c; cx.fillRect(p.x, p.y, p.s, p.s); } cx.globalAlpha = 1;
+    cx.font = '800 22px system-ui,sans-serif'; cx.textAlign = 'center'; cx.lineWidth = 4; cx.strokeStyle = '#000a';
+    for (let i = floats.length - 1; i >= 0; i--) { const f = floats[i]; f.life -= dt * 1.1; if (f.life <= 0) { floats.splice(i, 1); continue; } f.y -= 60 * dt; cx.globalAlpha = Math.min(1, f.life * 1.6); cx.strokeText(f.txt, f.x, f.y); cx.fillStyle = f.col; cx.fillText(f.txt, f.x, f.y); } cx.globalAlpha = 1;
+    cx.restore();
+    if (golden) drawGolden(tm);
+    refreshTopCheap(); shopT += dt; if (shopT > .25) { shopT = 0; refreshShop(); refreshActions(); checkAch(); recalcIfFx(); updateHint(); }
+    saveT += dt; if (saveT > 8) { saveT = 0; save(); }
+  }
+  requestAnimationFrame(frame);
+}
+function drawHud() {
+  const boss = isBoss(S.d), mx = rockMax(S.d), bw = Math.min(W * .72, 440), bx = (W - bw) / 2, by = 34, f = Math.max(0, Math.min(1, S.rhp / mx));
+  cx.textAlign = 'center'; cx.lineWidth = 4; cx.strokeStyle = '#000b'; cx.font = '800 16px system-ui,sans-serif'; cx.fillStyle = boss ? '#ff8d8d' : '#fff';
+  const label = (boss ? '👑 ' + t('boss') + ' · ' : '⛏️ ') + t('depth') + ' ' + S.d + (boss && bossEnd ? ' · ' + Math.max(0, Math.ceil((bossEnd - now()) / 1000)) + 's' : '');
+  cx.strokeText(label, W / 2, by - 8); cx.fillText(label, W / 2, by - 8);
+  cx.fillStyle = '#0008'; cx.fillRect(bx - 2, by - 2, bw + 4, 18); cx.fillStyle = boss ? '#ff4d4d' : '#47e0a0'; cx.fillRect(bx, by, bw * f, 14);
+  cx.fillStyle = '#fff'; cx.font = '700 11px system-ui,sans-serif'; cx.fillText(fmt(Math.max(0, S.rhp)) + ' / ' + fmt(mx), W / 2, by + 11);
+}
+let lastGoldTxt = '', lastFx = false;
+function refreshTopCheap() { const s = fmt(S.g); if (s !== lastGoldTxt) { lastGoldTxt = s; refreshTop(); } }
+function recalcIfFx() { const f = frenzyEnd > now() || boostOn() || furyEnd > now(); if (f !== lastFx) { lastFx = f; recalc(); refreshTop(); } }
+function updateHint() {
+  const h = $('#hint'); if (S.taps < 8) { h.hidden = false; h.textContent = t('tap'); } else if (S.c[0] === 0 && S.tot > 0) { h.hidden = false; h.textContent = S.g >= 15 ? t('buy') : ''; } else h.hidden = true;
+}
+/* tapping */
+function doTap(x, y, auto) {
+  const v = clickVal(); earn(v); S.taps++; quest('taps', 1); damage(v); squash = 1; pulse = 1; combo++; comboT = now(); if (!auto) { sfx.tap(); gameplay(true); } shake(auto ? 0 : 1.5);
+  burst(x, y, 6, rockCol()[0]);
+  floatTxt(x + (Math.random() - .5) * 30, y - 20, '+' + fmt(v), combo > 8 ? '#ffd76b' : '#fff');
+}
+cv.addEventListener('pointerdown', (e) => {
+  e.preventDefault(); const r = cv.getBoundingClientRect(); const x = e.clientX - r.left, y = e.clientY - r.top;
+  if (golden && Math.hypot(x - golden.x, y - golden.y) < 46) { clickGolden(); return; }
+  if (Math.hypot(x - cxm, y - (cym + R * .1)) < R * 1.35 || true) doTap(x, y);
+});
+window.addEventListener('keydown', (e) => { if (e.code === 'Space' && !e.repeat && modalDepth === 0) { e.preventDefault(); doTap(cxm + (Math.random() - .5) * R * .6, cym); } });
+/* golden gem */
+function goldenTick(dt) {
+  if (golden) { golden.life -= dt; golden.x += golden.vx * dt; golden.y = golden.by + Math.sin(golden.life * 3) * 18; if (golden.life <= 0 || golden.x < -60 || golden.x > W + 60) golden = null; return; }
+  goldenT += dt; if (!goldenAt) goldenAt = 40 + Math.random() * 50;
+  if (goldenT > goldenAt / (1 + 0.2 * crysLv('gold')) && S.tot > 100) { goldenT = 0; goldenAt = 45 + Math.random() * 60; const dir = Math.random() < .5 ? 1 : -1; golden = { x: dir > 0 ? -30 : W + 30, by: H * (.2 + Math.random() * .5), y: 0, vx: dir * (W / 7), life: 12 }; }
+}
+function drawGolden(tm) {
+  cx.save(); cx.translate(golden.x, golden.y); const s = 1 + Math.sin(tm / 160) * .1; cx.scale(s, s);
+  const g = cx.createRadialGradient(0, 0, 4, 0, 0, 44); g.addColorStop(0, '#ffe98a'); g.addColorStop(1, '#ffb30000'); cx.fillStyle = g; cx.beginPath(); cx.arc(0, 0, 44, 0, 6.283); cx.fill();
+  cx.fillStyle = '#ffc83d'; cx.strokeStyle = '#7a4a00'; cx.lineWidth = 3; cx.beginPath(); cx.moveTo(0, -24); cx.lineTo(18, -6); cx.lineTo(11, 20); cx.lineTo(-11, 20); cx.lineTo(-18, -6); cx.closePath(); cx.fill(); cx.stroke();
+  cx.fillStyle = '#fff8'; cx.beginPath(); cx.moveTo(0, -24); cx.lineTo(-18, -6); cx.lineTo(-2, -4); cx.closePath(); cx.fill(); cx.restore();
+}
+function clickGolden() {
+  const x = golden.x, y = golden.y; golden = null; S.gold++; sfx.gem(); happy(); burst(x, y, 50, '#ffd76b');
+  if (Math.random() < .5) { frenzyEnd = now() + 30000; recalc(); toast('✨ ' + t('golden') + ' ' + t('frenzy'), 'gold'); }
+  else { const v = Math.max(300, PS * 900); earn(v); toast('✨ ' + t('lucky', fmt(v)), 'gold'); }
+  checkAch(); refreshTop();
+}
+
+/* ============================== offline / welcome ============================== */
+function offlineCheck() {
+  const gone = Math.min((now() - S.last) / 1000, offCap()); if (gone < 90 || PS <= 0) return;
+  const val = PS * gone * (0.5 + 0.1 * crysLv('off')); if (val < 1) return;
+  openModal('<h2>' + t('welcome') + '</h2><p>' + t('away') + ' (' + fmtT(gone) + ')</p><div class="big">+' + fmt(val) + ' 🪙</div><div class="btns"><button class="pri" id="m1">' + t('collect') + '</button><button class="adb" id="m2">' + t('collect2') + '</button></div>', (m) => {
+    m.querySelector('#m1').onclick = () => { earn(val); closeModal(); sfx.gem(); refreshTop(); save(); };
+    m.querySelector('#m2').onclick = () => showAd('rewarded', () => { earn(val * 2); closeModal(); sfx.gem(); refreshTop(); save(); });
+  });
+}
+
+/* ============================== boot ============================== */
+function paintMute() { $('#bMute').textContent = muted() && !adOn ? '🔇' : '🔊'; }
+async function main() {
+  await cgBoot(); load(); newQuests(); recalc(); ensureRock(); resize(); buildTabs(); buildList(); buildActions(); refreshTop(); refreshActions(); paintMute();
+  $('#app').hidden = false; resize(); $('#loading').remove();
+  try { const k = sdk(); if (k) k.game.loadingStop(); } catch (e) {}
+  $('#bMute').onclick = () => { S.mute = !S.mute; paintMute(); toast(t(S.mute ? 'soundOff' : 'soundOn')); if (!S.mute) { actx(); sfx.buy(); } save(); };
+  $('#bDaily').onclick = openDaily; $('#bAch').onclick = openAch; $('#bArt').onclick = openColl; $('#bQ').onclick = openQuests;
+  window.addEventListener('resize', resize); window.addEventListener('orientationchange', () => setTimeout(resize, 200));
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { save(); gameplay(false); } else { if (modalDepth === 0 && !adOn && S.taps > 0) gameplay(true); S.last = Math.max(S.last, now() - 1000); } });
+  window.addEventListener('pagehide', save); window.addEventListener('beforeunload', save);
+  setTimeout(offlineCheck, 400); requestAnimationFrame((t0) => { last = t0; frame(t0); });
+  window.__gm = { S: () => S, doTap, buyGen, earn, recalc, openDaily, onAscend, doAscend, crysGain, buildList, get PS() { return PS; } };
+}
+main();
+</script>
+</body>
+</html>

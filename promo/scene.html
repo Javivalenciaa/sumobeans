@@ -1,0 +1,59 @@
+<!doctype html><meta charset="utf-8"><style>html,body{margin:0;background:#000}canvas{display:block}</style><canvas id="c"></canvas>
+<script>
+const P = new URLSearchParams(location.search); const W = +P.get('w') || 1920, H = +P.get('h') || 1080; const c = document.getElementById('c'); c.width = W; c.height = H; const x = c.getContext('2d');
+let sd = 7; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+const sparks = Array.from({ length: 160 }, () => ({ x: rnd(), y: rnd(), s: .4 + rnd() * 2.2, v: .02 + rnd() * .08, p: rnd() * 6.28 }));
+const COLS = [['#ff6bd6', '#6a1a9c'], ['#4fd8ff', '#0a5a8c'], ['#7dff9a', '#0c7a3a'], ['#b66bff', '#4a1a96'], ['#ffd76b', '#a0580a'], ['#ff6b8b', '#8a1a3a']];
+function crystal(cx, cy, h, w, tilt, col, glow) {
+  const [a, b] = col; const g = x.createLinearGradient(cx - w, cy - h, cx + w, cy); g.addColorStop(0, a); g.addColorStop(1, b);
+  x.save(); x.translate(cx, cy); x.rotate(tilt);
+  x.shadowColor = a; x.shadowBlur = glow;
+  x.fillStyle = g; x.beginPath(); x.moveTo(-w, 0); x.lineTo(-w * .85, -h * .72); x.lineTo(0, -h); x.lineTo(w * .85, -h * .72); x.lineTo(w, 0); x.closePath(); x.fill(); x.shadowBlur = 0;
+  x.fillStyle = '#ffffff40'; x.beginPath(); x.moveTo(-w * .85, -h * .72); x.lineTo(0, -h); x.lineTo(-w * .05, -h * .1); x.lineTo(-w * .5, -h * .05); x.closePath(); x.fill();
+  x.fillStyle = '#00000038'; x.beginPath(); x.moveTo(w * .85, -h * .72); x.lineTo(0, -h); x.lineTo(-w * .05, -h * .1); x.lineTo(w, 0); x.closePath(); x.fill();
+  x.strokeStyle = '#ffffff55'; x.lineWidth = Math.max(1.5, w * .035); x.beginPath(); x.moveTo(-w * .05, -h * .1); x.lineTo(0, -h); x.stroke(); x.restore();
+}
+function cave(side, h0, n, col) {
+  x.fillStyle = col; x.beginPath(); x.moveTo(side < 0 ? 0 : W, 0);
+  for (let i = 0; i <= n; i++) { const fy = i / n, fx = (1 - fy) * .26 + Math.sin(i * 2.7) * .03; x.lineTo(side < 0 ? fx * W : W - fx * W, fy * H * h0); }
+  x.lineTo(side < 0 ? 0 : W, H * h0); x.closePath(); x.fill();
+}
+function draw(t, title) {
+  const S = Math.min(W / 1920, H / 1080) * (W < H ? 1.35 : 1), zoom = 1 + t * .02;
+  x.clearRect(0, 0, W, H);
+  let g = x.createRadialGradient(W / 2, H * .55, 20, W / 2, H * .55, Math.max(W, H) * .75); g.addColorStop(0, '#6b2bd1'); g.addColorStop(.35, '#2c1060'); g.addColorStop(1, '#07030f'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  // light shafts
+  x.save(); x.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 7; i++) { const a = -1.1 + i * .37 + Math.sin(t * .6 + i) * .04; x.save(); x.translate(W / 2, H * .62); x.rotate(a); const gg = x.createLinearGradient(0, 0, 0, -H * 1.2); gg.addColorStop(0, '#c9a0ff44'); gg.addColorStop(1, '#c9a0ff00'); x.fillStyle = gg; x.beginPath(); x.moveTo(-14 * S, 0); x.lineTo(14 * S, 0); x.lineTo(150 * S, -H * 1.2); x.lineTo(-150 * S, -H * 1.2); x.fill(); x.restore(); }
+  x.restore();
+  cave(-1, .9, 9, '#0a0516'); cave(1, .95, 8, '#0a0516');
+  // stalactites
+  x.fillStyle = '#0c0618'; for (let i = 0; i < 14; i++) { const px = (i / 13) * W, wd = (40 + (i * 37) % 70) * S, hh = (60 + (i * 53) % 140) * S; x.beginPath(); x.moveTo(px - wd, 0); x.lineTo(px, hh); x.lineTo(px + wd, 0); x.fill(); }
+  // glow behind cluster
+  const cxm = W / 2, cyb = H * (W < H ? .66 : .8), pulse = 1 + Math.sin(t * 2) * .04;
+  g = x.createRadialGradient(cxm, cyb - 260 * S, 10, cxm, cyb - 260 * S, 640 * S * pulse); g.addColorStop(0, '#ffb3f0aa'); g.addColorStop(.4, '#8a3dff55'); g.addColorStop(1, '#8a3dff00'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  // ground
+  g = x.createLinearGradient(0, cyb - 60 * S, 0, H); g.addColorStop(0, '#1a0d33'); g.addColorStop(1, '#05020b'); x.fillStyle = g; x.beginPath(); x.moveTo(0, H); x.lineTo(0, cyb + 10 * S); for (let i = 0; i <= 20; i++) x.lineTo(i / 20 * W, cyb + 10 * S + Math.sin(i * 1.9) * 26 * S - Math.abs(i / 20 - .5) * -40 * S); x.lineTo(W, H); x.fill();
+  x.save(); x.translate(cxm, cyb); x.scale(zoom * S * .86, zoom * S * .86); x.translate(-cxm, -cyb);
+  // crystals (back to front)
+  const cl = [[-360, 20, 330, 90, -.32, 0], [330, 30, 360, 95, .3, 1], [-190, 40, 470, 120, -.14, 3], [200, 40, 500, 125, .15, 2], [-520, 50, 210, 70, -.5, 5], [520, 55, 230, 72, .52, 4], [0, 50, 640, 170, 0, 0], [-90, 70, 300, 85, -.1, 1], [100, 75, 330, 90, .12, 3]];
+  cl.forEach((q) => crystal(cxm + q[0], cyb + q[1], q[2], q[3], q[4], COLS[q[5]], 60 + Math.sin(t * 2 + q[0]) * 14));
+  // coins
+  for (let i = 0; i < 70; i++) { const a = rnd() * 6.28, r = 140 + rnd() * 520, px = cxm + Math.cos(a) * r * 1.35, py = cyb + 60 + Math.abs(Math.sin(a)) * 80 + rnd() * 40; x.fillStyle = '#ffc83d'; x.strokeStyle = '#7a4a00'; x.lineWidth = 3; x.beginPath(); x.ellipse(px, py, 26, 11, 0, 0, 6.28); x.fill(); x.stroke(); x.fillStyle = '#fff3a8'; x.beginPath(); x.ellipse(px - 4, py - 3, 12, 4, 0, 0, 6.28); x.fill(); }
+  x.restore();
+  // sparks
+  x.save(); x.globalCompositeOperation = 'lighter'; sparks.forEach((p) => { const yy = ((p.y - t * p.v) % 1 + 1) % 1; x.fillStyle = `rgba(255,${200 + p.s * 20 | 0},255,${.35 + .4 * Math.sin(t * 3 + p.p)})`; x.beginPath(); x.arc(p.x * W, yy * H, p.s * 2.2 * S + .5, 0, 6.28); x.fill(); }); x.restore();
+  // vignette
+  g = x.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .35, W / 2, H / 2, Math.max(W, H) * .75); g.addColorStop(0, '#0000'); g.addColorStop(1, '#000000c0'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  if (title !== false) drawTitle(S, Math.min(1, t * 1.5));
+}
+function drawTitle(S, a) {
+  const vert = H > W, f1 = (vert ? 150 : 190) * S * (W < H ? .8 : 1), ty = vert ? H * .16 : H * .2; x.save(); x.globalAlpha = a; x.textAlign = 'center'; x.lineJoin = 'round';
+  const line = (txt, y, fs) => { x.font = `900 ${fs}px "DejaVu Sans","Liberation Sans",Arial,sans-serif`; const g = x.createLinearGradient(0, y - fs, 0, y + fs * .1); g.addColorStop(0, '#fff6b0'); g.addColorStop(.45, '#ffc83d'); g.addColorStop(1, '#e06a00');
+    x.shadowColor = '#ff9d1c'; x.shadowBlur = 50 * S; x.lineWidth = fs * .16; x.strokeStyle = '#3b1500'; x.strokeText(txt, W / 2, y); x.shadowBlur = 0; x.lineWidth = fs * .06; x.strokeStyle = '#fff3'; x.fillStyle = g; x.fillText(txt, W / 2, y); };
+  line('GEM MINER', ty, f1); line('TYCOON', ty + f1 * .92, f1 * 1.04);
+  const sy = ty + f1 * 1.55, sw = f1 * 4.6; x.fillStyle = '#12082acc'; x.beginPath(); x.roundRect ? x.roundRect(W / 2 - sw / 2, sy - f1 * .2, sw, f1 * .3, 40) : x.rect(W / 2 - sw / 2, sy - f1 * .2, sw, f1 * .3); x.fill();
+  x.font = `800 ${f1 * .17}px "DejaVu Sans",Arial,sans-serif`; x.fillStyle = '#e9d9ff'; x.shadowColor = '#000'; x.shadowBlur = 12; x.fillText('TAP  •  DIG  •  ASCEND  •  GET RICH', W / 2, ty + f1 * 1.55); x.restore();
+}
+window.draw = draw; draw(+P.get('t') || 0.9);
+</script>
