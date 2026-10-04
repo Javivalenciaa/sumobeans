@@ -1,8 +1,8 @@
 const { chromium } = require('/opt/node-tools/node_modules/playwright');
-const SHOT = '/tmp/claude-0/nh_';
+const SHOT = '/tmp/claude-0/wh_';
 (async () => {
   const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] }); const errs = [];
-  const p = await b.newPage({ viewport: { width: 1280, height: 720 } }); p.on('pageerror', (e) => errs.push(e.message)); p.on('console', (m) => { if (m.type() === 'error' && !/TUNNEL|ERR_/.test(m.text())) errs.push(m.text()); });
+  const p = await b.newPage({ viewport: { width: 1280, height: 720 } }); p.on('pageerror', (e) => errs.push(e.message + ' ' + (e.stack || '').split('\n').slice(1, 3).join('|'))); p.on('console', (m) => { if (m.type() === 'error' && !/TUNNEL|ERR_/.test(m.text())) errs.push(m.text()); });
   await p.goto('file:///home/user/neon-horde/index.html'); await p.waitForSelector('#sMenu:not([hidden])'); await p.waitForTimeout(800); await p.screenshot({ path: SHOT + 'menu.png' });
   await p.click('#bPlay', { force: true }); await p.waitForTimeout(300);
   // bot: flee from enemy centroid, always pick option 0; fast-forward the simulation

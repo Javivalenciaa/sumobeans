@@ -8,7 +8,7 @@ function heroCards() {
   const el = $('#heroes'); el.innerHTML = '';
   HEROES.forEach((h, i) => {
     const owned = SV.heroes.indexOf(i) >= 0, d = document.createElement('button'); d.className = 'hero' + (SV.hero === i ? ' on' : '') + (owned ? '' : ' lock');
-    const c = document.createElement('canvas'); c.width = 168; c.height = 184; c.getContext('2d').drawImage(SP['hero' + i], 14, 0, 140, 172); d.appendChild(c);
+    const c = document.createElement('canvas'); c.width = 168; c.height = 184; c.getContext('2d').drawImage(SP['hero' + i], 20, 0, 128, 166); d.appendChild(c);
     d.insertAdjacentHTML('beforeend', '<b>' + L2(h.n) + '</b><span>' + L2(h.role) + '</span>' + (owned ? '' : '<div class="lk">🔒 ' + t('locked') + ' · ' + h.cost + ' 🪙</div>'));
     d.onclick = () => { sfx('click'); if (owned) { SV.hero = i; save(); heroCards(); return; } if (SV.gold >= h.cost) { SV.gold -= h.cost; SV.heroes.push(i); SV.hero = i; save(); heroCards(); menuStats(); sfx('chest'); } else toast(t('gold') + ' ' + SV.gold + ' / ' + h.cost); };
     el.appendChild(d);
@@ -96,7 +96,7 @@ function loop(tm) {
   requestAnimationFrame(loop);
 }
 async function main() {
-  await cgBoot(); loadSave(); buildSprites(); buildGlows(); resize(); window.addEventListener('resize', resize);
+  await cgBoot(); loadSave(); resize(); let rt = 0; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(resize, 200); });
   $('#bPlay').textContent = t('play'); $('#bShop').textContent = t('shop'); $('#bShopX').textContent = t('close'); $('#bResume').textContent = t('resume'); $('#bQuit').textContent = t('quit'); $('#pauseT').textContent = t('pause');
   $('#bAgain').textContent = t('again'); $('#bMenu').textContent = t('menu'); $('#bRevive').textContent = t('revive'); $('#bX2').textContent = t('x2'); $('#bReroll').textContent = t('reroll');
   $('#bPlay').onclick = startRun; $('#bShop').onclick = () => { sfx('click'); renderShop(); show('#sShop', true); }; $('#bShopX').onclick = () => { show('#sShop', false); sfx('click'); };

@@ -28,26 +28,24 @@ const SHOP = [
 ];
 const shopLv = (id) => SV.shop[id] || 0, shopCost = (id) => Math.round(45 + shopLv(id) * 55 + shopLv(id) * shopLv(id) * 6);
 const ETYPE = {
-  slime: { hp: 14, spd: 50, dmg: 6, r: 14, xp: 1, spr: 'slime', sw: 44 },
-  bat: { hp: 7, spd: 98, dmg: 5, r: 11, xp: 1, spr: 'bat', sw: 28 },
-  brute: { hp: 75, spd: 40, dmg: 14, r: 25, xp: 5, spr: 'brute', sw: 72 },
-  watcher: { hp: 32, spd: 44, dmg: 8, r: 17, xp: 3, spr: 'watcher', sw: 46, ranged: true },
-  elite: { hp: 520, spd: 46, dmg: 20, r: 34, xp: 30, spr: 'brute', sw: 100, elite: true },
-  boss1: { hp: 2600, spd: 38, dmg: 26, r: 58, xp: 120, spr: 'boss1', sw: 150, boss: true },
-  boss2: { hp: 7200, spd: 36, dmg: 32, r: 66, xp: 300, spr: 'boss2', sw: 170, boss: true },
+  slime: { hp: 14, spd: 50, dmg: 6, r: 15, xp: 1, spr: 'slime' },
+  bat: { hp: 7, spd: 98, dmg: 5, r: 12, xp: 1, spr: 'bat' },
+  brute: { hp: 75, spd: 40, dmg: 14, r: 28, xp: 5, spr: 'brute' },
+  watcher: { hp: 32, spd: 44, dmg: 8, r: 19, xp: 3, spr: 'watcher', ranged: true },
+  elite: { hp: 520, spd: 46, dmg: 20, r: 36, xp: 30, spr: 'elite', sc: 1.25, elite: true },
+  boss1: { hp: 2600, spd: 38, dmg: 26, r: 58, xp: 120, spr: 'boss1', boss: true },
+  boss2: { hp: 7200, spd: 36, dmg: 32, r: 66, xp: 300, spr: 'boss2', sc: 1.08, boss: true },
 };
 
 /* ============================== state ============================== */
 const cv = $('#cv'), cx = cv.getContext('2d'); let VW = 800, VH = 600, DPR = 1, Z = 1, UI = 1;
-const bl1 = document.createElement('canvas'), bl2 = document.createElement('canvas'), b1 = bl1.getContext('2d'), b2 = bl2.getContext('2d');
-const CAN_FILTER = (() => { try { return 'filter' in b1; } catch (e) { return false; } })();
 let state = 'menu', P = null, G = null, cam = { x: 0, y: 0, sh: 0 }, uid = 1;
 const keys = {}, joy = { on: false, id: -1, ox: 0, oy: 0, x: 0, y: 0 };
 let enemies = [], shots = [], eshots = [], gems = [], parts = [], texts = [], fxs = [], grid = new Map();
 function resize() {
   DPR = Math.min(2, window.devicePixelRatio || 1); VW = window.innerWidth; VH = window.innerHeight; cv.width = Math.floor(VW * DPR); cv.height = Math.floor(VH * DPR);
   Z = clamp(Math.min(VW, VH) / 640, .62, 1.5) * (VW > VH ? 1 : 1); UI = clamp(Math.min(VW, VH) / 700, .85, 1.35);
-  bl1.width = Math.ceil(cv.width / 4); bl1.height = Math.ceil(cv.height / 4); bl2.width = Math.ceil(cv.width / 10); bl2.height = Math.ceil(cv.height / 10);
+  ensureSprites();
 }
 function metaMods() { return { hp: shopLv('hp') * 10, dmg: 1 + shopLv('dmg') * .05, spd: 1 + shopLv('spd') * .03, mag: 1 + shopLv('mag') * .1, xp: 1 + shopLv('xp') * .06, gold: 1 + shopLv('gold') * .1, regen: shopLv('regen') * .15 }; }
 function newRun() {
