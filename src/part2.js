@@ -1,11 +1,11 @@
 /* ============================== util / i18n / storage ============================== */
 const $ = (s) => document.querySelector(s);
-const LANG = /^es/i.test(navigator.language || '') ? 'es' : 'en';
+let LANG = 'en';   // English by default; the player can switch to Spanish (saved)
 const rnd = (a, b) => a + Math.random() * (b - a), irnd = (a, b) => Math.floor(rnd(a, b + 1)), pick = (a) => a[(Math.random() * a.length) | 0];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), TAU = Math.PI * 2;
 const TX = {
-  en: { play: '▶  PLAY', shop: '⭐ Upgrades', snd: 'Sound', gold: 'Gold', best: 'Best', kills: 'Kills', time: 'Time', lvl: 'Level', pick: 'LEVEL UP!', chest: 'TREASURE!', reroll: '📺 Reroll', pause: 'Paused', resume: 'Resume', quit: 'Quit run', over: 'You fell…', win: 'VICTORY!', again: '▶ Play again', menu: 'Menu', revive: '📺 Revive', x2: '📺 Gold ×2', ready: 'Hero', locked: 'Unlock', max: 'MAX', noad: 'No ad available right now', heal: 'Heal 40% HP', coins: '+60 gold', move: 'Move: WASD / arrows / drag. You attack automatically.', boss: 'BOSS', lvlup: 'Lv', got: 'Collected', owned: 'owned', shopT: 'Permanent upgrades', close: 'Close', total: 'Total kills', earned: 'Gold earned', bonus: 'Bonus', new: 'NEW' },
-  es: { play: '▶  JUGAR', shop: '⭐ Mejoras', snd: 'Sonido', gold: 'Oro', best: 'Récord', kills: 'Bajas', time: 'Tiempo', lvl: 'Nivel', pick: '¡SUBES DE NIVEL!', chest: '¡TESORO!', reroll: '📺 Cambiar', pause: 'Pausa', resume: 'Continuar', quit: 'Abandonar', over: 'Has caído…', win: '¡VICTORIA!', again: '▶ Jugar otra vez', menu: 'Menú', revive: '📺 Revivir', x2: '📺 Oro ×2', ready: 'Héroe', locked: 'Desbloquear', max: 'MÁX', noad: 'No hay anuncio disponible ahora', heal: 'Curar 40% de vida', coins: '+60 de oro', move: 'Muévete: WASD / flechas / arrastra. Atacas automáticamente.', boss: 'JEFE', lvlup: 'Nv', got: 'Recogido', owned: 'tienes', shopT: 'Mejoras permanentes', close: 'Cerrar', total: 'Bajas totales', earned: 'Oro ganado', bonus: 'Bonus', new: 'NUEVO' },
+  en: { play: '▶  PLAY', shop: '⭐ Upgrades', snd: 'Sound', gold: 'Gold', best: 'Best', kills: 'Kills', time: 'Time', lvl: 'Level', pick: 'LEVEL UP!', chest: 'TREASURE!', reroll: '📺 Reroll', pause: 'Paused', resume: 'Resume', quit: 'Quit run', over: 'You fell…', win: 'VICTORY!', again: '▶ Play again', menu: 'Menu', revive: '📺 Revive', x2: '📺 Gold ×2', ready: 'Hero', locked: 'Unlock', max: 'MAX', noad: 'No ad available right now', heal: 'Heal 40% HP', coins: '+60 gold', move: 'Move: WASD / arrows / drag. You attack automatically.', boss: 'BOSS', lvlup: 'Lv', got: 'Collected', owned: 'owned', shopT: 'Permanent upgrades', close: 'Close', total: 'Total kills', earned: 'Gold earned', bonus: 'Bonus', new: 'NEW', lang: 'Language' },
+  es: { play: '▶  JUGAR', shop: '⭐ Mejoras', snd: 'Sonido', gold: 'Oro', best: 'Récord', kills: 'Bajas', time: 'Tiempo', lvl: 'Nivel', pick: '¡SUBES DE NIVEL!', chest: '¡TESORO!', reroll: '📺 Cambiar', pause: 'Pausa', resume: 'Continuar', quit: 'Abandonar', over: 'Has caído…', win: '¡VICTORIA!', again: '▶ Jugar otra vez', menu: 'Menú', revive: '📺 Revivir', x2: '📺 Oro ×2', ready: 'Héroe', locked: 'Desbloquear', max: 'MÁX', noad: 'No hay anuncio disponible ahora', heal: 'Curar 40% de vida', coins: '+60 de oro', move: 'Muévete: WASD / flechas / arrastra. Atacas automáticamente.', boss: 'JEFE', lvlup: 'Nv', got: 'Recogido', owned: 'tienes', shopT: 'Mejoras permanentes', close: 'Cerrar', total: 'Bajas totales', earned: 'Oro ganado', bonus: 'Bonus', new: 'NUEVO', lang: 'Idioma' },
 };
 const t = (k) => (TX[LANG][k] != null ? TX[LANG][k] : TX.en[k]) || k;
 const L2 = (a) => a[LANG === 'es' ? 1 : 0];
@@ -17,8 +17,8 @@ const store = {
   set(k, v) { try { if (cgData) cgData.setItem(k, v); } catch (e) {} try { localStorage.setItem(k, v); } catch (e) {} },
 };
 const KEY = 'neonhorde-v1';
-let SV = { gold: 0, shop: {}, heroes: [0], hero: 0, best: 0, kills: 0, runs: 0, mute: false, seen: 0 };
-function loadSave() { try { const o = JSON.parse(store.get(KEY) || '{}'); SV = Object.assign(SV, o); } catch (e) {} }
+let SV = { lang: 'en', gold: 0, shop: {}, heroes: [0], hero: 0, best: 0, kills: 0, runs: 0, mute: false, seen: 0 };
+function loadSave() { try { const o = JSON.parse(store.get(KEY) || '{}'); SV = Object.assign(SV, o); } catch (e) {} LANG = SV.lang === 'es' ? 'es' : 'en'; }
 function save() { store.set(KEY, JSON.stringify(SV)); }
 
 /* ============================== audio ============================== */

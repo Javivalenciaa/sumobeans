@@ -95,11 +95,19 @@ function loop(tm) {
   if (state === 'menu') drawAll(tm, true); else { drawAll(tm, false); if (!window.__nohud) drawHud(tm); }
   requestAnimationFrame(loop);
 }
-async function main() {
-  await cgBoot(); loadSave(); resize(); let rt = 0; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(resize, 200); });
+function applyTexts() {
+  document.documentElement.lang = LANG;
   $('#bPlay').textContent = t('play'); $('#bShop').textContent = t('shop'); $('#bShopX').textContent = t('close'); $('#bResume').textContent = t('resume'); $('#bQuit').textContent = t('quit'); $('#pauseT').textContent = t('pause');
   $('#bAgain').textContent = t('again'); $('#bMenu').textContent = t('menu'); $('#bRevive').textContent = t('revive'); $('#bX2').textContent = t('x2'); $('#bReroll').textContent = t('reroll');
+  const lb = '🌐 ' + (LANG === 'es' ? 'Español' : 'English'); $('#bLang').textContent = lb; $('#bLang2').textContent = lb; $('#pauseH').textContent = t('move');
+  paintSnd(); menuStats(); if (!$('#sShop').hidden) renderShop(); if (state === 'menu') heroCards();
+}
+function setLang(l) { LANG = l === 'es' ? 'es' : 'en'; SV.lang = LANG; save(); applyTexts(); sfx('click'); }
+async function main() {
+  await cgBoot(); loadSave(); resize(); let rt = 0; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(resize, 200); });
+  applyTexts();
   $('#bPlay').onclick = startRun; $('#bShop').onclick = () => { sfx('click'); renderShop(); show('#sShop', true); }; $('#bShopX').onclick = () => { show('#sShop', false); sfx('click'); };
+  $('#bLang').onclick = () => setLang(LANG === 'es' ? 'en' : 'es'); $('#bLang2').onclick = () => setLang(LANG === 'es' ? 'en' : 'es');
   $('#bSnd').onclick = toggleSnd; $('#bSnd2').onclick = toggleSnd; $('#bPause').onclick = pauseGame; $('#bResume').onclick = resumeGame; $('#bQuit').onclick = () => { if (state === 'paused') { show('#sPause', false); G.over = false; gameOver(false); } };
   $('#bReroll').onclick = () => showAd('rewarded', renderOffer);
   $('#bRevive').onclick = () => showAd('rewarded', revive);

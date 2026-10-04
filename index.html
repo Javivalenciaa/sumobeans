@@ -70,23 +70,23 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
   <h1 class="title">WILD<br>HORDE<small>SURVIVORS</small></h1>
   <div class="row" id="heroes"></div>
   <button class="btn play" id="bPlay"></button>
-  <div class="row"><button class="btn sm" id="bShop"></button><button class="btn sm" id="bSnd2"></button></div>
+  <div class="row"><button class="btn sm" id="bShop"></button><button class="btn sm" id="bSnd2"></button><button class="btn sm" id="bLang"></button></div>
   <div class="stats" id="mstats"></div>
 </div>
 <div class="screen dim" id="sShop" hidden><div class="card"><h2 id="shopT"></h2><div class="stats" id="shopG"></div><div class="shop" id="shopL"></div><div class="row"><button class="btn" id="bShopX"></button></div></div></div>
 <div class="screen dim" id="sUp" hidden><h2 class="title" style="font-size:clamp(28px,6vw,48px)" id="upT"></h2><div class="ups" id="upL"></div><div class="row"><button class="btn sm ad" id="bReroll"></button></div></div>
-<div class="screen dim" id="sPause" hidden><div class="card" style="text-align:center"><h2 id="pauseT"></h2><div class="row" style="margin-top:14px"><button class="btn play" style="font-size:22px;padding:14px 36px" id="bResume"></button><button class="btn sm" id="bQuit"></button></div><div class="stats" style="margin-top:12px" id="pauseH"></div></div></div>
+<div class="screen dim" id="sPause" hidden><div class="card" style="text-align:center"><h2 id="pauseT"></h2><div class="row" style="margin-top:14px"><button class="btn play" style="font-size:22px;padding:14px 36px" id="bResume"></button><button class="btn sm" id="bQuit"></button><button class="btn sm" id="bLang2"></button></div><div class="stats" style="margin-top:12px" id="pauseH"></div></div></div>
 <div class="screen dim" id="sOver" hidden><div class="card" style="text-align:center"><h2 id="overT"></h2><div class="res" id="overR"></div><div class="big" id="overG"></div><div class="row" style="margin-top:8px"><button class="btn ad" id="bRevive"></button><button class="btn ad" id="bX2"></button></div><div class="row" style="margin-top:10px"><button class="btn play" style="font-size:22px;padding:14px 36px" id="bAgain"></button><button class="btn sm" id="bMenu"></button></div></div></div>
 <script>
 'use strict';
 /* ============================== util / i18n / storage ============================== */
 const $ = (s) => document.querySelector(s);
-const LANG = /^es/i.test(navigator.language || '') ? 'es' : 'en';
+let LANG = 'en';   // English by default; the player can switch to Spanish (saved)
 const rnd = (a, b) => a + Math.random() * (b - a), irnd = (a, b) => Math.floor(rnd(a, b + 1)), pick = (a) => a[(Math.random() * a.length) | 0];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), TAU = Math.PI * 2;
 const TX = {
-  en: { play: '▶  PLAY', shop: '⭐ Upgrades', snd: 'Sound', gold: 'Gold', best: 'Best', kills: 'Kills', time: 'Time', lvl: 'Level', pick: 'LEVEL UP!', chest: 'TREASURE!', reroll: '📺 Reroll', pause: 'Paused', resume: 'Resume', quit: 'Quit run', over: 'You fell…', win: 'VICTORY!', again: '▶ Play again', menu: 'Menu', revive: '📺 Revive', x2: '📺 Gold ×2', ready: 'Hero', locked: 'Unlock', max: 'MAX', noad: 'No ad available right now', heal: 'Heal 40% HP', coins: '+60 gold', move: 'Move: WASD / arrows / drag. You attack automatically.', boss: 'BOSS', lvlup: 'Lv', got: 'Collected', owned: 'owned', shopT: 'Permanent upgrades', close: 'Close', total: 'Total kills', earned: 'Gold earned', bonus: 'Bonus', new: 'NEW' },
-  es: { play: '▶  JUGAR', shop: '⭐ Mejoras', snd: 'Sonido', gold: 'Oro', best: 'Récord', kills: 'Bajas', time: 'Tiempo', lvl: 'Nivel', pick: '¡SUBES DE NIVEL!', chest: '¡TESORO!', reroll: '📺 Cambiar', pause: 'Pausa', resume: 'Continuar', quit: 'Abandonar', over: 'Has caído…', win: '¡VICTORIA!', again: '▶ Jugar otra vez', menu: 'Menú', revive: '📺 Revivir', x2: '📺 Oro ×2', ready: 'Héroe', locked: 'Desbloquear', max: 'MÁX', noad: 'No hay anuncio disponible ahora', heal: 'Curar 40% de vida', coins: '+60 de oro', move: 'Muévete: WASD / flechas / arrastra. Atacas automáticamente.', boss: 'JEFE', lvlup: 'Nv', got: 'Recogido', owned: 'tienes', shopT: 'Mejoras permanentes', close: 'Cerrar', total: 'Bajas totales', earned: 'Oro ganado', bonus: 'Bonus', new: 'NUEVO' },
+  en: { play: '▶  PLAY', shop: '⭐ Upgrades', snd: 'Sound', gold: 'Gold', best: 'Best', kills: 'Kills', time: 'Time', lvl: 'Level', pick: 'LEVEL UP!', chest: 'TREASURE!', reroll: '📺 Reroll', pause: 'Paused', resume: 'Resume', quit: 'Quit run', over: 'You fell…', win: 'VICTORY!', again: '▶ Play again', menu: 'Menu', revive: '📺 Revive', x2: '📺 Gold ×2', ready: 'Hero', locked: 'Unlock', max: 'MAX', noad: 'No ad available right now', heal: 'Heal 40% HP', coins: '+60 gold', move: 'Move: WASD / arrows / drag. You attack automatically.', boss: 'BOSS', lvlup: 'Lv', got: 'Collected', owned: 'owned', shopT: 'Permanent upgrades', close: 'Close', total: 'Total kills', earned: 'Gold earned', bonus: 'Bonus', new: 'NEW', lang: 'Language' },
+  es: { play: '▶  JUGAR', shop: '⭐ Mejoras', snd: 'Sonido', gold: 'Oro', best: 'Récord', kills: 'Bajas', time: 'Tiempo', lvl: 'Nivel', pick: '¡SUBES DE NIVEL!', chest: '¡TESORO!', reroll: '📺 Cambiar', pause: 'Pausa', resume: 'Continuar', quit: 'Abandonar', over: 'Has caído…', win: '¡VICTORIA!', again: '▶ Jugar otra vez', menu: 'Menú', revive: '📺 Revivir', x2: '📺 Oro ×2', ready: 'Héroe', locked: 'Desbloquear', max: 'MÁX', noad: 'No hay anuncio disponible ahora', heal: 'Curar 40% de vida', coins: '+60 de oro', move: 'Muévete: WASD / flechas / arrastra. Atacas automáticamente.', boss: 'JEFE', lvlup: 'Nv', got: 'Recogido', owned: 'tienes', shopT: 'Mejoras permanentes', close: 'Cerrar', total: 'Bajas totales', earned: 'Oro ganado', bonus: 'Bonus', new: 'NUEVO', lang: 'Idioma' },
 };
 const t = (k) => (TX[LANG][k] != null ? TX[LANG][k] : TX.en[k]) || k;
 const L2 = (a) => a[LANG === 'es' ? 1 : 0];
@@ -98,8 +98,8 @@ const store = {
   set(k, v) { try { if (cgData) cgData.setItem(k, v); } catch (e) {} try { localStorage.setItem(k, v); } catch (e) {} },
 };
 const KEY = 'neonhorde-v1';
-let SV = { gold: 0, shop: {}, heroes: [0], hero: 0, best: 0, kills: 0, runs: 0, mute: false, seen: 0 };
-function loadSave() { try { const o = JSON.parse(store.get(KEY) || '{}'); SV = Object.assign(SV, o); } catch (e) {} }
+let SV = { lang: 'en', gold: 0, shop: {}, heroes: [0], hero: 0, best: 0, kills: 0, runs: 0, mute: false, seen: 0 };
+function loadSave() { try { const o = JSON.parse(store.get(KEY) || '{}'); SV = Object.assign(SV, o); } catch (e) {} LANG = SV.lang === 'es' ? 'es' : 'en'; }
 function save() { store.set(KEY, JSON.stringify(SV)); }
 
 /* ============================== audio ============================== */
@@ -729,11 +729,19 @@ function loop(tm) {
   if (state === 'menu') drawAll(tm, true); else { drawAll(tm, false); if (!window.__nohud) drawHud(tm); }
   requestAnimationFrame(loop);
 }
-async function main() {
-  await cgBoot(); loadSave(); resize(); let rt = 0; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(resize, 200); });
+function applyTexts() {
+  document.documentElement.lang = LANG;
   $('#bPlay').textContent = t('play'); $('#bShop').textContent = t('shop'); $('#bShopX').textContent = t('close'); $('#bResume').textContent = t('resume'); $('#bQuit').textContent = t('quit'); $('#pauseT').textContent = t('pause');
   $('#bAgain').textContent = t('again'); $('#bMenu').textContent = t('menu'); $('#bRevive').textContent = t('revive'); $('#bX2').textContent = t('x2'); $('#bReroll').textContent = t('reroll');
+  const lb = '🌐 ' + (LANG === 'es' ? 'Español' : 'English'); $('#bLang').textContent = lb; $('#bLang2').textContent = lb; $('#pauseH').textContent = t('move');
+  paintSnd(); menuStats(); if (!$('#sShop').hidden) renderShop(); if (state === 'menu') heroCards();
+}
+function setLang(l) { LANG = l === 'es' ? 'es' : 'en'; SV.lang = LANG; save(); applyTexts(); sfx('click'); }
+async function main() {
+  await cgBoot(); loadSave(); resize(); let rt = 0; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(resize, 200); });
+  applyTexts();
   $('#bPlay').onclick = startRun; $('#bShop').onclick = () => { sfx('click'); renderShop(); show('#sShop', true); }; $('#bShopX').onclick = () => { show('#sShop', false); sfx('click'); };
+  $('#bLang').onclick = () => setLang(LANG === 'es' ? 'en' : 'es'); $('#bLang2').onclick = () => setLang(LANG === 'es' ? 'en' : 'es');
   $('#bSnd').onclick = toggleSnd; $('#bSnd2').onclick = toggleSnd; $('#bPause').onclick = pauseGame; $('#bResume').onclick = resumeGame; $('#bQuit').onclick = () => { if (state === 'paused') { show('#sPause', false); G.over = false; gameOver(false); } };
   $('#bReroll').onclick = () => showAd('rewarded', renderOffer);
   $('#bRevive').onclick = () => showAd('rewarded', revive);
