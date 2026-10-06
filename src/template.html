@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Banderazo</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html,body{margin:0;height:100%;overflow:hidden;background:#12304f;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;font-weight:800;color:#fff;font-size:10px}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#ui{position:fixed;inset:0;pointer-events:none}
+#ui>*{pointer-events:none}
+.hide{display:none!important}
+button{font-family:inherit}
+.btn{pointer-events:auto;border:0;border-radius:1.8rem;padding:1.2rem 2.6rem;font-size:2.6rem;font-weight:800;color:#fff;cursor:pointer;background:linear-gradient(#5aa8ff,#2f6fe0);box-shadow:0 .6rem 0 #1c3f94,0 1rem 1.8rem rgba(0,0,0,.3);text-shadow:0 .2rem 0 rgba(0,0,0,.25);transition:transform .08s}
+.btn:active{transform:translateY(.4rem);box-shadow:0 .2rem 0 #1c3f94}
+.btn.g{background:linear-gradient(#78e65f,#34aa34);box-shadow:0 .6rem 0 #1f7a22,0 1rem 1.8rem rgba(0,0,0,.3)}
+.btn.y{background:linear-gradient(#ffdc55,#f0a712);color:#4a2c00;text-shadow:none;box-shadow:0 .6rem 0 #a56a00,0 1rem 1.8rem rgba(0,0,0,.3)}
+.btn.r{background:linear-gradient(#ff7b7b,#d63a3a);box-shadow:0 .6rem 0 #8d1f1f,0 1rem 1.8rem rgba(0,0,0,.3)}
+.btn.sm{font-size:2rem;padding:.8rem 1.6rem;border-radius:1.4rem}
+.btn[disabled]{filter:grayscale(.85) brightness(.8);cursor:default;transform:none}
+.panel{background:linear-gradient(#2a3f78,#1b2a57);border:.4rem solid #5e7dd0;border-radius:2.4rem;padding:2.2rem 2.6rem;box-shadow:0 1.4rem 4rem rgba(0,0,0,.45);pointer-events:auto}
+.overlay{position:absolute;inset:0;background:rgba(6,14,40,.6);display:flex;align-items:center;justify-content:center;pointer-events:auto;z-index:20}
+.pill{background:rgba(10,20,50,.6);border:.3rem solid rgba(255,255,255,.22);border-radius:3rem;padding:.6rem 1.8rem;font-size:2.6rem;display:flex;align-items:center;gap:1rem}
+.coin{display:inline-block;width:2.8rem;height:2.8rem;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff7b0,#ffd23f 45%,#e0a000);border:.3rem solid #b87800}
+/* lobby */
+#lobby{position:absolute;inset:0}
+#lobby .logo{position:absolute;left:3rem;top:2.2rem;font-size:6.4rem;line-height:1;text-shadow:0 .5rem 0 #1a5fb0,0 .8rem 0 rgba(0,0,0,.2);-webkit-text-stroke:.35rem #1d6fd1;paint-order:stroke fill}
+#lobby .logo small{display:block;font-size:2.2rem;-webkit-text-stroke:0;letter-spacing:.3rem;text-shadow:0 .2rem 0 rgba(0,0,0,.4)}
+#prof{position:absolute;left:3rem;top:13rem;width:34rem;padding:1.2rem 1.6rem;background:rgba(10,20,50,.55);border-radius:2rem;border:.3rem solid rgba(255,255,255,.2);pointer-events:auto}
+#prof .row{display:flex;align-items:center;justify-content:space-between;font-size:2.2rem}
+.bar{height:1.4rem;border-radius:1rem;background:rgba(255,255,255,.2);overflow:hidden;margin:.7rem 0}
+.bar>div{height:100%;background:linear-gradient(#8cf06b,#3fbf3a);width:0}
+#lbTop{position:absolute;right:3rem;top:2.2rem;display:flex;gap:1.2rem;align-items:center}
+#lbMid{position:absolute;left:3rem;bottom:3rem;display:flex;flex-direction:column;gap:1.4rem}
+#lbPlay{position:absolute;left:50%;bottom:3rem;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:1.2rem}
+#lbPlay .btn.big{font-size:4.6rem;padding:1.4rem 8rem}
+#wsel{position:absolute;right:3rem;bottom:3rem;display:flex;gap:1.2rem;pointer-events:auto}
+.wcard{width:15rem;padding:1.2rem;text-align:center;border-radius:2rem;background:rgba(10,20,50,.6);border:.4rem solid rgba(255,255,255,.2);cursor:pointer;pointer-events:auto}
+.wcard.on{border-color:#ffd23f;background:rgba(60,70,130,.8);transform:translateY(-.8rem)}
+.wcard .ic{font-size:5rem;line-height:1.1}
+.wcard .nm{font-size:2.4rem}.wcard .ds{font-size:1.4rem;opacity:.8;font-weight:700}
+#friendsBtn{position:absolute;right:3rem;top:50%}
+/* search */
+#search .box{width:56rem;text-align:center}
+#search h2{margin:0 0 1rem;font-size:3.8rem}
+#slots{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,auto);grid-auto-flow:column;gap:.8rem 2rem;margin:1.2rem 0;font-size:2.2rem}
+.slot{background:rgba(255,255,255,.1);border-radius:1.2rem;padding:.6rem 1rem;min-height:3.6rem;text-align:left}
+.slot.b{border-left:.8rem solid #3d7bff}.slot.r{border-left:.8rem solid #e04a42}
+.slot.empty{opacity:.45}
+/* hud */
+#hud{position:absolute;inset:0}
+#sbar{position:absolute;left:50%;top:1.6rem;transform:translateX(-50%);display:flex;border-radius:1.4rem;overflow:hidden;font-size:3.6rem;box-shadow:0 .4rem 1.4rem rgba(0,0,0,.4);border:.3rem solid rgba(255,255,255,.35)}
+#sbar div{padding:.4rem 2.4rem;min-width:7rem;text-align:center}
+#sb0{background:#2f6fe0}#sb1{background:#d63a3a}#stime{background:#1b2a57;min-width:12rem}
+#obj{position:absolute;left:50%;top:7.8rem;transform:translateX(-50%);font-size:2.2rem;background:rgba(20,30,50,.75);border-radius:2rem;padding:.6rem 2rem;white-space:nowrap}
+#mini{position:absolute;right:1.6rem;top:1.6rem;width:17rem;height:17rem;border-radius:50%;border:.4rem solid rgba(255,255,255,.5);background:#1e5a8a;box-shadow:0 .4rem 1.4rem rgba(0,0,0,.4)}
+#feed{position:absolute;right:1.6rem;top:20rem;width:34rem;display:flex;flex-direction:column;align-items:flex-end;gap:.4rem;font-size:1.9rem}
+#feed div{background:rgba(10,20,50,.6);border-radius:1rem;padding:.3rem 1rem;animation:fe 6s forwards}
+@keyframes fe{0%{opacity:0;transform:translateX(2rem)}6%{opacity:1;transform:none}85%{opacity:1}100%{opacity:0}}
+#vit{position:absolute;left:1.6rem;bottom:1.6rem;display:flex;align-items:center;gap:1.2rem}
+#avatar{width:7.2rem;height:7.2rem;border-radius:50%;border:.5rem solid #3d9bff;background:#2f6fe0;display:flex;align-items:center;justify-content:center;font-size:3.6rem}
+#hearts{font-size:3.8rem;letter-spacing:.3rem;text-shadow:0 .3rem 0 rgba(0,0,0,.4)}
+.chips{display:flex;gap:.8rem;margin-top:.5rem}
+.chip{width:5.4rem;height:5.4rem;border-radius:1.2rem;background:rgba(10,20,50,.7);border:.3rem solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:2.4rem;position:relative;overflow:hidden}
+.chip i{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);height:0}
+#hcoins{position:absolute;right:1.6rem;bottom:1.6rem;display:flex;gap:1rem;align-items:center}
+#toastBig{position:absolute;left:0;right:0;top:20%;text-align:center;font-size:5.6rem;text-shadow:0 .5rem 0 rgba(0,0,0,.4);opacity:0}
+#toastBig.go{animation:big 2.2s ease-out}
+@keyframes big{0%{opacity:0;transform:scale(.6)}12%{opacity:1;transform:scale(1.1)}22%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:translateY(-3rem)}}
+#toast{position:absolute;left:0;right:0;bottom:22%;text-align:center;font-size:2.8rem;text-shadow:0 .3rem 0 rgba(0,0,0,.5);opacity:0;transition:opacity .25s}
+#dead{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+#dead h2{font-size:5rem;margin:0;text-shadow:0 .5rem 0 rgba(0,0,0,.4)}
+#dead .wsel2{display:flex;gap:1rem;justify-content:center;margin-top:1rem;pointer-events:auto}
+#cd{position:absolute;left:0;right:0;top:30%;text-align:center;font-size:14rem;text-shadow:0 1rem 0 rgba(0,0,0,.3)}
+#carry{position:absolute;left:50%;bottom:9rem;transform:translateX(-50%);font-size:2.4rem;background:rgba(255,200,40,.9);color:#4a2c00;border-radius:2rem;padding:.4rem 1.6rem}
+#ptr{position:absolute;left:50%;top:50%;width:.8rem;height:.8rem;margin:-.4rem;border-radius:50%;background:rgba(255,255,255,.6)}
+/* touch */
+.touchmode #vit{bottom:21rem}.touchmode #hcoins{right:auto;left:1.6rem;bottom:auto;top:1.6rem}.touchmode #feed{top:19rem}
+#touch{position:absolute;inset:0}
+#joy{position:absolute;left:3rem;bottom:3rem;width:16rem;height:16rem;border-radius:50%;background:rgba(255,255,255,.15);border:.4rem solid rgba(255,255,255,.35);pointer-events:auto;touch-action:none}
+#knob{position:absolute;left:50%;top:50%;width:7rem;height:7rem;margin:-3.5rem;border-radius:50%;background:rgba(255,255,255,.55)}
+.tb{position:absolute;border-radius:50%;pointer-events:auto;touch-action:none;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.2);border:.4rem solid rgba(255,255,255,.5);font-size:3rem}
+#tAtk{right:3rem;bottom:5rem;width:12rem;height:12rem;font-size:5rem;background:rgba(255,90,90,.45)}
+#tJump{right:17rem;bottom:3rem;width:9rem;height:9rem}
+#tDash{right:4rem;bottom:19rem;width:9rem;height:9rem}
+#tUse{right:15rem;bottom:14rem;width:8rem;height:8rem}
+/* menus */
+.modal{width:96rem;max-height:90%;display:flex;flex-direction:column}
+.modal h2{margin:0;font-size:3.6rem;flex:1}
+.mtop{display:flex;align-items:center;gap:1.2rem;margin-bottom:1.2rem}
+.mbody{overflow:auto;flex:1;padding-right:.6rem;-webkit-overflow-scrolling:touch}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem}
+.item{background:rgba(255,255,255,.08);border-radius:1.6rem;padding:1rem;text-align:center;font-size:1.8rem}
+.item .pv{font-size:4rem;height:5.4rem}
+.item .nm{margin:.3rem 0 .6rem}
+.mrow{display:flex;align-items:center;gap:1.4rem;background:rgba(255,255,255,.08);border-radius:1.6rem;padding:1rem 1.6rem;margin-bottom:1rem;font-size:2.2rem}
+.mrow .tx{flex:1}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:.8rem 3rem;font-size:2.3rem}
+.stats div{display:flex;justify-content:space-between;border-bottom:.2rem solid rgba(255,255,255,.12);padding:.4rem 0}
+/* end */
+#end .box{width:62rem;text-align:center}
+#end h1{margin:0;font-size:7rem;text-shadow:0 .6rem 0 rgba(0,0,0,.35)}
+.erow{display:flex;justify-content:space-between;font-size:2.4rem;padding:.3rem 1rem}
+.erow.t{font-size:3rem;color:#ffe066;border-top:.3rem solid rgba(255,255,255,.2);margin-top:.6rem;padding-top:.8rem}
+#eNext{font-size:2.2rem;color:#9ff0ff;margin:1rem 0;min-height:6.4rem}
+#eBtns{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-top:1.4rem}
+#eBtns .w{grid-column:1/3}
+#adv{text-align:center}
+#adbar{width:42rem;height:1.6rem;background:rgba(255,255,255,.2);border-radius:1rem;overflow:hidden;margin:1.8rem auto 0}
+#adbar div{height:100%;width:0;background:#7dff8a}
+#lock{position:absolute;left:50%;bottom:4rem;transform:translateX(-50%);font-size:2.4rem;background:rgba(0,0,0,.6);padding:.8rem 2.4rem;border-radius:2rem}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="ui">
+  <div id="lobby" class="hide">
+    <div class="logo">BANDERAZO<small>CAPTURA LA BANDERA 3v3</small></div>
+    <div id="prof">
+      <div class="row"><span id="pLvl"></span><span id="pRank"></span></div>
+      <div class="bar"><div id="pXp"></div></div>
+      <div class="row" style="font-size:1.8rem;opacity:.85"><span id="pXpT"></span><span id="pPlace"></span></div>
+    </div>
+    <div id="lbTop">
+      <div class="pill"><i class="coin"></i><b id="lCoins">0</b></div>
+      <button class="btn sm" id="bSnd">&#9834;</button>
+    </div>
+    <div id="lbMid">
+      <button class="btn y" id="bShop">Tienda</button>
+      <button class="btn" id="bMis">Misiones <span id="misDot"></span></button>
+      <button class="btn" id="bProf">Perfil</button>
+    </div>
+    <button class="btn sm" id="friendsBtn" style="top:20rem" disabled title="Necesita servidor online">Jugar con amigos (pronto)</button>
+    <div id="lbPlay">
+      <button class="btn y sm" id="bChest"></button>
+      <button class="btn g big" id="bPlay">JUGAR</button>
+    </div>
+    <div id="wsel"></div>
+  </div>
+
+  <div id="search" class="overlay hide"><div class="panel box">
+    <h2 id="sTitle">Buscando partida...</h2>
+    <div id="sSub" style="font-size:2.2rem;opacity:.85"></div>
+    <div id="slots"></div>
+    <button class="btn r sm" id="bCancel">Cancelar</button>
+  </div></div>
+
+  <div id="hud" class="hide">
+    <div id="sbar"><div id="sb0">0</div><div id="stime">4:00</div><div id="sb1">0</div></div>
+    <div id="obj"></div>
+    <canvas id="mini" width="340" height="340"></canvas>
+    <div id="feed"></div>
+    <div id="vit"><div id="avatar">&#9733;</div><div><div id="hearts"></div><div class="chips"><div class="chip" id="cDash">&#10148;<i></i></div><div class="chip" id="cAtk">&#9876;<i></i></div><div class="chip" id="cItem">?<i></i></div></div></div></div>
+    <div id="hcoins"><div class="pill"><i class="coin"></i><b id="hCoinN">0</b></div></div>
+    <div id="carry" class="hide">&#9873; Llevas la bandera</div>
+    <div id="ptr"></div>
+    <div id="toastBig"></div><div id="toast"></div>
+    <div id="cd" class="hide"></div>
+    <div id="dead" class="hide"><h2 id="dTxt"></h2><div id="dSub" style="font-size:2.4rem"></div><div class="wsel2" id="dW"></div></div>
+    <div id="lock" class="hide">Haz clic para controlar la camara</div>
+  </div>
+
+  <div id="touch" class="hide">
+    <div id="joy"><div id="knob"></div></div>
+    <div class="tb" id="tAtk">&#9876;</div><div class="tb" id="tJump">&#8679;</div><div class="tb" id="tDash">&#10148;</div><div class="tb" id="tUse">E</div>
+  </div>
+
+  <div id="shop" class="overlay hide"><div class="panel modal"><div class="mtop"><h2>Tienda</h2><div class="pill"><i class="coin"></i><b id="shCoins">0</b></div><button class="btn r sm" data-close="shop">&#10005;</button></div><div class="mbody" id="shBody"></div></div></div>
+  <div id="mis" class="overlay hide"><div class="panel modal"><div class="mtop"><h2>Misiones</h2><button class="btn r sm" data-close="mis">&#10005;</button></div><div class="mbody" id="misBody"></div></div></div>
+  <div id="prf" class="overlay hide"><div class="panel modal"><div class="mtop"><h2>Perfil</h2><button class="btn r sm" data-close="prf">&#10005;</button></div><div class="mbody" id="prfBody"></div></div></div>
+
+  <div id="end" class="overlay hide"><div class="panel box">
+    <h1 id="eTitle"></h1><div id="eScore" style="font-size:3rem"></div>
+    <div id="eRows" style="margin-top:1rem"></div><div id="eNext"></div>
+    <div id="eBtns"><button class="btn y" id="eDbl"></button><button class="btn" id="eLobby">Menu</button><button class="btn g w" id="eAgain">Otra partida</button></div>
+  </div></div>
+
+  <div id="ad" class="overlay hide" style="z-index:50"><div id="adv"><h2 style="font-size:4rem;margin:0">Anuncio</h2><div style="font-size:2rem;opacity:.8">(simulado - los anuncios reales van por el SDK de CrazyGames)</div><div id="adbar"><div></div></div></div></div>
+  <div id="toastG" style="position:absolute;left:0;right:0;top:40%;text-align:center;font-size:3rem;opacity:0;transition:opacity .3s;text-shadow:0 .3rem 0 rgba(0,0,0,.5);z-index:60"></div>
+</div>
+<script>/*THREE*/</script>
+<script>/*GAME*/</script>
+</body>
+</html>
