@@ -759,12 +759,13 @@ function stairs(B,cx,cz,dx,dz,half,T,sh,sd,width,col){
 // team-mirrored builder: fn(sg) with sg=-1 (blue / left) and +1 (red / right)
 function both(fn){fn(-1);fn(1)}
 const tc2=(sg,b,r)=>sg<0?b:r;
-function crate(B,x,z,s,h,col,trim){const g=baseGround(x,z);B.box(x,g+h/2,z,s,h,s,col);B.box(x,g+.07,z,s+.07,.14,s+.07,trim||0x6b4423);B.box(x,g+h-.07,z,s+.07,.14,s+.07,trim||0x6b4423);addSolid(x,z,s,s,g+h,'crate')}
+function crate(B,x,z,s,h,col,trim){const g=baseGround(x,z);B.box(x,g+h/2,z,s,h,s,col);B.box(x,g+.07,z,s+.07,.14,s+.07,trim||0x6b4423);B.box(x,g+h-.05,z,s+.07,.14,s+.07,trim||0x6b4423);addSolid(x,z,s,s,g+h,'crate')}
 function flagStandDecal(B,t){
   const f=MAP.flag[t],g=baseGround(f.x,f.z);
-  B.add('cyl',t?0xe04a42:0x3d7bff,f.x,g+.02,f.z,4.4,.04,4.4,0,DECAL);
-  B.add('cyl',t?0xffb0a8:0xa8c8ff,f.x,g+.05,f.z,3.3,.04,3.3,0,DECAL);
-  B.add('cyl',t?0xe04a42:0x3d7bff,f.x,g+.08,f.z,1.0,.04,1.0,0,DECAL);
+  // each layer has its own height (no two top faces share a plane, so nothing can z-fight)
+  B.add('cyl',t?0xe04a42:0x3d7bff,f.x,g+.065,f.z,4.4,.03,4.4,0);
+  B.add('cyl',t?0xffb0a8:0xa8c8ff,f.x,g+.095,f.z,3.3,.03,3.3,0);
+  B.add('cyl',t?0xe04a42:0x3d7bff,f.x,g+.125,f.z,1.0,.03,1.0,0);
 }
 function setTheme(o){
   scene.fog.color.setHex(o.fog);scene.fog.near=o.fn;scene.fog.far=o.ff;scene.background.setHex(o.fog);
