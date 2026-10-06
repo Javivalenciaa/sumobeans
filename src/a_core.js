@@ -9,79 +9,96 @@ function mulberry(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let x=Ma
 function hashStr(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
 const todayKey=()=>new Date().toISOString().slice(0,10);
 const yesterdayKey=()=>new Date(Date.now()-864e5).toISOString().slice(0,10);
-const IS_TOUCH=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+let IS_TOUCH=('ontouchstart' in window)||navigator.maxTouchPoints>0;
 
-/* ================= Platform SDK (CrazyGames) with safe fallback ================= */
-let CG=null,sdkOK=false,sysMute=false,adMute=false;
+/* ================= Sitelock ================= */
+// TEMP: *.github.io is whitelisted so the game can be tested on GitHub Pages. Remove it before the final upload.
+const SITE_ALLOW=[/(^|\.)crazygames\.com$/,/(^|\.)crazygames\.games$/,/^localhost$/,/^127\.0\.0\.1$/,/\.github\.io$/];
+function siteOK(){
+  try{
+    if(location.protocol==='file:')return true;
+    const hosts=[location.hostname];
+    if(location.ancestorOrigins)for(let i=0;i<location.ancestorOrigins.length;i++){try{hosts.push(new URL(location.ancestorOrigins[i]).hostname)}catch(e){}}
+    return hosts.some(h=>SITE_ALLOW.some(r=>r.test(h)));
+  }catch(e){return true}
+}
+
+/* ================= Platform SDK (CrazyGames) ================= */
+let CG=null,sdkOK=false,sysMute=false,adMute=false,adblock=false,cgUser=null,sdkLocale=null,sdkDevice=null;
 function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);setTimeout(()=>rej(new Error('timeout')),4000)})}
 async function initSDK(){
   try{await loadScript('https://sdk.crazygames.com/crazygames-sdk-v3.js');await window.CrazyGames.SDK.init();CG=window.CrazyGames.SDK;sdkOK=CG.environment!=='disabled';if(!sdkOK)CG=null}catch(e){CG=null;sdkOK=false}
-  if(sdkOK){
-    try{const r=CG.data.getItem('banderazo_save');if(r){S=parseSave(r);afterLoad()}}catch(e){}
-    try{CG.game.addSettingsChangeListener&&CG.game.addSettingsChangeListener(s=>{if(s&&s.muteAudio!==undefined){sysMute=!!s.muteAudio;applyVolume()}});if(CG.game.settings&&CG.game.settings.muteAudio){sysMute=true;applyVolume()}}catch(e){}
-  }
+  if(!sdkOK)return;
+  try{CG.game.loadingStart()}catch(e){}
+  try{const r=CG.data.getItem('banderazo_save');if(r){S=parseSave(r)}}catch(e){}
+  try{
+    CG.game.addSettingsChangeListener(s=>{if(s&&s.muteAudio!==undefined){sysMute=!!s.muteAudio;applyVolume()}});
+    if(CG.game.settings&&CG.game.settings.muteAudio){sysMute=true}
+  }catch(e){}
+  try{const si=CG.user.systemInfo;if(si){sdkLocale=si.locale;sdkDevice=si.device&&si.device.type}}catch(e){}
+  try{if(CG.user.isUserAccountAvailable){cgUser=await CG.user.getUser();CG.user.addAuthListener(u=>{cgUser=u;if(window.onUserChanged)window.onUserChanged()})}}catch(e){}
+  try{const h=CG.ad.hasAdblock();adblock=!!(h&&h.then?await h:h)}catch(e){}
 }
 const Store={
   get(k){try{if(sdkOK&&CG&&CG.data)return CG.data.getItem(k)}catch(e){}try{return localStorage.getItem(k)}catch(e){return null}},
   set(k,v){try{if(sdkOK&&CG&&CG.data){CG.data.setItem(k,v);return}}catch(e){}try{localStorage.setItem(k,v)}catch(e){}}
 };
-const gp={start(){try{sdkOK&&CG.game.gameplayStart()}catch(e){}},stop(){try{sdkOK&&CG.game.gameplayStop()}catch(e){}},happy(){try{sdkOK&&CG.game.happytime()}catch(e){}}};
+const gp={on:false,
+  start(){if(this.on)return;this.on=true;try{sdkOK&&CG.game.gameplayStart()}catch(e){}},
+  stop(){if(!this.on)return;this.on=false;try{sdkOK&&CG.game.gameplayStop()}catch(e){}},
+  happy(){try{sdkOK&&CG.game.happytime()}catch(e){}},
+  loaded(){try{sdkOK&&CG.game.loadingStop()}catch(e){}}};
 
 /* ================= Catalog / progression ================= */
 const CAT=[
- {id:'hat_party',type:'hat',name:'Gorro de fiesta',price:150,ic:'🎉'},
- {id:'hat_helm',type:'hat',name:'Casco de lata',price:400,ic:'⛑'},
- {id:'hat_horns',type:'hat',name:'Cuernos',price:900,ic:'😈'},
- {id:'hat_prop',type:'hat',name:'Helice',price:1200,ic:'🚁'},
- {id:'hat_crown',type:'hat',name:'Corona',price:2500,ic:'👑'},
- {id:'pack_red',type:'pack',name:'Mochila roja',price:200,ic:'🎒',col:0xd63a3a},
- {id:'pack_pink',type:'pack',name:'Mochila rosa',price:300,ic:'🎒',col:0xff7fb5},
- {id:'pack_gold',type:'pack',name:'Mochila dorada',price:1500,ic:'🎒',col:0xf0b020},
- {id:'trail_bubble',type:'trail',name:'Estela de burbujas',price:600,ic:'🫧',col:0x9fe8ff},
- {id:'trail_fire',type:'trail',name:'Estela de fuego',price:3000,ic:'🔥',col:0xff7a2a},
- {id:'trail_star',type:'trail',name:'Estela de estrellas',price:4500,ic:'⭐',col:0xffe45a},
- // desbloqueo por nivel (no se compran)
- {id:'pack_green',type:'pack',name:'Mochila verde',lvl:3,ic:'🎒',col:0x43c43d},
- {id:'trail_spark',type:'trail',name:'Estela de chispas',lvl:8,ic:'✨',col:0xfff2a0},
- {id:'hat_recruit',type:'hat',name:'Gorro Recluta',lvl:10,ic:'🧢'},
- {id:'hat_epic',type:'hat',name:'Casco epico',lvl:20,ic:'🤴'},
- {id:'trail_gold',type:'trail',name:'Estela dorada',lvl:30,ic:'🌟',col:0xffc400}
+ {id:'hat_party',type:'hat',n:'it_party',price:150,ic:'🎉'},
+ {id:'hat_helm',type:'hat',n:'it_helm',price:400,ic:'⛑'},
+ {id:'hat_horns',type:'hat',n:'it_horns',price:900,ic:'😈'},
+ {id:'hat_prop',type:'hat',n:'it_prop',price:1200,ic:'🚁'},
+ {id:'hat_crown',type:'hat',n:'it_crown',price:2500,ic:'👑'},
+ {id:'pack_red',type:'pack',n:'it_pred',price:200,ic:'🎒',col:0xd63a3a},
+ {id:'pack_pink',type:'pack',n:'it_ppink',price:300,ic:'🎒',col:0xff7fb5},
+ {id:'pack_gold',type:'pack',n:'it_pgold',price:1500,ic:'🎒',col:0xf0b020},
+ {id:'trail_bubble',type:'trail',n:'it_tbub',price:600,ic:'🫧',col:0x9fe8ff},
+ {id:'trail_fire',type:'trail',n:'it_tfire',price:3000,ic:'🔥',col:0xff7a2a},
+ {id:'trail_star',type:'trail',n:'it_tstar',price:4500,ic:'⭐',col:0xffe45a},
+ {id:'pack_green',type:'pack',n:'it_pgreen',lvl:3,ic:'🎒',col:0x43c43d},
+ {id:'trail_spark',type:'trail',n:'it_tspark',lvl:8,ic:'✨',col:0xfff2a0},
+ {id:'hat_recruit',type:'hat',n:'it_recruit',lvl:10,ic:'🧢'},
+ {id:'hat_epic',type:'hat',n:'it_epic',lvl:20,ic:'🤴'},
+ {id:'trail_gold',type:'trail',n:'it_tgold',lvl:30,ic:'🌟',col:0xffc400}
 ];
 const catById=id=>CAT.find(c=>c.id===id);
-const LEAGUES=['Carton','Madera','Pintura','Cromo','Cristal','Corona','Leyenda de la Caja'];
 const LCOL=['#c9a26a','#a8743a','#e0508a','#9aa7c0','#7fe3ff','#ffd23f','#ff6af0'];
 const xpNeed=l=>300+80*(l-1);
 const MISSIONS=[
- {id:'play2',text:'Juega 2 partidas',n:2,stat:'games'},{id:'ret1',text:'Devuelve una bandera',n:1,stat:'rets'},
- {id:'coin30',text:'Recoge 30 monedas del mapa',n:30,stat:'coins'},{id:'win1',text:'Gana una partida',n:1,stat:'wins'},
- {id:'as3',text:'Da 3 asistencias',n:3,stat:'assists'},{id:'carry90',text:'Lleva la bandera 90 segundos',n:90,stat:'carryTime'},
- {id:'loot2',text:'Recoge 2 objetos raros',n:2,stat:'loot'},{id:'cap1',text:'Captura una bandera',n:1,stat:'caps'}
+ {id:'play2',k:'m_play2',n:2,stat:'games'},{id:'ret1',k:'m_ret1',n:1,stat:'rets'},
+ {id:'coin30',k:'m_coin30',n:30,stat:'coins'},{id:'win1',k:'m_win1',n:1,stat:'wins'},
+ {id:'as3',k:'m_as3',n:3,stat:'assists'},{id:'carry90',k:'m_carry90',n:90,stat:'carryTime'},
+ {id:'loot2',k:'m_loot2',n:2,stat:'loot'},{id:'cap1',k:'m_cap1',n:1,stat:'caps'}
 ];
 const STREAK=[100,150,200,250,300,400,800];
 const WEAPONS={
- sword:{name:'Espada',ic:'⚔',desc:'Rapida y movil. Dash largo.',role:'Corredor'},
- spear:{name:'Lanza',ic:'🔱',desc:'Largo alcance. Control de pasillos.',role:'Defensor'},
- xbow:{name:'Ballesta',ic:'🏹',desc:'Dispara a distancia y frena.',role:'Apoyo'}
+ sword:{ic:'⚔'},spear:{ic:'🔱'},xbow:{ic:'🏹'}
 };
 
 /* ================= Save ================= */
-const defSave=()=>({v:1,coins:300,xp:0,level:1,own:{},eq:{hat:'',pack:'',trail:''},weapon:'sword',
+const defSave=()=>({v:2,coins:300,xp:0,level:1,own:{},eq:{hat:'',pack:'',trail:''},weapon:'sword',map:'auto',lang:'',
   st:{games:0,wins:0,caps:0,rets:0,assists:0,loot:0,coins:0,carryTime:0,kills:0,streak:0,bestStreak:0},
-  rank:{pts:0,placed:0,pw:0,best:0},daily:{date:'',missions:[],prog:{},claimed:{},firstWin:false,chest:false},login:{last:'',streak:0},snd:1});
-function parseSave(r){try{const o=JSON.parse(r),d=defSave();const s=Object.assign(d,o);s.st=Object.assign(defSave().st,o.st||{});s.rank=Object.assign(defSave().rank,o.rank||{});s.eq=Object.assign(defSave().eq,o.eq||{});s.daily=Object.assign(defSave().daily,o.daily||{});s.login=Object.assign(defSave().login,o.login||{});if(!Number.isFinite(s.coins))s.coins=0;if(!Number.isFinite(s.xp))s.xp=0;return s}catch(e){return defSave()}}
+  rank:{pts:0,placed:0,pw:0,best:0},daily:{date:'',missions:[],prog:{},claimed:{},firstWin:false,chest:false,loginDone:false},login:{last:'',streak:0},
+  set:{snd:1,mus:1,sens:1,inv:0,q:'auto',tut:0}});
+function parseSave(r){try{const o=JSON.parse(r),d=defSave();const s=Object.assign(d,o);const D=defSave();s.st=Object.assign(D.st,o.st||{});s.rank=Object.assign(D.rank,o.rank||{});s.eq=Object.assign(D.eq,o.eq||{});s.daily=Object.assign(D.daily,o.daily||{});s.login=Object.assign(D.login,o.login||{});s.set=Object.assign(D.set,o.set||{});if(!Number.isFinite(s.coins))s.coins=0;if(!Number.isFinite(s.xp))s.xp=0;return s}catch(e){return defSave()}}
 let S=parseSave(Store.get('banderazo_save'));
 function save(){if(!Number.isFinite(S.coins))S.coins=0;Store.set('banderazo_save',JSON.stringify(S))}
 function owns(id){const c=catById(id);return !!c&&(S.own[id]||(c.lvl&&S.level>=c.lvl))}
 function checkDaily(){
-  const k=todayKey();let newDay=false;
+  const k=todayKey();
   if(S.daily.date!==k){
     const r=mulberry(hashStr('banderazo'+k)),pool=MISSIONS.slice(),ms=[];
-    for(let i=0;i<3;i++){ms.push(pool.splice((r()*pool.length)|0,1)[0].id)}
-    S.daily={date:k,missions:ms,prog:{},claimed:{},firstWin:false,chest:false};newDay=true;
-    if(S.login.last===yesterdayKey())S.login.streak=Math.min(7,S.login.streak+1);else S.login.streak=1;
-    S.login.last=k;
+    for(let i=0;i<3;i++)ms.push(pool.splice((r()*pool.length)|0,1)[0].id);
+    S.daily={date:k,missions:ms,prog:{},claimed:{},firstWin:false,chest:false,loginDone:false};
+    S.login.streak=(S.login.last===yesterdayKey())?Math.min(7,S.login.streak+1):1;S.login.last=k;
   }
-  return newDay;
 }
 checkDaily();
 function addXP(n){
@@ -91,74 +108,100 @@ function addXP(n){
   return ups;
 }
 function rankInfo(){
-  const r=S.rank;if(r.placed<5)return{name:'Colocacion '+r.placed+'/5',col:'#fff',idx:-1};
-  const i=Math.min(6,Math.floor(r.pts/100));return{name:LEAGUES[i],col:LCOL[i],idx:i};
+  const r=S.rank;if(r.placed<5)return{name:t('placement',{n:r.placed}),col:'#fff',idx:-1};
+  const i=Math.min(6,Math.floor(r.pts/100));return{name:t('lg'+i),col:LCOL[i],idx:i};
 }
 
+/* ================= Language ================= */
+let L='en';
+function detectLang(){
+  if(S.lang)return S.lang;
+  const loc=(sdkLocale||navigator.language||'en').toLowerCase();
+  return loc.startsWith('es')?'es':'en';
+}
+function t(k,o){let s=(T[L]&&T[L][k]!==undefined?T[L][k]:T.en[k]);if(s===undefined)s=k;if(o)for(const q in o)s=s.split('{'+q+'}').join(o[q]);return s}
+
 /* ================= Audio ================= */
-let AC=null,master=null,musicTimer=null,noteI=0,noiseBuf=null;
-function applyVolume(){if(master)master.gain.value=(S.snd&&!sysMute&&!adMute)?0.7:0}
-function audioInit(){if(AC){if(AC.state==='suspended')AC.resume();return}try{AC=new(window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.connect(AC.destination);applyVolume();startMusic()}catch(e){AC=null}}
-function tone(f,d,type,v,slide,delay){
-  if(!AC||!S.snd||sysMute||adMute)return;
+let AC=null,master=null,musicG=null,musicTimer=null,noteI=0,noiseBuf=null;
+function applyVolume(){if(master)master.gain.value=(S.set.snd&&!sysMute&&!adMute)?0.75:0;if(musicG)musicG.gain.value=S.set.mus?1:0}
+function audioInit(){
+  if(AC){if(AC.state==='suspended')AC.resume();return}
+  try{
+    AC=new(window.AudioContext||window.webkitAudioContext)();
+    master=AC.createGain();const comp=AC.createDynamicsCompressor();master.connect(comp);comp.connect(AC.destination);
+    musicG=AC.createGain();musicG.connect(master);applyVolume();startMusic();
+  }catch(e){AC=null}
+}
+function canPlay(){return AC&&S.set.snd&&!sysMute&&!adMute}
+function tone(f,d,type,v,slide,delay,dest){
+  if(!canPlay())return;
   const tt=AC.currentTime+(delay||0),o=AC.createOscillator(),g=AC.createGain();
   o.type=type||'sine';o.frequency.setValueAtTime(f,tt);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(30,f+slide),tt+d);
   g.gain.setValueAtTime(0.0001,tt);g.gain.exponentialRampToValueAtTime(v||.2,tt+.012);g.gain.exponentialRampToValueAtTime(0.0001,tt+d);
-  o.connect(g);g.connect(master);o.start(tt);o.stop(tt+d+.05);
+  o.connect(g);g.connect(dest||master);o.start(tt);o.stop(tt+d+.05);
 }
 function noise(d,v,f,delay){
-  if(!AC||!S.snd||sysMute||adMute)return;
+  if(!canPlay())return;
   if(!noiseBuf){noiseBuf=AC.createBuffer(1,AC.sampleRate,AC.sampleRate);const a=noiseBuf.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=Math.random()*2-1}
   const tt=AC.currentTime+(delay||0),s=AC.createBufferSource(),b=AC.createBiquadFilter(),g=AC.createGain();
   s.buffer=noiseBuf;b.type='bandpass';b.frequency.value=f||1200;g.gain.setValueAtTime(v||.15,tt);g.gain.exponentialRampToValueAtTime(0.0001,tt+d);
   s.connect(b);b.connect(g);g.connect(master);s.start(tt);s.stop(tt+d+.02);
 }
-let lastSfx={};
+const lastSfx={};
 const sfx=(()=>{
   const g=(k,fn,gap)=>(...a)=>{const n=performance.now();if(lastSfx[k]&&n-lastSfx[k]<(gap||40))return;lastSfx[k]=n;fn(...a)};
   return{
-    swing:g('sw',()=>{noise(.14,.14,1800);tone(300,.12,'triangle',.07,300)}),
-    hit:g('hit',()=>{noise(.1,.25,900);tone(160,.12,'square',.12,-80)}),
-    shoot:g('sh',()=>{tone(700,.12,'sawtooth',.08,-400);noise(.08,.1,3000)}),
-    dash:g('da',()=>{noise(.2,.16,1400);tone(250,.15,'sine',.1,500)}),
-    jump:g('ju',()=>tone(300,.14,'sine',.12,350)),
-    coin:g('co',()=>{tone(988,.08,'triangle',.12);tone(1319,.12,'triangle',.12,0,.06)},20),
-    flag:()=>{[523,659,784].forEach((f,i)=>tone(f,.15,'triangle',.16,0,i*.08))},
-    cap:()=>{[523,659,784,1047,1319].forEach((f,i)=>tone(f,.2,'triangle',.18,0,i*.09))},
-    ret:()=>{[784,659,784].forEach((f,i)=>tone(f,.12,'triangle',.15,0,i*.07))},
-    lose:()=>{[392,330,262].forEach((f,i)=>tone(f,.3,'triangle',.16,0,i*.18))},
-    pop:g('po',()=>{noise(.2,.2,700);tone(220,.2,'sine',.15,-100)}),
-    item:()=>{tone(600,.1,'triangle',.14);tone(900,.18,'triangle',.14,0,.08)},
-    ui:()=>tone(600,.07,'triangle',.1),
-    buy:()=>{[523,659,784,1047].forEach((f,i)=>tone(f,.14,'triangle',.15,0,i*.07))},
-    err:()=>tone(160,.2,'square',.1),
-    beep:()=>tone(880,.12,'square',.1),
-    go:()=>tone(1320,.35,'square',.1)
+    swing:g('sw',()=>{noise(.16,.14,1700);tone(300,.12,'triangle',.06,300)}),
+    hit:g('hit',()=>{noise(.1,.22,900);tone(160,.12,'square',.1,-80)}),
+    tick:g('tk',()=>{tone(1500,.05,'square',.06)},60),
+    kill:()=>{tone(700,.1,'square',.09);tone(1000,.15,'square',.09,0,.08)},
+    shoot:g('sh',()=>{tone(700,.12,'sawtooth',.07,-400);noise(.08,.1,3000)}),
+    dash:g('da',()=>{noise(.2,.14,1400);tone(250,.15,'sine',.09,500)}),
+    jump:g('ju',()=>tone(300,.14,'sine',.1,350)),
+    land:g('la',()=>{tone(110,.1,'sine',.1,-40)},120),
+    step:g('st',()=>{noise(.05,.035,500)},90),
+    pad:()=>{tone(300,.35,'sine',.14,900);noise(.2,.1,2000)},
+    coin:g('co',()=>{tone(988,.08,'triangle',.11);tone(1319,.12,'triangle',.11,0,.06)},20),
+    flag:()=>{[523,659,784].forEach((f,i)=>tone(f,.15,'triangle',.14,0,i*.08))},
+    cap:()=>{[523,659,784,1047,1319].forEach((f,i)=>tone(f,.2,'triangle',.16,0,i*.09))},
+    ret:()=>{[784,659,784].forEach((f,i)=>tone(f,.12,'triangle',.13,0,i*.07))},
+    lose:()=>{[392,330,262].forEach((f,i)=>tone(f,.3,'triangle',.14,0,i*.18))},
+    pop:g('po',()=>{noise(.2,.18,700);tone(220,.2,'sine',.12,-100)}),
+    item:()=>{tone(600,.1,'triangle',.12);tone(900,.18,'triangle',.12,0,.08)},
+    ui:()=>tone(600,.07,'triangle',.08),
+    buy:()=>{[523,659,784,1047].forEach((f,i)=>tone(f,.14,'triangle',.13,0,i*.07))},
+    err:()=>tone(160,.2,'square',.08),
+    beep:()=>tone(880,.12,'square',.08),
+    go:()=>tone(1320,.35,'square',.08),
+    hurt:g('hu',()=>{tone(200,.18,'sawtooth',.1,-90)},120)
   };
 })();
 function startMusic(){
   if(musicTimer)return;
   const sc=[0,2,4,7,9,12],root=196,seq=[0,2,4,5,4,2,1,3,0,2,4,2,3,1,2,0];
   musicTimer=setInterval(()=>{
-    if(!AC||!S.snd||sysMute||adMute)return;
+    if(!canPlay()||!S.set.mus)return;
     const i=noteI++,n=seq[i%seq.length];
-    tone(root*Math.pow(2,sc[n]/12),.35,'triangle',.035,0);
-    if(i%4===0)tone(root/2*Math.pow(2,[0,-3,-5,-2][(i>>2)%4]/12),.9,'sine',.05,0);
+    tone(root*Math.pow(2,sc[n]/12),.35,'triangle',.028,0,0,musicG);
+    if(i%4===0)tone(root/2*Math.pow(2,[0,-3,-5,-2][(i>>2)%4]/12),.9,'sine',.04,0,0,musicG);
   },240);
 }
 
-/* ================= Ads ================= */
+/* ================= Ads (CrazyGames SDK rules) ================= */
 let adBusy=false;
+function adsAvailable(){return !adblock}
+// type: 'midgame' | 'rewarded'. done(ok). Game is not running while an ad plays (gameplay is stopped by the caller flow).
 function showAd(type,done){
   if(adBusy){done(false);return}
-  adBusy=true;gp.stop();
-  const fin=ok=>{adBusy=false;adMute=false;applyVolume();$('ad').classList.add('hide');done(ok)};
-  if(sdkOK&&CG){try{CG.ad.requestAd(type,{adStarted:()=>{adMute=true;applyVolume()},adFinished:()=>fin(true),adError:()=>fin(false)})}catch(e){fin(false)}}
-  else{
+  adBusy=true;const wasOn=gp.on;gp.stop();
+  const fin=ok=>{adBusy=false;adMute=false;applyVolume();$('ad').classList.add('hide');if(wasOn&&window.resumeAfterAd)window.resumeAfterAd();done(ok)};
+  if(sdkOK&&CG){
+    try{CG.ad.requestAd(type,{adStarted:()=>{adMute=true;applyVolume()},adFinished:()=>fin(true),adError:()=>fin(false)})}catch(e){fin(false)}
+  }else{ // local simulation (no SDK): lets the whole flow be tested
     adMute=true;applyVolume();$('ad').classList.remove('hide');
     const bar=$('adbar').firstElementChild;bar.style.width='0';const t0=performance.now(),D=type==='rewarded'?2200:1200;
     const iv=setInterval(()=>{const p=(performance.now()-t0)/D;bar.style.width=Math.min(100,p*100)+'%';if(p>=1){clearInterval(iv);fin(true)}},50);
   }
 }
 let toastT=0;
-function toastG(m){const e=$('toastG');e.textContent=m;e.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>e.style.opacity=0,2000)}
+function toastG(m){const e=$('toastG');e.textContent=m;e.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>e.style.opacity=0,2200)}

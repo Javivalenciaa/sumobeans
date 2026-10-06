@@ -1,14 +1,14 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Banderazo</title>
+<title>Banderazo - Capture the Flag</title>
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;-webkit-touch-callout:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#12304f;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;font-weight:800;color:#fff;font-size:10px}
 #gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
-#ui{position:fixed;inset:0;pointer-events:none}
+#ui{position:fixed;inset:0;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 #ui>*{pointer-events:none}
 .hide{display:none!important}
 button{font-family:inherit}
@@ -23,7 +23,11 @@ button{font-family:inherit}
 .overlay{position:absolute;inset:0;background:rgba(6,14,40,.6);display:flex;align-items:center;justify-content:center;pointer-events:auto;z-index:20}
 .pill{background:rgba(10,20,50,.6);border:.3rem solid rgba(255,255,255,.22);border-radius:3rem;padding:.6rem 1.8rem;font-size:2.6rem;display:flex;align-items:center;gap:1rem}
 .coin{display:inline-block;width:2.8rem;height:2.8rem;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff7b0,#ffd23f 45%,#e0a000);border:.3rem solid #b87800}
-/* lobby */
+.vid{display:inline-block;width:0;height:0;border-left:1.1rem solid currentColor;border-top:.7rem solid transparent;border-bottom:.7rem solid transparent;margin-right:.6rem}
+#loading,#sitelock{position:fixed;inset:0;background:radial-gradient(#2a5a9a,#0e2038);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;font-size:3rem;text-align:center;padding:4rem}
+#loading b{font-size:7rem;-webkit-text-stroke:.3rem #1d6fd1;paint-order:stroke fill;text-shadow:0 .5rem 0 #1a5fb0}
+#ldbar{width:36rem;height:1.2rem;background:rgba(255,255,255,.2);border-radius:1rem;margin-top:2.4rem;overflow:hidden}#ldbar i{display:block;height:100%;width:40%;background:#7dff8a;border-radius:1rem;animation:ld 1.1s ease-in-out infinite}
+@keyframes ld{0%{margin-left:-40%}100%{margin-left:100%}}
 #lobby{position:absolute;inset:0}
 #lobby .logo{position:absolute;left:3rem;top:2.2rem;font-size:6.4rem;line-height:1;text-shadow:0 .5rem 0 #1a5fb0,0 .8rem 0 rgba(0,0,0,.2);-webkit-text-stroke:.35rem #1d6fd1;paint-order:stroke fill}
 #lobby .logo small{display:block;font-size:2.2rem;-webkit-text-stroke:0;letter-spacing:.3rem;text-shadow:0 .2rem 0 rgba(0,0,0,.4)}
@@ -32,30 +36,34 @@ button{font-family:inherit}
 .bar{height:1.4rem;border-radius:1rem;background:rgba(255,255,255,.2);overflow:hidden;margin:.7rem 0}
 .bar>div{height:100%;background:linear-gradient(#8cf06b,#3fbf3a);width:0}
 #lbTop{position:absolute;right:3rem;top:2.2rem;display:flex;gap:1.2rem;align-items:center}
+#cgUser{font-size:2rem;opacity:.9}
 #lbMid{position:absolute;left:3rem;bottom:3rem;display:flex;flex-direction:column;gap:1.4rem}
 #lbPlay{position:absolute;left:50%;bottom:3rem;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:1.2rem}
 #lbPlay .btn.big{font-size:4.6rem;padding:1.4rem 8rem}
-#wsel{position:absolute;right:3rem;bottom:3rem;display:flex;gap:1.2rem;pointer-events:auto}
-.wcard{width:15rem;padding:1.2rem;text-align:center;border-radius:2rem;background:rgba(10,20,50,.6);border:.4rem solid rgba(255,255,255,.2);cursor:pointer;pointer-events:auto}
-.wcard.on{border-color:#ffd23f;background:rgba(60,70,130,.8);transform:translateY(-.8rem)}
-.wcard .ic{font-size:5rem;line-height:1.1}
-.wcard .nm{font-size:2.4rem}.wcard .ds{font-size:1.4rem;opacity:.8;font-weight:700}
-#friendsBtn{position:absolute;right:3rem;top:50%}
-/* search */
+#lbPlay .row{display:flex;gap:1rem}
+#mapsel{display:flex;gap:.8rem;pointer-events:auto}
+.mbtn{pointer-events:auto;border:.3rem solid rgba(255,255,255,.25);background:rgba(10,20,50,.65);color:#fff;border-radius:1.4rem;padding:.6rem 1.2rem;font-size:1.7rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;min-width:9rem}
+.mbtn span{font-size:2.6rem;line-height:1.1}.mbtn.on{border-color:#ffd23f;background:rgba(70,80,140,.85)}
+#mapDesc{font-size:1.9rem;text-shadow:0 .2rem 0 rgba(0,0,0,.5);text-align:center;max-width:56rem}
+#wsel{position:absolute;right:3rem;top:13rem;display:flex;flex-direction:column;gap:1rem;pointer-events:auto}
+.wcard{width:19rem;padding:.8rem 1rem;text-align:center;border-radius:2rem;background:rgba(10,20,50,.6);border:.4rem solid rgba(255,255,255,.2);cursor:pointer;pointer-events:auto}
+.wcard.on{border-color:#ffd23f;background:rgba(60,70,130,.8);transform:translateX(-.8rem)}
+.wcard .ic{font-size:3.6rem;line-height:1.1}
+.wcard .nm{font-size:2.4rem}.wcard .ds{font-size:1.4rem;opacity:.85;font-weight:700}
+#friendsBtn{position:absolute;right:3rem;bottom:3rem}
 #search .box{width:56rem;text-align:center}
 #search h2{margin:0 0 1rem;font-size:3.8rem}
 #slots{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,auto);grid-auto-flow:column;gap:.8rem 2rem;margin:1.2rem 0;font-size:2.2rem}
 .slot{background:rgba(255,255,255,.1);border-radius:1.2rem;padding:.6rem 1rem;min-height:3.6rem;text-align:left}
 .slot.b{border-left:.8rem solid #3d7bff}.slot.r{border-left:.8rem solid #e04a42}
 .slot.empty{opacity:.45}
-/* hud */
 #hud{position:absolute;inset:0}
 #sbar{position:absolute;left:50%;top:1.6rem;transform:translateX(-50%);display:flex;border-radius:1.4rem;overflow:hidden;font-size:3.6rem;box-shadow:0 .4rem 1.4rem rgba(0,0,0,.4);border:.3rem solid rgba(255,255,255,.35)}
 #sbar div{padding:.4rem 2.4rem;min-width:7rem;text-align:center}
 #sb0{background:#2f6fe0}#sb1{background:#d63a3a}#stime{background:#1b2a57;min-width:12rem}
 #obj{position:absolute;left:50%;top:7.8rem;transform:translateX(-50%);font-size:2.2rem;background:rgba(20,30,50,.75);border-radius:2rem;padding:.6rem 2rem;white-space:nowrap}
 #mini{position:absolute;right:1.6rem;top:1.6rem;width:17rem;height:17rem;border-radius:50%;border:.4rem solid rgba(255,255,255,.5);background:#1e5a8a;box-shadow:0 .4rem 1.4rem rgba(0,0,0,.4)}
-#feed{position:absolute;right:1.6rem;top:20rem;width:34rem;display:flex;flex-direction:column;align-items:flex-end;gap:.4rem;font-size:1.9rem}
+#feed{position:absolute;right:1.6rem;top:20rem;width:36rem;display:flex;flex-direction:column;align-items:flex-end;gap:.4rem;font-size:1.9rem}
 #feed div{background:rgba(10,20,50,.6);border-radius:1rem;padding:.3rem 1rem;animation:fe 6s forwards}
 @keyframes fe{0%{opacity:0;transform:translateX(2rem)}6%{opacity:1;transform:none}85%{opacity:1}100%{opacity:0}}
 #vit{position:absolute;left:1.6rem;bottom:1.6rem;display:flex;align-items:center;gap:1.2rem}
@@ -69,14 +77,30 @@ button{font-family:inherit}
 #toastBig.go{animation:big 2.2s ease-out}
 @keyframes big{0%{opacity:0;transform:scale(.6)}12%{opacity:1;transform:scale(1.1)}22%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:translateY(-3rem)}}
 #toast{position:absolute;left:0;right:0;bottom:22%;text-align:center;font-size:2.8rem;text-shadow:0 .3rem 0 rgba(0,0,0,.5);opacity:0;transition:opacity .25s}
-#dead{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+#dead{position:absolute;left:50%;top:60%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
 #dead h2{font-size:5rem;margin:0;text-shadow:0 .5rem 0 rgba(0,0,0,.4)}
 #dead .wsel2{display:flex;gap:1rem;justify-content:center;margin-top:1rem;pointer-events:auto}
-#cd{position:absolute;left:0;right:0;top:30%;text-align:center;font-size:14rem;text-shadow:0 1rem 0 rgba(0,0,0,.3)}
+#cd{position:absolute;left:0;right:0;top:26%;text-align:center;font-size:14rem;text-shadow:0 1rem 0 rgba(0,0,0,.3)}
 #carry{position:absolute;left:50%;bottom:9rem;transform:translateX(-50%);font-size:2.4rem;background:rgba(255,200,40,.9);color:#4a2c00;border-radius:2rem;padding:.4rem 1.6rem}
-#ptr{position:absolute;left:50%;top:50%;width:.8rem;height:.8rem;margin:-.4rem;border-radius:50%;background:rgba(255,255,255,.6)}
-/* touch */
-.touchmode #vit{bottom:21rem}.touchmode #hcoins{right:auto;left:1.6rem;bottom:auto;top:1.6rem}.touchmode #feed{top:19rem}
+#xh{position:absolute;left:50%;top:50%;width:0;height:0}
+#xh i{position:absolute;background:#fff;box-shadow:0 0 .4rem #000;border-radius:.2rem}
+#xh .d{left:-.25rem;top:-.25rem;width:.5rem;height:.5rem;border-radius:50%}
+#xh .l{left:-2.4rem;top:-.15rem;width:1.4rem;height:.3rem}#xh .r{left:1rem;top:-.15rem;width:1.4rem;height:.3rem}
+#xh .u{top:-2.4rem;left:-.15rem;height:1.4rem;width:.3rem}#xh .b{top:1rem;left:-.15rem;height:1.4rem;width:.3rem}
+#xh.enemy i{background:#ff4a4a}
+#hm{position:absolute;left:50%;top:50%;width:0;height:0;opacity:0}
+#hm i{position:absolute;width:1.6rem;height:.35rem;background:#fff;box-shadow:0 0 .4rem #000;border-radius:.2rem}
+#hm i:nth-child(1){transform:translate(-3.2rem,-3.2rem) rotate(45deg)}#hm i:nth-child(2){transform:translate(1.6rem,-3.2rem) rotate(-45deg)}
+#hm i:nth-child(3){transform:translate(-3.2rem,2.8rem) rotate(-45deg)}#hm i:nth-child(4){transform:translate(1.6rem,2.8rem) rotate(45deg)}
+#hm.on{opacity:1}#hm.kill i{background:#ff4a4a;width:2.2rem}#hm.shield i{background:#7fd8ff}
+#dmg{position:absolute;left:50%;top:50%;width:34rem;height:34rem;margin:-17rem;border-radius:50%;border-top:1.6rem solid rgba(255,60,60,.85);opacity:0}
+#dmg.on{animation:dm .8s ease-out}
+@keyframes dm{0%{opacity:1}100%{opacity:0}}
+.mk{position:absolute;transform:translate(-50%,-50%);font-size:2.2rem;text-shadow:0 .2rem 0 #000,0 0 .6rem #000;white-space:nowrap}
+#tut{position:absolute;left:50%;bottom:11rem;transform:translateX(-50%);background:rgba(10,20,50,.78);border:.3rem solid rgba(255,255,255,.3);border-radius:2rem;padding:1.2rem 2.4rem;font-size:2.2rem;text-align:center;line-height:1.6}
+#tut kbd{background:#fff;color:#1b2a57;border-radius:.6rem;padding:.1rem .8rem;font-family:inherit;margin:0 .2rem;box-shadow:0 .25rem 0 #8a99c0}
+#tut small{display:block;font-size:1.6rem;opacity:.7;font-weight:700}
+#lockp{position:absolute;left:50%;bottom:4rem;transform:translateX(-50%);font-size:2.6rem;background:rgba(0,0,0,.65);padding:1rem 3rem;border-radius:2rem;pointer-events:auto;cursor:pointer}
 #touch{position:absolute;inset:0}
 #joy{position:absolute;left:3rem;bottom:3rem;width:16rem;height:16rem;border-radius:50%;background:rgba(255,255,255,.15);border:.4rem solid rgba(255,255,255,.35);pointer-events:auto;touch-action:none}
 #knob{position:absolute;left:50%;top:50%;width:7rem;height:7rem;margin:-3.5rem;border-radius:50%;background:rgba(255,255,255,.55)}
@@ -85,8 +109,9 @@ button{font-family:inherit}
 #tJump{right:17rem;bottom:3rem;width:9rem;height:9rem}
 #tDash{right:4rem;bottom:19rem;width:9rem;height:9rem}
 #tUse{right:15rem;bottom:14rem;width:8rem;height:8rem}
-/* menus */
-.modal{width:96rem;max-height:90%;display:flex;flex-direction:column}
+#tPause{left:1.6rem;top:1.6rem;width:6rem;height:6rem;font-size:2.6rem}
+.touchmode #vit{bottom:21rem}.touchmode #hcoins{right:auto;left:10rem;bottom:auto;top:2.6rem}.touchmode #feed{top:19rem}
+.modal{width:96rem;max-width:96%;max-height:90%;display:flex;flex-direction:column}
 .modal h2{margin:0;font-size:3.6rem;flex:1}
 .mtop{display:flex;align-items:center;gap:1.2rem;margin-bottom:1.2rem}
 .mbody{overflow:auto;flex:1;padding-right:.6rem;-webkit-overflow-scrolling:touch}
@@ -98,8 +123,9 @@ button{font-family:inherit}
 .mrow .tx{flex:1}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:.8rem 3rem;font-size:2.3rem}
 .stats div{display:flex;justify-content:space-between;border-bottom:.2rem solid rgba(255,255,255,.12);padding:.4rem 0}
-/* end */
-#end .box{width:62rem;text-align:center}
+#pause .box{width:50rem;text-align:center;display:flex;flex-direction:column;gap:1.4rem}
+#pause h2{margin:0 0 .6rem;font-size:4.4rem}
+#end .box{width:62rem;max-width:96%;text-align:center}
 #end h1{margin:0;font-size:7rem;text-shadow:0 .6rem 0 rgba(0,0,0,.35)}
 .erow{display:flex;justify-content:space-between;font-size:2.4rem;padding:.3rem 1rem}
 .erow.t{font-size:3rem;color:#ffe066;border-top:.3rem solid rgba(255,255,255,.2);margin-top:.6rem;padding-top:.8rem}
@@ -109,41 +135,47 @@ button{font-family:inherit}
 #adv{text-align:center}
 #adbar{width:42rem;height:1.6rem;background:rgba(255,255,255,.2);border-radius:1rem;overflow:hidden;margin:1.8rem auto 0}
 #adbar div{height:100%;width:0;background:#7dff8a}
-#lock{position:absolute;left:50%;bottom:4rem;transform:translateX(-50%);font-size:2.4rem;background:rgba(0,0,0,.6);padding:.8rem 2.4rem;border-radius:2rem}
+#toastG{position:absolute;left:0;right:0;top:40%;text-align:center;font-size:3rem;opacity:0;transition:opacity .3s;text-shadow:0 .3rem 0 rgba(0,0,0,.5);z-index:60}
 </style>
 </head>
 <body>
 <canvas id="gl"></canvas>
+<div id="loading"><b>BANDERAZO</b><div data-i18n="loading">Loading...</div><div id="ldbar"><i></i></div></div>
+<div id="sitelock" class="hide"><b style="font-size:5rem">BANDERAZO</b><div style="margin-top:2rem" data-i18n="sitelock">Play Banderazo on CrazyGames.com</div></div>
 <div id="ui">
   <div id="lobby" class="hide">
-    <div class="logo">BANDERAZO<small>CAPTURA LA BANDERA 3v3</small></div>
+    <div class="logo">BANDERAZO<small data-i18n="tagline">CAPTURE THE FLAG 3v3</small></div>
     <div id="prof">
       <div class="row"><span id="pLvl"></span><span id="pRank"></span></div>
       <div class="bar"><div id="pXp"></div></div>
       <div class="row" style="font-size:1.8rem;opacity:.85"><span id="pXpT"></span><span id="pPlace"></span></div>
     </div>
     <div id="lbTop">
+      <span id="cgUser"></span>
       <div class="pill"><i class="coin"></i><b id="lCoins">0</b></div>
+      <button class="btn sm" id="btnLang">EN</button>
       <button class="btn sm" id="bSnd">&#9834;</button>
+      <button class="btn sm" id="bSet">&#9881;</button>
     </div>
     <div id="lbMid">
-      <button class="btn y" id="bShop">Tienda</button>
-      <button class="btn" id="bMis">Misiones <span id="misDot"></span></button>
-      <button class="btn" id="bProf">Perfil</button>
+      <button class="btn y" id="bShop" data-i18n="ui_shop">Shop</button>
+      <button class="btn" id="bMis"><span data-i18n="ui_missions">Missions</span> <span id="misDot"></span></button>
+      <button class="btn" id="bProf" data-i18n="ui_profile">Profile</button>
     </div>
-    <button class="btn sm" id="friendsBtn" style="top:20rem" disabled title="Necesita servidor online">Jugar con amigos (pronto)</button>
+    <button class="btn sm" id="friendsBtn" disabled data-i18n="ui_friends">Play with friends (soon)</button>
     <div id="lbPlay">
-      <button class="btn y sm" id="bChest"></button>
-      <button class="btn g big" id="bPlay">JUGAR</button>
+      <div id="mapDesc"></div>
+      <div id="mapsel"></div>
+      <div class="row"><button class="btn y sm" id="bChest"></button><button class="btn sm" id="bVideo"><span class="vid"></span><span data-i18n="ui_video">Free coins</span></button></div>
+      <button class="btn g big" id="bPlay" data-i18n="ui_play">PLAY</button>
     </div>
     <div id="wsel"></div>
   </div>
 
   <div id="search" class="overlay hide"><div class="panel box">
-    <h2 id="sTitle">Buscando partida...</h2>
+    <h2 id="sTitle"></h2>
     <div id="sSub" style="font-size:2.2rem;opacity:.85"></div>
     <div id="slots"></div>
-    <button class="btn r sm" id="bCancel">Cancelar</button>
   </div></div>
 
   <div id="hud" class="hide">
@@ -153,31 +185,43 @@ button{font-family:inherit}
     <div id="feed"></div>
     <div id="vit"><div id="avatar">&#9733;</div><div><div id="hearts"></div><div class="chips"><div class="chip" id="cDash">&#10148;<i></i></div><div class="chip" id="cAtk">&#9876;<i></i></div><div class="chip" id="cItem">?<i></i></div></div></div></div>
     <div id="hcoins"><div class="pill"><i class="coin"></i><b id="hCoinN">0</b></div></div>
-    <div id="carry" class="hide">&#9873; Llevas la bandera</div>
-    <div id="ptr"></div>
+    <div id="carry" class="hide" data-i18n="carry_lbl">You carry the flag</div>
+    <div id="xh"><i class="d"></i><i class="l"></i><i class="r"></i><i class="u"></i><i class="b"></i></div>
+    <div id="hm"><i></i><i></i><i></i><i></i></div>
+    <div id="dmg"></div>
+    <div class="mk hide" id="mk1"></div><div class="mk hide" id="mk2"></div>
     <div id="toastBig"></div><div id="toast"></div>
     <div id="cd" class="hide"></div>
     <div id="dead" class="hide"><h2 id="dTxt"></h2><div id="dSub" style="font-size:2.4rem"></div><div class="wsel2" id="dW"></div></div>
-    <div id="lock" class="hide">Haz clic para controlar la camara</div>
+    <div id="tut" class="hide"><div id="tutText"></div><small data-i18n="tut_skip">Press H to hide</small></div>
+    <div id="lockp" class="hide" data-i18n="click_play">Click to play</div>
   </div>
 
   <div id="touch" class="hide">
     <div id="joy"><div id="knob"></div></div>
-    <div class="tb" id="tAtk">&#9876;</div><div class="tb" id="tJump">&#8679;</div><div class="tb" id="tDash">&#10148;</div><div class="tb" id="tUse">E</div>
+    <div class="tb" id="tAtk">&#9876;</div><div class="tb" id="tJump">&#8679;</div><div class="tb" id="tDash">&#10148;</div><div class="tb" id="tUse">E</div><div class="tb" id="tPause">II</div>
   </div>
 
-  <div id="shop" class="overlay hide"><div class="panel modal"><div class="mtop"><h2>Tienda</h2><div class="pill"><i class="coin"></i><b id="shCoins">0</b></div><button class="btn r sm" data-close="shop">&#10005;</button></div><div class="mbody" id="shBody"></div></div></div>
-  <div id="mis" class="overlay hide"><div class="panel modal"><div class="mtop"><h2>Misiones</h2><button class="btn r sm" data-close="mis">&#10005;</button></div><div class="mbody" id="misBody"></div></div></div>
-  <div id="prf" class="overlay hide"><div class="panel modal"><div class="mtop"><h2>Perfil</h2><button class="btn r sm" data-close="prf">&#10005;</button></div><div class="mbody" id="prfBody"></div></div></div>
+  <div id="pause" class="overlay hide" style="z-index:30"><div class="panel box">
+    <h2 data-i18n="paused">Paused</h2>
+    <button class="btn g" id="pResume" data-i18n="resume">Resume</button>
+    <button class="btn" id="pSet" data-i18n="ui_settings">Settings</button>
+    <button class="btn r" id="pQuit" data-i18n="quit">Leave match</button>
+  </div></div>
+
+  <div id="shop" class="overlay hide"><div class="panel modal"><div class="mtop"><h2 data-i18n="ui_shop">Shop</h2><div class="pill"><i class="coin"></i><b id="shCoins">0</b></div><button class="btn r sm" data-close="shop">&#10005;</button></div><div class="mbody" id="shBody"></div></div></div>
+  <div id="mis" class="overlay hide"><div class="panel modal"><div class="mtop"><h2 data-i18n="ui_missions">Missions</h2><button class="btn r sm" data-close="mis">&#10005;</button></div><div class="mbody" id="misBody"></div></div></div>
+  <div id="prf" class="overlay hide"><div class="panel modal"><div class="mtop"><h2 data-i18n="ui_profile">Profile</h2><button class="btn r sm" data-close="prf">&#10005;</button></div><div class="mbody" id="prfBody"></div></div></div>
+  <div id="set" class="overlay hide" style="z-index:40"><div class="panel modal"><div class="mtop"><h2 data-i18n="ui_settings">Settings</h2><button class="btn r sm" data-close="set">&#10005;</button></div><div class="mbody" id="setBody"></div></div></div>
 
   <div id="end" class="overlay hide"><div class="panel box">
     <h1 id="eTitle"></h1><div id="eScore" style="font-size:3rem"></div>
     <div id="eRows" style="margin-top:1rem"></div><div id="eNext"></div>
-    <div id="eBtns"><button class="btn y" id="eDbl"></button><button class="btn" id="eLobby">Menu</button><button class="btn g w" id="eAgain">Otra partida</button></div>
+    <div id="eBtns"><button class="btn y" id="eDbl"></button><button class="btn" id="eLobby" data-i18n="ui_menu">Menu</button><button class="btn g w" id="eAgain" data-i18n="play_again">Play again</button></div>
   </div></div>
 
-  <div id="ad" class="overlay hide" style="z-index:50"><div id="adv"><h2 style="font-size:4rem;margin:0">Anuncio</h2><div style="font-size:2rem;opacity:.8">(simulado - los anuncios reales van por el SDK de CrazyGames)</div><div id="adbar"><div></div></div></div></div>
-  <div id="toastG" style="position:absolute;left:0;right:0;top:40%;text-align:center;font-size:3rem;opacity:0;transition:opacity .3s;text-shadow:0 .3rem 0 rgba(0,0,0,.5);z-index:60"></div>
+  <div id="ad" class="overlay hide" style="z-index:50"><div id="adv"><h2 style="font-size:4rem;margin:0" data-i18n="ad_title">Advertisement</h2><div style="font-size:2rem;opacity:.8" data-i18n="ad_sim">(simulated)</div><div id="adbar"><div></div></div></div></div>
+  <div id="toastG"></div>
 </div>
 <script>/*THREE*/</script>
 <script>/*GAME*/</script>
