@@ -1,0 +1,14 @@
+const { chromium } = require('/opt/node-tools/node_modules/playwright'); const out = '/home/user/bumper-orbs/promo/';
+(async () => {
+  const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
+  for (const [n, w, h] of [['cover_1920x1080', 1920, 1080], ['cover_800x1200', 800, 1200], ['cover_800x800', 800, 800]]) {
+    const p = await b.newPage({ viewport: { width: w, height: h } }); await p.addInitScript(() => { try { localStorage.setItem('bumperorbs-v1', JSON.stringify({ seen: 1, name: 'SwiftPanda42', lang: 'en' })); } catch (e) {} });
+    await p.route('**/*', (r) => (r.request().url().startsWith('file:') ? r.continue() : r.abort())); await p.goto('file:///home/user/bumper-orbs/index.html'); await p.waitForSelector('#sMenu:not([hidden])');
+    await p.click('#bSolo', { force: true }); await p.waitForTimeout(3800);
+    await p.evaluate(() => { window.__nohud = true; window.__zoom = window.innerHeight > window.innerWidth ? 1.3 : 1.5; window.__oy = window.innerHeight * .08; document.querySelector('#topbtns').hidden = true; const s = window.__bo.sim(); const pos = [[-60, 30, 60, -30], [45, -5, -90, 40], [-10, 105, 20, -120], [-135, -60, 120, 60], [140, 70, -60, -110]]; s.orbs.forEach((o, i) => { o.x = pos[i][0]; o.y = pos[i][1]; o.vx = pos[i][2]; o.vy = pos[i][3]; o.alive = true; o.fall = 0; o.ix = o.iy = 0; }); s.orbs[0].dash = .25; s.orbs[1].shield = 5; s.orbs[3].boost = 5; s.orbs[2].heavy = 5; s.t = 2; s.picks = [{ id: 1, k: 0, x: 170, y: -150, age: 1 }, { id: 2, k: 3, x: -180, y: 150, age: 1 }, { id: 3, k: 2, x: 20, y: -190, age: 1 }]; s.ff = 1; });
+    await p.waitForTimeout(120);
+    await p.evaluate(({ w, h }) => { const d = document.createElement('div'); d.style.cssText = `position:fixed;left:0;right:0;top:${h > w ? 3 : 2}%;text-align:center;z-index:99;pointer-events:none`; const f = Math.min(w, h * 1.1) * (h > w ? .24 : .15), o = Math.max(2, f * .03); d.innerHTML = `<div style="font:900 ${f}px Impact,'Arial Black','DejaVu Sans',sans-serif;line-height:.9;letter-spacing:3px;background:linear-gradient(#fffbc0 0%,#ffd23a 40%,#ff8a1a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(${o}px 0 0 #2a1408) drop-shadow(-${o}px 0 0 #2a1408) drop-shadow(0 ${o}px 0 #2a1408) drop-shadow(0 -${o}px 0 #2a1408) drop-shadow(0 ${o * 3}px 0 #8a3a0a) drop-shadow(0 ${o * 5}px ${o * 3}px rgba(0,0,0,.4))">BUMPER ORBS</div><div style="font:900 ${f * .22}px 'Trebuchet MS',sans-serif;letter-spacing:${f * .1}px;color:#fff;text-shadow:0 3px 0 #2a1408,2px 2px 0 #2a1408,-2px 2px 0 #2a1408,2px -2px 0 #2a1408,-2px -2px 0 #2a1408;margin-top:${f * .05}px">PUSH THEM OFF THE ARENA!</div>`; document.body.appendChild(d); }, { w, h });
+    await p.waitForTimeout(300); await p.screenshot({ path: out + n + '.png' }); await p.close();
+  }
+  await b.close();
+})();
