@@ -53,9 +53,10 @@ button{font-family:inherit}
 #friendsBtn{position:absolute;right:3rem;bottom:3rem}
 #search .box{width:56rem;text-align:center}
 #search h2{margin:0 0 1rem;font-size:3.8rem}
+#sCode{margin:1rem 0}#sBtns{display:flex;gap:1.2rem;justify-content:center;margin-top:1rem}
 #slots{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,auto);grid-auto-flow:column;gap:.8rem 2rem;margin:1.2rem 0;font-size:2.2rem}
 .slot{background:rgba(255,255,255,.1);border-radius:1.2rem;padding:.6rem 1rem;min-height:3.6rem;text-align:left}
-.slot.b{border-left:.8rem solid #3d7bff}.slot.r{border-left:.8rem solid #e04a42}
+.slot.h{border-left:.8rem solid #7dff8a}.slot.b{border-left:.8rem solid #3d7bff}.slot.r{border-left:.8rem solid #e04a42}
 .slot.empty{opacity:.45}
 #hud{position:absolute;inset:0}
 #sbar{position:absolute;left:50%;top:1.6rem;transform:translateX(-50%);display:flex;border-radius:1.4rem;overflow:hidden;font-size:3.6rem;box-shadow:0 .4rem 1.4rem rgba(0,0,0,.4);border:.3rem solid rgba(255,255,255,.35)}
@@ -162,7 +163,7 @@ button{font-family:inherit}
       <button class="btn" id="bMis"><span data-i18n="ui_missions">Missions</span> <span id="misDot"></span></button>
       <button class="btn" id="bProf" data-i18n="ui_profile">Profile</button>
     </div>
-    <button class="btn sm" id="friendsBtn" disabled data-i18n="ui_friends">Play with friends (soon)</button>
+    <button class="btn sm" id="friendsBtn" data-i18n="ui_friends">Play with friends</button>
     <div id="lbPlay">
       <div id="mapDesc"></div>
       <div id="mapsel"></div>
@@ -176,6 +177,8 @@ button{font-family:inherit}
     <h2 id="sTitle"></h2>
     <div id="sSub" style="font-size:2.2rem;opacity:.85"></div>
     <div id="slots"></div>
+    <div id="sCode" class="hide"></div>
+    <div id="sBtns"><button class="btn g sm hide" id="sStart" data-i18n="rm_start">Start match</button><button class="btn r sm" id="sCancel" data-i18n="ui_cancel">Cancel</button></div>
   </div></div>
 
   <div id="hud" class="hide">
@@ -209,6 +212,10 @@ button{font-family:inherit}
     <button class="btn r" id="pQuit" data-i18n="quit">Leave match</button>
   </div></div>
 
+  <div id="fr" class="overlay hide"><div class="panel modal" style="width:62rem"><div class="mtop"><h2 data-i18n="ui_friends">Play with friends</h2><button class="btn r sm" data-close="fr">&#10005;</button></div><div class="mbody">
+    <div class="mrow"><div class="tx" data-i18n="rm_create_d">Create a private room and share the code or invite link.</div><button class="btn g" id="frCreate" data-i18n="rm_create">Create room</button></div>
+    <div class="mrow"><input id="frCode" maxlength="4" placeholder="ABCD" autocomplete="off" style="width:16rem;font:inherit;font-size:3.4rem;text-align:center;text-transform:uppercase;border-radius:1.2rem;border:.3rem solid #5e7dd0;background:#10204a;color:#fff;padding:.6rem;-webkit-user-select:text;user-select:text"><div class="tx" data-i18n="rm_code_d">Room code</div><button class="btn" id="frJoin" data-i18n="rm_join">Join</button></div>
+  </div></div></div>
   <div id="shop" class="overlay hide"><div class="panel modal"><div class="mtop"><h2 data-i18n="ui_shop">Shop</h2><div class="pill"><i class="coin"></i><b id="shCoins">0</b></div><button class="btn r sm" data-close="shop">&#10005;</button></div><div class="mbody" id="shBody"></div></div></div>
   <div id="mis" class="overlay hide"><div class="panel modal"><div class="mtop"><h2 data-i18n="ui_missions">Missions</h2><button class="btn r sm" data-close="mis">&#10005;</button></div><div class="mbody" id="misBody"></div></div></div>
   <div id="prf" class="overlay hide"><div class="panel modal"><div class="mtop"><h2 data-i18n="ui_profile">Profile</h2><button class="btn r sm" data-close="prf">&#10005;</button></div><div class="mbody" id="prfBody"></div></div></div>

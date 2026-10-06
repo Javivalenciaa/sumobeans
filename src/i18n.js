@@ -2,7 +2,7 @@
 const T={
 en:{
  loading:'Loading...',sitelock:'Play Banderazo on CrazyGames.com',tagline:'CAPTURE THE FLAG 3v3',
- ui_shop:'Shop',ui_missions:'Missions',ui_profile:'Profile',ui_settings:'Settings',ui_friends:'Play with friends (soon)',ui_video:'Free coins',ui_play:'PLAY',ui_menu:'Menu',play_again:'Play again',
+ ui_shop:'Shop',ui_missions:'Missions',ui_profile:'Profile',ui_settings:'Settings',ui_friends:'Play with friends',ui_video:'Free coins',ui_play:'PLAY',ui_menu:'Menu',play_again:'Play again',
  carry_lbl:'You carry the flag',tut_skip:'Press H to hide',click_play:'Click to play',paused:'Paused',resume:'Resume',quit:'Leave match',
  ad_title:'Advertisement',ad_sim:'(simulated - real ads run through the CrazyGames SDK)',
  you:'You',go:'GO!',red:'red',blue:'blue',
@@ -35,12 +35,16 @@ en:{
  map_ice:'Frozen Lake',map_ice_d:'Slippery ice, translucent walls and open edges. Control your slide.',
  w_sword:'Sword',w_sword_d:'Fast and mobile. Long dash.',w_spear:'Spear',w_spear_d:'Long reach. Hold to sweep.',w_xbow:'Crossbow',w_xbow_d:'Ranged bolts that slow.',
  it_party:'Party hat',it_helm:'Tin helmet',it_horns:'Horns',it_prop:'Propeller cap',it_crown:'Crown',it_pred:'Red backpack',it_ppink:'Pink backpack',it_pgold:'Golden backpack',it_tbub:'Bubble trail',it_tfire:'Fire trail',it_tstar:'Star trail',it_pgreen:'Green backpack',it_tspark:'Spark trail',it_recruit:'Recruit cap',it_epic:'Epic helmet',it_tgold:'Golden trail',
+
+ rm_create:'Create room',rm_create_d:'Create a private room and share the code or invite link.',rm_join:'Join',rm_code_d:'Room code',rm_code:'ROOM CODE',rm_invite:'Copy invite link',rm_copied:'Link copied!',rm_start:'Start match',
+ rm_waiting:'Waiting for friends...',rm_host_wait:'Waiting for the host to start...',rm_badcode:'Enter the 4-letter room code',rm_notfound:'Room not found',rm_full:'The room is full',rm_busy:'The match already started',rm_noserver:'Could not connect to the server',
+ ui_cancel:'Cancel',s_start_in:'starting in {n}s',net_lost:'Connection lost. Back to the menu.',net_hostleft:'The host left the match.',
  lg0:'Cardboard',lg1:'Wood',lg2:'Paint',lg3:'Chrome',lg4:'Crystal',lg5:'Crown',lg6:'Box Legend',
  m_play2:'Play 2 matches',m_ret1:'Return a flag',m_coin30:'Collect 30 map coins',m_win1:'Win a match',m_as3:'Get 3 assists',m_carry90:'Carry the flag for 90 seconds',m_loot2:'Pick up 2 rare items',m_cap1:'Capture a flag'
 },
 es:{
  loading:'Cargando...',sitelock:'Juega a Banderazo en CrazyGames.com',tagline:'CAPTURA LA BANDERA 3v3',
- ui_shop:'Tienda',ui_missions:'Misiones',ui_profile:'Perfil',ui_settings:'Ajustes',ui_friends:'Jugar con amigos (pronto)',ui_video:'Monedas gratis',ui_play:'JUGAR',ui_menu:'Menú',play_again:'Otra partida',
+ ui_shop:'Tienda',ui_missions:'Misiones',ui_profile:'Perfil',ui_settings:'Ajustes',ui_friends:'Jugar con amigos',ui_video:'Monedas gratis',ui_play:'JUGAR',ui_menu:'Menú',play_again:'Otra partida',
  carry_lbl:'Llevas la bandera',tut_skip:'Pulsa H para ocultar',click_play:'Haz clic para jugar',paused:'Pausa',resume:'Continuar',quit:'Salir de la partida',
  ad_title:'Anuncio',ad_sim:'(simulado - los anuncios reales van por el SDK de CrazyGames)',
  you:'Tú',go:'¡YA!',red:'roja',blue:'azul',
@@ -73,6 +77,10 @@ es:{
  map_ice:'Lago Helado',map_ice_d:'Hielo resbaladizo, muros translúcidos y bordes abiertos. Controla tu deslizamiento.',
  w_sword:'Espada',w_sword_d:'Rápida y móvil. Dash largo.',w_spear:'Lanza',w_spear_d:'Largo alcance. Mantén para barrer.',w_xbow:'Ballesta',w_xbow_d:'Virotes a distancia que frenan.',
  it_party:'Gorro de fiesta',it_helm:'Casco de lata',it_horns:'Cuernos',it_prop:'Gorro de hélice',it_crown:'Corona',it_pred:'Mochila roja',it_ppink:'Mochila rosa',it_pgold:'Mochila dorada',it_tbub:'Estela de burbujas',it_tfire:'Estela de fuego',it_tstar:'Estela de estrellas',it_pgreen:'Mochila verde',it_tspark:'Estela de chispas',it_recruit:'Gorro Recluta',it_epic:'Casco épico',it_tgold:'Estela dorada',
+
+ rm_create:'Crear sala',rm_create_d:'Crea una sala privada y comparte el código o el enlace.',rm_join:'Unirse',rm_code_d:'Código de sala',rm_code:'CÓDIGO DE SALA',rm_invite:'Copiar enlace',rm_copied:'¡Enlace copiado!',rm_start:'Empezar partida',
+ rm_waiting:'Esperando a tus amigos...',rm_host_wait:'Esperando a que el anfitrión empiece...',rm_badcode:'Escribe el código de 4 letras',rm_notfound:'Sala no encontrada',rm_full:'La sala está llena',rm_busy:'La partida ya ha empezado',rm_noserver:'No se pudo conectar al servidor',
+ ui_cancel:'Cancelar',s_start_in:'empieza en {n}s',net_lost:'Conexión perdida. Volviendo al menú.',net_hostleft:'El anfitrión abandonó la partida.',
  lg0:'Cartón',lg1:'Madera',lg2:'Pintura',lg3:'Cromo',lg4:'Cristal',lg5:'Corona',lg6:'Leyenda de la Caja',
  m_play2:'Juega 2 partidas',m_ret1:'Devuelve una bandera',m_coin30:'Recoge 30 monedas del mapa',m_win1:'Gana una partida',m_as3:'Consigue 3 asistencias',m_carry90:'Lleva la bandera 90 segundos',m_loot2:'Recoge 2 objetos raros',m_cap1:'Captura una bandera'
 }
