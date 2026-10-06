@@ -39,8 +39,18 @@ button{font-family:inherit}
 #cgUser{font-size:2rem;opacity:.9}
 #lbMid{position:absolute;left:3rem;bottom:3rem;display:flex;flex-direction:column;gap:1.4rem}
 #lbPlay{position:absolute;left:50%;bottom:3rem;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:1.2rem}
-#lbPlay .btn.big{font-size:4.6rem;padding:1.4rem 8rem}
 #lbPlay .row{display:flex;gap:1rem}
+#modes{display:flex;gap:1.4rem;margin-top:.6rem}
+.pbtn{pointer-events:auto;cursor:pointer;border:0;border-radius:2rem;padding:1.2rem 1.6rem;width:21rem;color:#fff;display:flex;flex-direction:column;align-items:center;gap:.2rem;background:linear-gradient(#5aa8ff,#2f6fe0);box-shadow:0 .7rem 0 #1c3f94,0 1rem 1.8rem rgba(0,0,0,.3);text-shadow:0 .2rem 0 rgba(0,0,0,.25);transition:transform .08s}
+.pbtn:active{transform:translateY(.5rem);box-shadow:0 .2rem 0 #1c3f94}
+.pbtn.g{background:linear-gradient(#78e65f,#34aa34);box-shadow:0 .7rem 0 #1f7a22,0 1rem 1.8rem rgba(0,0,0,.3)}
+.pbtn.y{background:linear-gradient(#ffdc55,#f0a712);color:#4a2c00;text-shadow:none;box-shadow:0 .7rem 0 #a56a00,0 1rem 1.8rem rgba(0,0,0,.3)}
+.pbtn i{font-style:normal;font-size:3.4rem;line-height:1}.pbtn b{font-size:2.5rem}.pbtn small{font-size:1.5rem;opacity:.9;font-weight:700}
+.row2{display:flex;gap:.8rem;margin-top:.8rem}
+.flagbtn{pointer-events:auto;cursor:pointer;border:.3rem solid rgba(255,255,255,.7);border-radius:1rem;padding:0;width:7.2rem;height:4.6rem;position:relative;overflow:hidden;box-shadow:0 .4rem 0 rgba(0,0,0,.35)}
+.flagbtn i{position:absolute;inset:0;background-size:cover;background-position:center}
+.flagbtn b{position:absolute;right:.3rem;bottom:.1rem;font-size:1.5rem;color:#fff;text-shadow:0 0 .4rem #000,0 0 .4rem #000}
+.flagbtn:active{transform:translateY(.3rem)}
 #mapsel{display:flex;gap:.8rem;pointer-events:auto}
 .mbtn{pointer-events:auto;border:.3rem solid rgba(255,255,255,.25);background:rgba(10,20,50,.65);color:#fff;border-radius:1.4rem;padding:.6rem 1.2rem;font-size:1.7rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;min-width:9rem}
 .mbtn span{font-size:2.6rem;line-height:1.1}.mbtn.on{border-color:#ffd23f;background:rgba(70,80,140,.85)}
@@ -150,25 +160,28 @@ button{font-family:inherit}
       <div class="row"><span id="pLvl"></span><span id="pRank"></span></div>
       <div class="bar"><div id="pXp"></div></div>
       <div class="row" style="font-size:1.8rem;opacity:.85"><span id="pXpT"></span><span id="pPlace"></span></div>
+      <div class="row2"><button class="btn y sm" id="bChest"></button><button class="btn sm" id="bVideo"><span class="vid"></span><span data-i18n="ui_video">Free coins</span></button></div>
     </div>
     <div id="lbTop">
       <span id="cgUser"></span>
       <div class="pill"><i class="coin"></i><b id="lCoins">0</b></div>
-      <button class="btn sm" id="btnLang">EN</button>
       <button class="btn sm" id="bSnd">&#9834;</button>
       <button class="btn sm" id="bSet">&#9881;</button>
+      <button class="flagbtn" id="btnLang" title="Language / Idioma"><i></i><b>EN</b></button>
     </div>
     <div id="lbMid">
       <button class="btn y" id="bShop" data-i18n="ui_shop">Shop</button>
       <button class="btn" id="bMis"><span data-i18n="ui_missions">Missions</span> <span id="misDot"></span></button>
       <button class="btn" id="bProf" data-i18n="ui_profile">Profile</button>
     </div>
-    <button class="btn sm" id="friendsBtn" data-i18n="ui_friends">Play with friends</button>
     <div id="lbPlay">
       <div id="mapDesc"></div>
       <div id="mapsel"></div>
-      <div class="row"><button class="btn y sm" id="bChest"></button><button class="btn sm" id="bVideo"><span class="vid"></span><span data-i18n="ui_video">Free coins</span></button></div>
-      <button class="btn g big" id="bPlay" data-i18n="ui_play">PLAY</button>
+      <div id="modes">
+        <button class="pbtn g" id="bLocal"><i>&#127918;</i><b data-i18n="mode_local">Local match</b><small data-i18n="mode_local_d">Play offline against bots</small></button>
+        <button class="pbtn" id="bPublic"><i>&#127760;</i><b data-i18n="mode_public">Public multiplayer</b><small data-i18n="mode_public_d">Find players online</small></button>
+        <button class="pbtn y" id="bPrivate"><i>&#128273;</i><b data-i18n="mode_private">Private multiplayer</b><small data-i18n="mode_private_d">Play with friends</small></button>
+      </div>
     </div>
     <div id="wsel"></div>
   </div>
@@ -178,7 +191,7 @@ button{font-family:inherit}
     <div id="sSub" style="font-size:2.2rem;opacity:.85"></div>
     <div id="slots"></div>
     <div id="sCode" class="hide"></div>
-    <div id="sBtns"><button class="btn g sm hide" id="sStart" data-i18n="rm_start">Start match</button><button class="btn r sm" id="sCancel" data-i18n="ui_cancel">Cancel</button></div>
+    <div id="sBtns"><button class="btn sm hide" id="sBots">Bots</button><button class="btn g sm hide" id="sStart" data-i18n="rm_start">Start match</button><button class="btn r sm" id="sCancel" data-i18n="ui_cancel">Cancel</button></div>
   </div></div>
 
   <div id="hud" class="hide">
@@ -212,7 +225,8 @@ button{font-family:inherit}
     <button class="btn r" id="pQuit" data-i18n="quit">Leave match</button>
   </div></div>
 
-  <div id="fr" class="overlay hide"><div class="panel modal" style="width:62rem"><div class="mtop"><h2 data-i18n="ui_friends">Play with friends</h2><button class="btn r sm" data-close="fr">&#10005;</button></div><div class="mbody">
+  <div id="fr" class="overlay hide"><div class="panel modal" style="width:64rem"><div class="mtop"><h2 data-i18n="mode_private">Private multiplayer</h2><button class="btn r sm" data-close="fr">&#10005;</button></div><div class="mbody">
+    <div class="mrow"><div class="tx"><span data-i18n="rm_bots">Fill empty slots with bots</span></div><button class="btn sm g" id="frBots">ON</button></div>
     <div class="mrow"><div class="tx" data-i18n="rm_create_d">Create a private room and share the code or invite link.</div><button class="btn g" id="frCreate" data-i18n="rm_create">Create room</button></div>
     <div class="mrow"><input id="frCode" maxlength="4" placeholder="ABCD" autocomplete="off" style="width:16rem;font:inherit;font-size:3.4rem;text-align:center;text-transform:uppercase;border-radius:1.2rem;border:.3rem solid #5e7dd0;background:#10204a;color:#fff;padding:.6rem;-webkit-user-select:text;user-select:text"><div class="tx" data-i18n="rm_code_d">Room code</div><button class="btn" id="frJoin" data-i18n="rm_join">Join</button></div>
   </div></div></div>

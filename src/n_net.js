@@ -3,7 +3,7 @@
    - Every other player moves locally (prediction) and sends its position/inputs (30 Hz); combat, flags,
      pickups and rewards are decided by the host. The relay (server/server.js) only forwards messages.
    - If anything fails, the game falls back to the offline match against bots. */
-const NET={on:false,host:false,pid:-1,code:'',ws:null,peers:{},names:{},seq:0,snapAcc:0,inAcc:0,rs:0,useC:0,lastUseC:0,cdLeft:-1,mode:'',started:false,lastSnapN:-1,roster:null,nick:'',bolts:{},boltId:1,mapWanted:'bridges',joinTimer:0};
+const NET={fill:true,on:false,host:false,pid:-1,code:'',ws:null,peers:{},names:{},seq:0,snapAcc:0,inAcc:0,rs:0,useC:0,lastUseC:0,cdLeft:-1,mode:'',started:false,lastSnapN:-1,roster:null,nick:'',bolts:{},boltId:1,mapWanted:'bridges',joinTimer:0};
 const netAuth=()=>!NET.on||NET.host;
 const ATKC={sword:1,thrust:2,sweep:3,shove:4,shoot:5},ATKN=[null,'sword','thrust','sweep','shove','shoot'];
 const ATKD={sword:.42,thrust:.55,sweep:.7,shove:.4,shoot:.35},WIDX={sword:0,spear:1,xbow:2},WNAME=['sword','spear','xbow'];
@@ -60,7 +60,8 @@ function netMsg(m){
       else{
         delete NET.peers[m.id];delete NET.names[m.id];
         const e=G.ents.find(x=>x.remote&&x.pid===m.id);
-        if(e){e.remote=false;e.ai=newAI(rand(.5,.85));e.ai.role={sword:'att',spear:'def',xbow:'sup'}[e.weapon];e.pid=-1} // a leaver becomes a bot
+        if(e&&NET.fill){e.remote=false;e.ai=newAI(rand(.5,.85));e.ai.role={sword:'att',spear:'def',xbow:'sup'}[e.weapon];e.pid=-1} // a leaver becomes a bot
+        else if(e){if(e.carry)dropFlag(e);e.remote=false;e.alive=false;e.respawn=1e9;e.gfx.root.visible=false}
       }
       broadcastRoster();roomChanged();break;
     case 'cd':NET.cdLeft=m.s;roomChanged();break;
@@ -93,7 +94,8 @@ function hostRecv(from,d){
 }
 function sanitizeEq(eq){const o={hat:'',pack:'',trail:''};if(eq)for(const k in o){const id=eq[k];if(typeof id==='string'&&catById(id)&&catById(id).type===k)o[k]=id}return o}
 // ------------------------------------------------------------------ match start
-function buildRoster(humans,mapId){
+function buildRoster(humans,mapId,fill){
+  if(fill===undefined)fill=true;
   const roster=[],tc=[0,0],tw=[[],[]];
   for(const h of humans){
     let team=tc[0]<=tc[1]?0:1;if(tc[team]>=3)team=1-team;tc[team]++;tw[team].push(h.w);
@@ -102,7 +104,7 @@ function buildRoster(humans,mapId){
   const used=new Set(roster.map(r=>r.name)),pool=NAMES.filter(n=>!used.has(n));
   for(let i=pool.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[pool[i],pool[j]]=[pool[j],pool[i]]}
   const pickW=(have)=>{const o=['sword','spear','xbow'].filter(w=>!have.includes(w)||(w!=='xbow'&&Math.random()<.35));return pick(o.length?o:['sword','spear'])};
-  for(const team of[0,1])while(tc[team]<3){
+  if(fill)for(const team of[0,1])while(tc[team]<3){
     let w=pickW(tw[team]);if(w==='xbow'&&tw[team].includes('xbow'))w='spear';tw[team].push(w);tc[team]++;
     roster.push({id:roster.length,name:pool.pop(),team,human:0,pid:-1,w,skill:rand(.45,.92),eq:{hat:pick(['','','hat_party','hat_helm','hat_horns','hat_crown','hat_prop']),pack:pick(['','','pack_red','pack_pink','pack_gold']),trail:pick(['','','','trail_bubble'])}});
   }
@@ -114,7 +116,7 @@ function hostStart(mapId){
   const humans=[{pid:0,name:NET.nick,w:S.weapon,eq:Object.assign({},S.eq),me:true}];
   for(const pid in NET.peers){const p=NET.peers[pid];humans.push({pid:+pid,name:p.name,w:p.w,eq:p.eq})}
   const map=mapId||pickMap();
-  const roster=buildRoster(humans,map);NET.roster=null;
+  const roster=buildRoster(humans,map,NET.fill);NET.roster=null;
   nsend({t:'a',d:{k:'start',map,roster:roster.map(r=>Object.assign({},r,{me:false}))}});
   onNetStart(roster,map);
 }

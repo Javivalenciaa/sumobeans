@@ -36,6 +36,8 @@ en:{
  w_sword:'Sword',w_sword_d:'Fast and mobile. Long dash.',w_spear:'Spear',w_spear_d:'Long reach. Hold to sweep.',w_xbow:'Crossbow',w_xbow_d:'Ranged bolts that slow.',
  it_party:'Party hat',it_helm:'Tin helmet',it_horns:'Horns',it_prop:'Propeller cap',it_crown:'Crown',it_pred:'Red backpack',it_ppink:'Pink backpack',it_pgold:'Golden backpack',it_tbub:'Bubble trail',it_tfire:'Fire trail',it_tstar:'Star trail',it_pgreen:'Green backpack',it_tspark:'Spark trail',it_recruit:'Recruit cap',it_epic:'Epic helmet',it_tgold:'Golden trail',
 
+ mode_local:'Local match',mode_local_d:'Play offline against bots',mode_public:'Public multiplayer',mode_public_d:'Find players online',mode_private:'Private multiplayer',mode_private_d:'Play with friends',
+ rm_bots:'Fill empty slots with bots',rm_bots_n:'Bots: {v}',rm_need2:'Without bots you need at least 2 players',s_local:'Local match',net_offline:'Server unavailable - playing against bots',
  rm_create:'Create room',rm_create_d:'Create a private room and share the code or invite link.',rm_join:'Join',rm_code_d:'Room code',rm_code:'ROOM CODE',rm_invite:'Copy invite link',rm_copied:'Link copied!',rm_start:'Start match',
  rm_waiting:'Waiting for friends...',rm_host_wait:'Waiting for the host to start...',rm_badcode:'Enter the 4-letter room code',rm_notfound:'Room not found',rm_full:'The room is full',rm_busy:'The match already started',rm_noserver:'Could not connect to the server',
  ui_cancel:'Cancel',s_start_in:'starting in {n}s',net_lost:'Connection lost. Back to the menu.',net_hostleft:'The host left the match.',
@@ -78,6 +80,8 @@ es:{
  w_sword:'Espada',w_sword_d:'Rápida y móvil. Dash largo.',w_spear:'Lanza',w_spear_d:'Largo alcance. Mantén para barrer.',w_xbow:'Ballesta',w_xbow_d:'Virotes a distancia que frenan.',
  it_party:'Gorro de fiesta',it_helm:'Casco de lata',it_horns:'Cuernos',it_prop:'Gorro de hélice',it_crown:'Corona',it_pred:'Mochila roja',it_ppink:'Mochila rosa',it_pgold:'Mochila dorada',it_tbub:'Estela de burbujas',it_tfire:'Estela de fuego',it_tstar:'Estela de estrellas',it_pgreen:'Mochila verde',it_tspark:'Estela de chispas',it_recruit:'Gorro Recluta',it_epic:'Casco épico',it_tgold:'Estela dorada',
 
+ mode_local:'Partida local',mode_local_d:'Juega sin conexión contra bots',mode_public:'Multijugador público',mode_public_d:'Busca jugadores online',mode_private:'Multijugador privado',mode_private_d:'Juega con amigos',
+ rm_bots:'Rellenar los huecos con bots',rm_bots_n:'Bots: {v}',rm_need2:'Sin bots hacen falta al menos 2 jugadores',s_local:'Partida local',net_offline:'Servidor no disponible: partida contra bots',
  rm_create:'Crear sala',rm_create_d:'Crea una sala privada y comparte el código o el enlace.',rm_join:'Unirse',rm_code_d:'Código de sala',rm_code:'CÓDIGO DE SALA',rm_invite:'Copiar enlace',rm_copied:'¡Enlace copiado!',rm_start:'Empezar partida',
  rm_waiting:'Esperando a tus amigos...',rm_host_wait:'Esperando a que el anfitrión empiece...',rm_badcode:'Escribe el código de 4 letras',rm_notfound:'Sala no encontrada',rm_full:'La sala está llena',rm_busy:'La partida ya ha empezado',rm_noserver:'No se pudo conectar al servidor',
  ui_cancel:'Cancelar',s_start_in:'empieza en {n}s',net_lost:'Conexión perdida. Volviendo al menú.',net_hostleft:'El anfitrión abandonó la partida.',

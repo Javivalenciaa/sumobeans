@@ -86,7 +86,7 @@ const WEAPONS={
 const defSave=()=>({v:2,coins:300,xp:0,level:1,own:{},eq:{hat:'',pack:'',trail:''},weapon:'sword',map:'auto',lang:'',
   st:{games:0,wins:0,caps:0,rets:0,assists:0,loot:0,coins:0,carryTime:0,kills:0,streak:0,bestStreak:0},
   rank:{pts:0,placed:0,pw:0,best:0},daily:{date:'',missions:[],prog:{},claimed:{},firstWin:false,chest:false,loginDone:false},login:{last:'',streak:0},
-  set:{snd:1,mus:1,sens:1,inv:0,q:'auto',tut:0}});
+  set:{snd:1,mus:1,sens:1,inv:0,q:'auto',tut:0,fill:1}});
 function parseSave(r){try{const o=JSON.parse(r),d=defSave();const s=Object.assign(d,o);const D=defSave();s.st=Object.assign(D.st,o.st||{});s.rank=Object.assign(D.rank,o.rank||{});s.eq=Object.assign(D.eq,o.eq||{});s.daily=Object.assign(D.daily,o.daily||{});s.login=Object.assign(D.login,o.login||{});s.set=Object.assign(D.set,o.set||{});if(!Number.isFinite(s.coins))s.coins=0;if(!Number.isFinite(s.xp))s.xp=0;return s}catch(e){return defSave()}}
 let S=parseSave(Store.get('banderazo_save'));
 function save(){if(!Number.isFinite(S.coins))S.coins=0;Store.set('banderazo_save',JSON.stringify(S))}
@@ -114,11 +114,7 @@ function rankInfo(){
 
 /* ================= Language ================= */
 let L='en';
-function detectLang(){
-  if(S.lang)return S.lang;
-  const loc=(sdkLocale||navigator.language||'en').toLowerCase();
-  return loc.startsWith('es')?'es':'en';
-}
+function detectLang(){return S.lang==='es'?'es':'en'} // English by default; the player can switch to Spanish with the flag button
 function t(k,o){let s=(T[L]&&T[L][k]!==undefined?T[L][k]:T.en[k]);if(s===undefined)s=k;if(o)for(const q in o)s=s.split('{'+q+'}').join(o[q]);return s}
 
 /* ================= Audio ================= */

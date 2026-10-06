@@ -221,11 +221,14 @@ function onPlayStart(){
 }
 
 /* ================= Language ================= */
+const FLAG_EN="data:image/svg+xml;utf8,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40' preserveAspectRatio='none'><rect width='60' height='40' fill='#012169'/><path d='M0,0 L60,40 M60,0 L0,40' stroke='#fff' stroke-width='8'/><path d='M0,0 L60,40 M60,0 L0,40' stroke='#C8102E' stroke-width='3'/><path d='M30,0 V40 M0,20 H60' stroke='#fff' stroke-width='13'/><path d='M30,0 V40 M0,20 H60' stroke='#C8102E' stroke-width='7'/></svg>");
+const FLAG_ES="data:image/svg+xml;utf8,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40' preserveAspectRatio='none'><rect width='60' height='40' fill='#AA151B'/><rect y='10' width='60' height='20' fill='#F1BF00'/></svg>");
+function setFlag(){const b=$('btnLang');b.firstElementChild.style.backgroundImage='url("'+(L==='es'?FLAG_ES:FLAG_EN)+'")';b.lastElementChild.textContent=L==='es'?'ES':'EN';b.title=L==='es'?'Idioma: Español (clic para English)':'Language: English (click for Español)'}
 function applyLang(){
   document.documentElement.lang=L;
   document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n)});
   $('tutText').innerHTML=IS_TOUCH?t('tut_touch'):t('tut_pc');
-  $('btnLang').textContent=L==='es'?'ES':'EN';
+  setFlag();
   refreshLobby();if(!$('shop').classList.contains('hide'))renderShop();
 }
 
@@ -346,7 +349,7 @@ $('bProf').onclick=()=>{renderProfile();openModal('prf')};
 $('bSet').onclick=()=>{renderSettings();openModal('set')};
 $('pSet').onclick=()=>{renderSettings();openModal('set')};
 $('bSnd').onclick=()=>{S.set.snd=S.set.snd?0:1;save();applyVolume();refreshLobby();if(S.set.snd){audioInit();sfx.ui()}};
-$('btnLang').onclick=()=>{L=L==='es'?'en':'es';S.lang=L;save();applyLang();sfx.ui()};
+$('btnLang').onclick=()=>{L=L==='es'?'en':'es';S.lang=L==='es'?'es':'';save();applyLang();sfx.ui()};
 $('bChest').onclick=()=>{if(S.daily.chest)return;S.daily.chest=true;const n=150+S.login.streak*10;S.coins+=n;save();sfx.buy();toastG('+'+n+' '+t('coins'));refreshLobby()};
 $('bVideo').onclick=()=>{
   if(!adsAvailable()){toastG(t('ad_blocked'));return}
@@ -365,7 +368,7 @@ function pickMap(){
 function openSearchUI(mode){
   $('lobby').classList.add('hide');$('fr').classList.add('hide');$('search').classList.remove('hide');G.state='search';
   $('sCode').classList.add('hide');$('sStart').classList.add('hide');
-  $('sTitle').textContent=t('s_search');$('sSub').textContent='';
+  $('sTitle').textContent=t('s_search');$('sSub').textContent='';$('sBots').classList.add('hide');
   paintSlots([]);
 }
 function paintSlots(names,roster){
@@ -391,16 +394,18 @@ function roomChanged(){
     NET.link=link;
     $('sCode').innerHTML=`<div style="font-size:2rem;opacity:.8">${t('rm_code')}</div><div style="font-size:6rem;letter-spacing:.8rem">${NET.code}</div><button class="btn sm" id="sCopy">${t('rm_invite')}</button>`;
     $('sCopy').onclick=()=>{try{navigator.clipboard.writeText(NET.link);toastG(t('rm_copied'))}catch(e){toastG(NET.link)}};
-    $('sStart').classList.toggle('hide',!NET.host);
+    $('sStart').classList.toggle('hide',!NET.host);$('sBots').classList.toggle('hide',!NET.host);
+    $('sBots').textContent=t('rm_bots_n',{v:t(NET.fill?'on':'off')});$('sBots').className='btn sm '+(NET.fill?'g':'r')+(NET.host?'':' hide');
+    $('sStart').disabled=NET.host&&!NET.fill&&n<2;
     if(NET.host){try{sdkOK&&CG&&CG.game.showInviteButton&&CG.game.showInviteButton({room:NET.code})}catch(e){}}
   }else{
     $('sTitle').textContent=t('s_search');
     $('sSub').textContent=n+'/6'+(NET.cdLeft>=0?' \u00b7 '+t('s_start_in',{n:NET.cdLeft}):'');
   }
 }
-function searchStartedMatch(roster,map){
+function searchStartedMatch(roster,map,title){
   const md=MAPDEFS.find(m=>m.id===map)||MAPDEFS[0];
-  $('sTitle').textContent=t('s_found');$('sSub').textContent='6/6 \u00b7 '+md.ic+' '+t(md.n);$('sCode').classList.add('hide');$('sStart').classList.add('hide');
+  $('sTitle').textContent=title||t('s_found');$('sSub').textContent=roster.length+'/6 \u00b7 '+md.ic+' '+t(md.n);$('sCode').classList.add('hide');$('sStart').classList.add('hide');$('sBots').classList.add('hide');
   paintSlots([],roster);
   setTimeout(()=>{
     if(G.state!=='search')return;
@@ -411,7 +416,7 @@ function searchStartedMatch(roster,map){
   },800);
 }
 function offlineSearch(){
-  NET.mode='';
+  NET.mode='';toastG(t('net_offline'));
   const names=[],pool=NAMES.slice();while(names.length<5)names.push(pool.splice((Math.random()*pool.length)|0,1)[0]);
   const mapId=pickMap();
   const shown=[t('you')];paintSlots(shown);
@@ -434,7 +439,7 @@ async function startSearch(){
   audioInit();sfx.ui();
   if(!IS_TOUCH)tryLock(); // user gesture: lock the mouse now so the match starts with a single click
   searchTimers.forEach(clearTimeout);searchTimers=[];netClose();
-  NET.nick=netNick();openSearchUI('quick');
+  NET.nick=netNick();NET.fill=true;openSearchUI('quick');
   const ok=await netConnect(2500);
   if(G.state!=='search')return;
   if(!ok){offlineSearch();return}
@@ -445,7 +450,7 @@ async function hostPrivate(){
   audioInit();sfx.ui();searchTimers.forEach(clearTimeout);netClose();NET.nick=netNick();openSearchUI('private');
   const ok=await netConnect(3000);if(G.state!=='search')return;
   if(!ok){NET.mode='private';searchFailed('noserver');return}
-  NET.mode='private';nsend({t:'create',g:'banderazo'});
+  NET.mode='private';NET.fill=!!S.set.fill;nsend({t:'create',g:'banderazo'});
 }
 async function joinPrivate(code){
   code=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4);
@@ -455,8 +460,19 @@ async function joinPrivate(code){
   if(!ok){NET.mode='join';searchFailed('noserver');return}
   NET.mode='join';nsend({t:'join',g:'banderazo',code});
 }
-$('bPlay').onclick=startSearch;
-$('friendsBtn').onclick=()=>{sfx.ui();$('frCode').value='';openModal('fr')};
+function startLocal(){
+  audioInit();sfx.ui();if(!IS_TOUCH)tryLock();
+  searchTimers.forEach(clearTimeout);searchTimers=[];netClose();NET.mode='';openSearchUI('local');
+  const map=pickMap();lastMap=map;previewMap=map;
+  const roster=buildRoster([{pid:-1,name:t('you'),w:S.weapon,eq:Object.assign({},S.eq),me:true}],map,true);
+  searchStartedMatch(roster,map,t('s_local'));
+}
+function setFrBots(){const b=$('frBots');b.textContent=t(S.set.fill?'on':'off');b.className='btn sm '+(S.set.fill?'g':'r')}
+$('bLocal').onclick=startLocal;
+$('bPublic').onclick=startSearch;
+$('bPrivate').onclick=()=>{sfx.ui();$('frCode').value='';setFrBots();openModal('fr')};
+$('frBots').onclick=()=>{S.set.fill=S.set.fill?0:1;save();sfx.ui();setFrBots()};
+$('sBots').onclick=()=>{if(!NET.host||NET.started)return;NET.fill=!NET.fill;S.set.fill=NET.fill?1:0;save();sfx.ui();roomChanged()};
 $('frCreate').onclick=hostPrivate;
 $('frJoin').onclick=()=>joinPrivate($('frCode').value);
 $('sStart').onclick=()=>{if(NET.host&&!NET.started)hostStart(pickMap())};
@@ -574,4 +590,4 @@ async function boot(){
   else{let inst=false;try{inst=!!(sdkOK&&CG&&CG.game.isInstantMultiplayer)}catch(e){}if(inst)setTimeout(startSearch,400)}
 }
 boot();
-window.__dbg={NET,hostStart,joinPrivate,hostPrivate,netConnect,buildRoster,applySnap,buildSnap,tick:(n)=>{for(let i=0;i<n;i++){readPlayerInput(STEP);updateGame(STEP);for(const e of G.ents)animEnt(e,STEP,1);fx.update(STEP);updateCamera(STEP,1)}},G,S,MAP,NAV,startMatch,showLobby,startSearch,look,keys,camera,navPath,loadMap};
+window.__dbg={startLocal,NET,hostStart,joinPrivate,hostPrivate,netConnect,buildRoster,applySnap,buildSnap,tick:(n)=>{for(let i=0;i<n;i++){readPlayerInput(STEP);updateGame(STEP);for(const e of G.ents)animEnt(e,STEP,1);fx.update(STEP);updateCamera(STEP,1)}},G,S,MAP,NAV,startMatch,showLobby,startSearch,look,keys,camera,navPath,loadMap};

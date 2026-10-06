@@ -39,8 +39,18 @@ button{font-family:inherit}
 #cgUser{font-size:2rem;opacity:.9}
 #lbMid{position:absolute;left:3rem;bottom:3rem;display:flex;flex-direction:column;gap:1.4rem}
 #lbPlay{position:absolute;left:50%;bottom:3rem;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:1.2rem}
-#lbPlay .btn.big{font-size:4.6rem;padding:1.4rem 8rem}
 #lbPlay .row{display:flex;gap:1rem}
+#modes{display:flex;gap:1.4rem;margin-top:.6rem}
+.pbtn{pointer-events:auto;cursor:pointer;border:0;border-radius:2rem;padding:1.2rem 1.6rem;width:21rem;color:#fff;display:flex;flex-direction:column;align-items:center;gap:.2rem;background:linear-gradient(#5aa8ff,#2f6fe0);box-shadow:0 .7rem 0 #1c3f94,0 1rem 1.8rem rgba(0,0,0,.3);text-shadow:0 .2rem 0 rgba(0,0,0,.25);transition:transform .08s}
+.pbtn:active{transform:translateY(.5rem);box-shadow:0 .2rem 0 #1c3f94}
+.pbtn.g{background:linear-gradient(#78e65f,#34aa34);box-shadow:0 .7rem 0 #1f7a22,0 1rem 1.8rem rgba(0,0,0,.3)}
+.pbtn.y{background:linear-gradient(#ffdc55,#f0a712);color:#4a2c00;text-shadow:none;box-shadow:0 .7rem 0 #a56a00,0 1rem 1.8rem rgba(0,0,0,.3)}
+.pbtn i{font-style:normal;font-size:3.4rem;line-height:1}.pbtn b{font-size:2.5rem}.pbtn small{font-size:1.5rem;opacity:.9;font-weight:700}
+.row2{display:flex;gap:.8rem;margin-top:.8rem}
+.flagbtn{pointer-events:auto;cursor:pointer;border:.3rem solid rgba(255,255,255,.7);border-radius:1rem;padding:0;width:7.2rem;height:4.6rem;position:relative;overflow:hidden;box-shadow:0 .4rem 0 rgba(0,0,0,.35)}
+.flagbtn i{position:absolute;inset:0;background-size:cover;background-position:center}
+.flagbtn b{position:absolute;right:.3rem;bottom:.1rem;font-size:1.5rem;color:#fff;text-shadow:0 0 .4rem #000,0 0 .4rem #000}
+.flagbtn:active{transform:translateY(.3rem)}
 #mapsel{display:flex;gap:.8rem;pointer-events:auto}
 .mbtn{pointer-events:auto;border:.3rem solid rgba(255,255,255,.25);background:rgba(10,20,50,.65);color:#fff;border-radius:1.4rem;padding:.6rem 1.2rem;font-size:1.7rem;cursor:pointer;display:flex;flex-direction:column;align-items:center;min-width:9rem}
 .mbtn span{font-size:2.6rem;line-height:1.1}.mbtn.on{border-color:#ffd23f;background:rgba(70,80,140,.85)}
@@ -150,25 +160,28 @@ button{font-family:inherit}
       <div class="row"><span id="pLvl"></span><span id="pRank"></span></div>
       <div class="bar"><div id="pXp"></div></div>
       <div class="row" style="font-size:1.8rem;opacity:.85"><span id="pXpT"></span><span id="pPlace"></span></div>
+      <div class="row2"><button class="btn y sm" id="bChest"></button><button class="btn sm" id="bVideo"><span class="vid"></span><span data-i18n="ui_video">Free coins</span></button></div>
     </div>
     <div id="lbTop">
       <span id="cgUser"></span>
       <div class="pill"><i class="coin"></i><b id="lCoins">0</b></div>
-      <button class="btn sm" id="btnLang">EN</button>
       <button class="btn sm" id="bSnd">&#9834;</button>
       <button class="btn sm" id="bSet">&#9881;</button>
+      <button class="flagbtn" id="btnLang" title="Language / Idioma"><i></i><b>EN</b></button>
     </div>
     <div id="lbMid">
       <button class="btn y" id="bShop" data-i18n="ui_shop">Shop</button>
       <button class="btn" id="bMis"><span data-i18n="ui_missions">Missions</span> <span id="misDot"></span></button>
       <button class="btn" id="bProf" data-i18n="ui_profile">Profile</button>
     </div>
-    <button class="btn sm" id="friendsBtn" data-i18n="ui_friends">Play with friends</button>
     <div id="lbPlay">
       <div id="mapDesc"></div>
       <div id="mapsel"></div>
-      <div class="row"><button class="btn y sm" id="bChest"></button><button class="btn sm" id="bVideo"><span class="vid"></span><span data-i18n="ui_video">Free coins</span></button></div>
-      <button class="btn g big" id="bPlay" data-i18n="ui_play">PLAY</button>
+      <div id="modes">
+        <button class="pbtn g" id="bLocal"><i>&#127918;</i><b data-i18n="mode_local">Local match</b><small data-i18n="mode_local_d">Play offline against bots</small></button>
+        <button class="pbtn" id="bPublic"><i>&#127760;</i><b data-i18n="mode_public">Public multiplayer</b><small data-i18n="mode_public_d">Find players online</small></button>
+        <button class="pbtn y" id="bPrivate"><i>&#128273;</i><b data-i18n="mode_private">Private multiplayer</b><small data-i18n="mode_private_d">Play with friends</small></button>
+      </div>
     </div>
     <div id="wsel"></div>
   </div>
@@ -178,7 +191,7 @@ button{font-family:inherit}
     <div id="sSub" style="font-size:2.2rem;opacity:.85"></div>
     <div id="slots"></div>
     <div id="sCode" class="hide"></div>
-    <div id="sBtns"><button class="btn g sm hide" id="sStart" data-i18n="rm_start">Start match</button><button class="btn r sm" id="sCancel" data-i18n="ui_cancel">Cancel</button></div>
+    <div id="sBtns"><button class="btn sm hide" id="sBots">Bots</button><button class="btn g sm hide" id="sStart" data-i18n="rm_start">Start match</button><button class="btn r sm" id="sCancel" data-i18n="ui_cancel">Cancel</button></div>
   </div></div>
 
   <div id="hud" class="hide">
@@ -212,7 +225,8 @@ button{font-family:inherit}
     <button class="btn r" id="pQuit" data-i18n="quit">Leave match</button>
   </div></div>
 
-  <div id="fr" class="overlay hide"><div class="panel modal" style="width:62rem"><div class="mtop"><h2 data-i18n="ui_friends">Play with friends</h2><button class="btn r sm" data-close="fr">&#10005;</button></div><div class="mbody">
+  <div id="fr" class="overlay hide"><div class="panel modal" style="width:64rem"><div class="mtop"><h2 data-i18n="mode_private">Private multiplayer</h2><button class="btn r sm" data-close="fr">&#10005;</button></div><div class="mbody">
+    <div class="mrow"><div class="tx"><span data-i18n="rm_bots">Fill empty slots with bots</span></div><button class="btn sm g" id="frBots">ON</button></div>
     <div class="mrow"><div class="tx" data-i18n="rm_create_d">Create a private room and share the code or invite link.</div><button class="btn g" id="frCreate" data-i18n="rm_create">Create room</button></div>
     <div class="mrow"><input id="frCode" maxlength="4" placeholder="ABCD" autocomplete="off" style="width:16rem;font:inherit;font-size:3.4rem;text-align:center;text-transform:uppercase;border-radius:1.2rem;border:.3rem solid #5e7dd0;background:#10204a;color:#fff;padding:.6rem;-webkit-user-select:text;user-select:text"><div class="tx" data-i18n="rm_code_d">Room code</div><button class="btn" id="frJoin" data-i18n="rm_join">Join</button></div>
   </div></div></div>
@@ -326,7 +340,7 @@ const WEAPONS={
 const defSave=()=>({v:2,coins:300,xp:0,level:1,own:{},eq:{hat:'',pack:'',trail:''},weapon:'sword',map:'auto',lang:'',
   st:{games:0,wins:0,caps:0,rets:0,assists:0,loot:0,coins:0,carryTime:0,kills:0,streak:0,bestStreak:0},
   rank:{pts:0,placed:0,pw:0,best:0},daily:{date:'',missions:[],prog:{},claimed:{},firstWin:false,chest:false,loginDone:false},login:{last:'',streak:0},
-  set:{snd:1,mus:1,sens:1,inv:0,q:'auto',tut:0}});
+  set:{snd:1,mus:1,sens:1,inv:0,q:'auto',tut:0,fill:1}});
 function parseSave(r){try{const o=JSON.parse(r),d=defSave();const s=Object.assign(d,o);const D=defSave();s.st=Object.assign(D.st,o.st||{});s.rank=Object.assign(D.rank,o.rank||{});s.eq=Object.assign(D.eq,o.eq||{});s.daily=Object.assign(D.daily,o.daily||{});s.login=Object.assign(D.login,o.login||{});s.set=Object.assign(D.set,o.set||{});if(!Number.isFinite(s.coins))s.coins=0;if(!Number.isFinite(s.xp))s.xp=0;return s}catch(e){return defSave()}}
 let S=parseSave(Store.get('banderazo_save'));
 function save(){if(!Number.isFinite(S.coins))S.coins=0;Store.set('banderazo_save',JSON.stringify(S))}
@@ -354,11 +368,7 @@ function rankInfo(){
 
 /* ================= Language ================= */
 let L='en';
-function detectLang(){
-  if(S.lang)return S.lang;
-  const loc=(sdkLocale||navigator.language||'en').toLowerCase();
-  return loc.startsWith('es')?'es':'en';
-}
+function detectLang(){return S.lang==='es'?'es':'en'} // English by default; the player can switch to Spanish with the flag button
 function t(k,o){let s=(T[L]&&T[L][k]!==undefined?T[L][k]:T.en[k]);if(s===undefined)s=k;if(o)for(const q in o)s=s.split('{'+q+'}').join(o[q]);return s}
 
 /* ================= Audio ================= */
@@ -484,6 +494,8 @@ en:{
  w_sword:'Sword',w_sword_d:'Fast and mobile. Long dash.',w_spear:'Spear',w_spear_d:'Long reach. Hold to sweep.',w_xbow:'Crossbow',w_xbow_d:'Ranged bolts that slow.',
  it_party:'Party hat',it_helm:'Tin helmet',it_horns:'Horns',it_prop:'Propeller cap',it_crown:'Crown',it_pred:'Red backpack',it_ppink:'Pink backpack',it_pgold:'Golden backpack',it_tbub:'Bubble trail',it_tfire:'Fire trail',it_tstar:'Star trail',it_pgreen:'Green backpack',it_tspark:'Spark trail',it_recruit:'Recruit cap',it_epic:'Epic helmet',it_tgold:'Golden trail',
 
+ mode_local:'Local match',mode_local_d:'Play offline against bots',mode_public:'Public multiplayer',mode_public_d:'Find players online',mode_private:'Private multiplayer',mode_private_d:'Play with friends',
+ rm_bots:'Fill empty slots with bots',rm_bots_n:'Bots: {v}',rm_need2:'Without bots you need at least 2 players',s_local:'Local match',net_offline:'Server unavailable - playing against bots',
  rm_create:'Create room',rm_create_d:'Create a private room and share the code or invite link.',rm_join:'Join',rm_code_d:'Room code',rm_code:'ROOM CODE',rm_invite:'Copy invite link',rm_copied:'Link copied!',rm_start:'Start match',
  rm_waiting:'Waiting for friends...',rm_host_wait:'Waiting for the host to start...',rm_badcode:'Enter the 4-letter room code',rm_notfound:'Room not found',rm_full:'The room is full',rm_busy:'The match already started',rm_noserver:'Could not connect to the server',
  ui_cancel:'Cancel',s_start_in:'starting in {n}s',net_lost:'Connection lost. Back to the menu.',net_hostleft:'The host left the match.',
@@ -526,6 +538,8 @@ es:{
  w_sword:'Espada',w_sword_d:'Rápida y móvil. Dash largo.',w_spear:'Lanza',w_spear_d:'Largo alcance. Mantén para barrer.',w_xbow:'Ballesta',w_xbow_d:'Virotes a distancia que frenan.',
  it_party:'Gorro de fiesta',it_helm:'Casco de lata',it_horns:'Cuernos',it_prop:'Gorro de hélice',it_crown:'Corona',it_pred:'Mochila roja',it_ppink:'Mochila rosa',it_pgold:'Mochila dorada',it_tbub:'Estela de burbujas',it_tfire:'Estela de fuego',it_tstar:'Estela de estrellas',it_pgreen:'Mochila verde',it_tspark:'Estela de chispas',it_recruit:'Gorro Recluta',it_epic:'Casco épico',it_tgold:'Estela dorada',
 
+ mode_local:'Partida local',mode_local_d:'Juega sin conexión contra bots',mode_public:'Multijugador público',mode_public_d:'Busca jugadores online',mode_private:'Multijugador privado',mode_private_d:'Juega con amigos',
+ rm_bots:'Rellenar los huecos con bots',rm_bots_n:'Bots: {v}',rm_need2:'Sin bots hacen falta al menos 2 jugadores',s_local:'Partida local',net_offline:'Servidor no disponible: partida contra bots',
  rm_create:'Crear sala',rm_create_d:'Crea una sala privada y comparte el código o el enlace.',rm_join:'Unirse',rm_code_d:'Código de sala',rm_code:'CÓDIGO DE SALA',rm_invite:'Copiar enlace',rm_copied:'¡Enlace copiado!',rm_start:'Empezar partida',
  rm_waiting:'Esperando a tus amigos...',rm_host_wait:'Esperando a que el anfitrión empiece...',rm_badcode:'Escribe el código de 4 letras',rm_notfound:'Sala no encontrada',rm_full:'La sala está llena',rm_busy:'La partida ya ha empezado',rm_noserver:'No se pudo conectar al servidor',
  ui_cancel:'Cancelar',s_start_in:'empieza en {n}s',net_lost:'Conexión perdida. Volviendo al menú.',net_hostleft:'El anfitrión abandonó la partida.',
@@ -1691,7 +1705,7 @@ function updateGame(dt){
    - Every other player moves locally (prediction) and sends its position/inputs (30 Hz); combat, flags,
      pickups and rewards are decided by the host. The relay (server/server.js) only forwards messages.
    - If anything fails, the game falls back to the offline match against bots. */
-const NET={on:false,host:false,pid:-1,code:'',ws:null,peers:{},names:{},seq:0,snapAcc:0,inAcc:0,rs:0,useC:0,lastUseC:0,cdLeft:-1,mode:'',started:false,lastSnapN:-1,roster:null,nick:'',bolts:{},boltId:1,mapWanted:'bridges',joinTimer:0};
+const NET={fill:true,on:false,host:false,pid:-1,code:'',ws:null,peers:{},names:{},seq:0,snapAcc:0,inAcc:0,rs:0,useC:0,lastUseC:0,cdLeft:-1,mode:'',started:false,lastSnapN:-1,roster:null,nick:'',bolts:{},boltId:1,mapWanted:'bridges',joinTimer:0};
 const netAuth=()=>!NET.on||NET.host;
 const ATKC={sword:1,thrust:2,sweep:3,shove:4,shoot:5},ATKN=[null,'sword','thrust','sweep','shove','shoot'];
 const ATKD={sword:.42,thrust:.55,sweep:.7,shove:.4,shoot:.35},WIDX={sword:0,spear:1,xbow:2},WNAME=['sword','spear','xbow'];
@@ -1748,7 +1762,8 @@ function netMsg(m){
       else{
         delete NET.peers[m.id];delete NET.names[m.id];
         const e=G.ents.find(x=>x.remote&&x.pid===m.id);
-        if(e){e.remote=false;e.ai=newAI(rand(.5,.85));e.ai.role={sword:'att',spear:'def',xbow:'sup'}[e.weapon];e.pid=-1} // a leaver becomes a bot
+        if(e&&NET.fill){e.remote=false;e.ai=newAI(rand(.5,.85));e.ai.role={sword:'att',spear:'def',xbow:'sup'}[e.weapon];e.pid=-1} // a leaver becomes a bot
+        else if(e){if(e.carry)dropFlag(e);e.remote=false;e.alive=false;e.respawn=1e9;e.gfx.root.visible=false}
       }
       broadcastRoster();roomChanged();break;
     case 'cd':NET.cdLeft=m.s;roomChanged();break;
@@ -1781,7 +1796,8 @@ function hostRecv(from,d){
 }
 function sanitizeEq(eq){const o={hat:'',pack:'',trail:''};if(eq)for(const k in o){const id=eq[k];if(typeof id==='string'&&catById(id)&&catById(id).type===k)o[k]=id}return o}
 // ------------------------------------------------------------------ match start
-function buildRoster(humans,mapId){
+function buildRoster(humans,mapId,fill){
+  if(fill===undefined)fill=true;
   const roster=[],tc=[0,0],tw=[[],[]];
   for(const h of humans){
     let team=tc[0]<=tc[1]?0:1;if(tc[team]>=3)team=1-team;tc[team]++;tw[team].push(h.w);
@@ -1790,7 +1806,7 @@ function buildRoster(humans,mapId){
   const used=new Set(roster.map(r=>r.name)),pool=NAMES.filter(n=>!used.has(n));
   for(let i=pool.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[pool[i],pool[j]]=[pool[j],pool[i]]}
   const pickW=(have)=>{const o=['sword','spear','xbow'].filter(w=>!have.includes(w)||(w!=='xbow'&&Math.random()<.35));return pick(o.length?o:['sword','spear'])};
-  for(const team of[0,1])while(tc[team]<3){
+  if(fill)for(const team of[0,1])while(tc[team]<3){
     let w=pickW(tw[team]);if(w==='xbow'&&tw[team].includes('xbow'))w='spear';tw[team].push(w);tc[team]++;
     roster.push({id:roster.length,name:pool.pop(),team,human:0,pid:-1,w,skill:rand(.45,.92),eq:{hat:pick(['','','hat_party','hat_helm','hat_horns','hat_crown','hat_prop']),pack:pick(['','','pack_red','pack_pink','pack_gold']),trail:pick(['','','','trail_bubble'])}});
   }
@@ -1802,7 +1818,7 @@ function hostStart(mapId){
   const humans=[{pid:0,name:NET.nick,w:S.weapon,eq:Object.assign({},S.eq),me:true}];
   for(const pid in NET.peers){const p=NET.peers[pid];humans.push({pid:+pid,name:p.name,w:p.w,eq:p.eq})}
   const map=mapId||pickMap();
-  const roster=buildRoster(humans,map);NET.roster=null;
+  const roster=buildRoster(humans,map,NET.fill);NET.roster=null;
   nsend({t:'a',d:{k:'start',map,roster:roster.map(r=>Object.assign({},r,{me:false}))}});
   onNetStart(roster,map);
 }
@@ -2156,11 +2172,14 @@ function onPlayStart(){
 }
 
 /* ================= Language ================= */
+const FLAG_EN="data:image/svg+xml;utf8,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40' preserveAspectRatio='none'><rect width='60' height='40' fill='#012169'/><path d='M0,0 L60,40 M60,0 L0,40' stroke='#fff' stroke-width='8'/><path d='M0,0 L60,40 M60,0 L0,40' stroke='#C8102E' stroke-width='3'/><path d='M30,0 V40 M0,20 H60' stroke='#fff' stroke-width='13'/><path d='M30,0 V40 M0,20 H60' stroke='#C8102E' stroke-width='7'/></svg>");
+const FLAG_ES="data:image/svg+xml;utf8,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 40' preserveAspectRatio='none'><rect width='60' height='40' fill='#AA151B'/><rect y='10' width='60' height='20' fill='#F1BF00'/></svg>");
+function setFlag(){const b=$('btnLang');b.firstElementChild.style.backgroundImage='url("'+(L==='es'?FLAG_ES:FLAG_EN)+'")';b.lastElementChild.textContent=L==='es'?'ES':'EN';b.title=L==='es'?'Idioma: Español (clic para English)':'Language: English (click for Español)'}
 function applyLang(){
   document.documentElement.lang=L;
   document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.dataset.i18n)});
   $('tutText').innerHTML=IS_TOUCH?t('tut_touch'):t('tut_pc');
-  $('btnLang').textContent=L==='es'?'ES':'EN';
+  setFlag();
   refreshLobby();if(!$('shop').classList.contains('hide'))renderShop();
 }
 
@@ -2281,7 +2300,7 @@ $('bProf').onclick=()=>{renderProfile();openModal('prf')};
 $('bSet').onclick=()=>{renderSettings();openModal('set')};
 $('pSet').onclick=()=>{renderSettings();openModal('set')};
 $('bSnd').onclick=()=>{S.set.snd=S.set.snd?0:1;save();applyVolume();refreshLobby();if(S.set.snd){audioInit();sfx.ui()}};
-$('btnLang').onclick=()=>{L=L==='es'?'en':'es';S.lang=L;save();applyLang();sfx.ui()};
+$('btnLang').onclick=()=>{L=L==='es'?'en':'es';S.lang=L==='es'?'es':'';save();applyLang();sfx.ui()};
 $('bChest').onclick=()=>{if(S.daily.chest)return;S.daily.chest=true;const n=150+S.login.streak*10;S.coins+=n;save();sfx.buy();toastG('+'+n+' '+t('coins'));refreshLobby()};
 $('bVideo').onclick=()=>{
   if(!adsAvailable()){toastG(t('ad_blocked'));return}
@@ -2300,7 +2319,7 @@ function pickMap(){
 function openSearchUI(mode){
   $('lobby').classList.add('hide');$('fr').classList.add('hide');$('search').classList.remove('hide');G.state='search';
   $('sCode').classList.add('hide');$('sStart').classList.add('hide');
-  $('sTitle').textContent=t('s_search');$('sSub').textContent='';
+  $('sTitle').textContent=t('s_search');$('sSub').textContent='';$('sBots').classList.add('hide');
   paintSlots([]);
 }
 function paintSlots(names,roster){
@@ -2326,16 +2345,18 @@ function roomChanged(){
     NET.link=link;
     $('sCode').innerHTML=`<div style="font-size:2rem;opacity:.8">${t('rm_code')}</div><div style="font-size:6rem;letter-spacing:.8rem">${NET.code}</div><button class="btn sm" id="sCopy">${t('rm_invite')}</button>`;
     $('sCopy').onclick=()=>{try{navigator.clipboard.writeText(NET.link);toastG(t('rm_copied'))}catch(e){toastG(NET.link)}};
-    $('sStart').classList.toggle('hide',!NET.host);
+    $('sStart').classList.toggle('hide',!NET.host);$('sBots').classList.toggle('hide',!NET.host);
+    $('sBots').textContent=t('rm_bots_n',{v:t(NET.fill?'on':'off')});$('sBots').className='btn sm '+(NET.fill?'g':'r')+(NET.host?'':' hide');
+    $('sStart').disabled=NET.host&&!NET.fill&&n<2;
     if(NET.host){try{sdkOK&&CG&&CG.game.showInviteButton&&CG.game.showInviteButton({room:NET.code})}catch(e){}}
   }else{
     $('sTitle').textContent=t('s_search');
     $('sSub').textContent=n+'/6'+(NET.cdLeft>=0?' \u00b7 '+t('s_start_in',{n:NET.cdLeft}):'');
   }
 }
-function searchStartedMatch(roster,map){
+function searchStartedMatch(roster,map,title){
   const md=MAPDEFS.find(m=>m.id===map)||MAPDEFS[0];
-  $('sTitle').textContent=t('s_found');$('sSub').textContent='6/6 \u00b7 '+md.ic+' '+t(md.n);$('sCode').classList.add('hide');$('sStart').classList.add('hide');
+  $('sTitle').textContent=title||t('s_found');$('sSub').textContent=roster.length+'/6 \u00b7 '+md.ic+' '+t(md.n);$('sCode').classList.add('hide');$('sStart').classList.add('hide');$('sBots').classList.add('hide');
   paintSlots([],roster);
   setTimeout(()=>{
     if(G.state!=='search')return;
@@ -2346,7 +2367,7 @@ function searchStartedMatch(roster,map){
   },800);
 }
 function offlineSearch(){
-  NET.mode='';
+  NET.mode='';toastG(t('net_offline'));
   const names=[],pool=NAMES.slice();while(names.length<5)names.push(pool.splice((Math.random()*pool.length)|0,1)[0]);
   const mapId=pickMap();
   const shown=[t('you')];paintSlots(shown);
@@ -2369,7 +2390,7 @@ async function startSearch(){
   audioInit();sfx.ui();
   if(!IS_TOUCH)tryLock(); // user gesture: lock the mouse now so the match starts with a single click
   searchTimers.forEach(clearTimeout);searchTimers=[];netClose();
-  NET.nick=netNick();openSearchUI('quick');
+  NET.nick=netNick();NET.fill=true;openSearchUI('quick');
   const ok=await netConnect(2500);
   if(G.state!=='search')return;
   if(!ok){offlineSearch();return}
@@ -2380,7 +2401,7 @@ async function hostPrivate(){
   audioInit();sfx.ui();searchTimers.forEach(clearTimeout);netClose();NET.nick=netNick();openSearchUI('private');
   const ok=await netConnect(3000);if(G.state!=='search')return;
   if(!ok){NET.mode='private';searchFailed('noserver');return}
-  NET.mode='private';nsend({t:'create',g:'banderazo'});
+  NET.mode='private';NET.fill=!!S.set.fill;nsend({t:'create',g:'banderazo'});
 }
 async function joinPrivate(code){
   code=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4);
@@ -2390,8 +2411,19 @@ async function joinPrivate(code){
   if(!ok){NET.mode='join';searchFailed('noserver');return}
   NET.mode='join';nsend({t:'join',g:'banderazo',code});
 }
-$('bPlay').onclick=startSearch;
-$('friendsBtn').onclick=()=>{sfx.ui();$('frCode').value='';openModal('fr')};
+function startLocal(){
+  audioInit();sfx.ui();if(!IS_TOUCH)tryLock();
+  searchTimers.forEach(clearTimeout);searchTimers=[];netClose();NET.mode='';openSearchUI('local');
+  const map=pickMap();lastMap=map;previewMap=map;
+  const roster=buildRoster([{pid:-1,name:t('you'),w:S.weapon,eq:Object.assign({},S.eq),me:true}],map,true);
+  searchStartedMatch(roster,map,t('s_local'));
+}
+function setFrBots(){const b=$('frBots');b.textContent=t(S.set.fill?'on':'off');b.className='btn sm '+(S.set.fill?'g':'r')}
+$('bLocal').onclick=startLocal;
+$('bPublic').onclick=startSearch;
+$('bPrivate').onclick=()=>{sfx.ui();$('frCode').value='';setFrBots();openModal('fr')};
+$('frBots').onclick=()=>{S.set.fill=S.set.fill?0:1;save();sfx.ui();setFrBots()};
+$('sBots').onclick=()=>{if(!NET.host||NET.started)return;NET.fill=!NET.fill;S.set.fill=NET.fill?1:0;save();sfx.ui();roomChanged()};
 $('frCreate').onclick=hostPrivate;
 $('frJoin').onclick=()=>joinPrivate($('frCode').value);
 $('sStart').onclick=()=>{if(NET.host&&!NET.started)hostStart(pickMap())};
@@ -2509,7 +2541,7 @@ async function boot(){
   else{let inst=false;try{inst=!!(sdkOK&&CG&&CG.game.isInstantMultiplayer)}catch(e){}if(inst)setTimeout(startSearch,400)}
 }
 boot();
-window.__dbg={NET,hostStart,joinPrivate,hostPrivate,netConnect,buildRoster,applySnap,buildSnap,tick:(n)=>{for(let i=0;i<n;i++){readPlayerInput(STEP);updateGame(STEP);for(const e of G.ents)animEnt(e,STEP,1);fx.update(STEP);updateCamera(STEP,1)}},G,S,MAP,NAV,startMatch,showLobby,startSearch,look,keys,camera,navPath,loadMap};
+window.__dbg={startLocal,NET,hostStart,joinPrivate,hostPrivate,netConnect,buildRoster,applySnap,buildSnap,tick:(n)=>{for(let i=0;i<n;i++){readPlayerInput(STEP);updateGame(STEP);for(const e of G.ents)animEnt(e,STEP,1);fx.update(STEP);updateCamera(STEP,1)}},G,S,MAP,NAV,startMatch,showLobby,startSearch,look,keys,camera,navPath,loadMap};
 
 })();</script>
 </body>
