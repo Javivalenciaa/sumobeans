@@ -1,10 +1,16 @@
 'use strict';
-/* Blob Sumo relay: el anfitrion (navegador) simula la partida; este servidor solo reenvia mensajes,
+/* Relay compartido (Sumo Beans y Bumper Orbs): cada partida lleva un identificador de juego (g) para no mezclar jugadores de juegos distintos.
+   Blob Sumo relay: el anfitrion (navegador) simula la partida; este servidor solo reenvia mensajes,
    organiza las partidas publicas (cuenta atras y arranque) y traspasa el anfitrion si se va. */
 const http = require('http');
 
 const MAX_PLAYERS = 5;
-const MAX_MSG = 8192;
+const MAX_MSG = 16384;
+// Per-game room settings. Games not listed keep the old behaviour (5 players, long wait).
+const GAME_CFG = {
+  banderazo: { max: 6, wait: +process.env.BANDERAZO_WAIT_MS || 6000, grace: 1500 },
+};
+const gcfg = (g) => GAME_CFG[g] || { max: MAX_PLAYERS, wait: null, grace: null };
 const RATE_LIMIT = 150;
 const PUB_WAIT_MS = +process.env.PUB_WAIT_MS || 15000;   // espera hasta rellenar con bots
 const FULL_GRACE_MS = +process.env.FULL_GRACE_MS || 2000; // si se llena, arranca en 2 s
@@ -60,10 +66,12 @@ function leave(ws) {
     log('room', room.code, 'player', ws.pid, 'left; players', room.clients.size + 1);
   }
 }
-function createRoom(ws, pub) {
+const gameId = (m) => (typeof m.g === 'string' && /^[a-z0-9-]{1,24}$/.test(m.g) ? m.g : 'blob'); // sin g = cliente antiguo (Sumo Beans)
+function createRoom(ws, pub, g) {
   const code = newCode();
   if (!code) return send(ws, { t: 'error', msg: 'full' });
-  const room = { code, host: ws, clients: new Map(), nextId: 1, joinable: true, pub: !!pub, created: Date.now(), deadline: Date.now() + PUB_WAIT_MS, go: false, goAt: 0, lastCd: -1 };
+  const cfg = gcfg(g || 'blob');
+  const room = { g: g || 'blob', max: cfg.max, grace: cfg.grace || FULL_GRACE_MS, code, host: ws, clients: new Map(), nextId: 1, joinable: true, pub: !!pub, created: Date.now(), deadline: Date.now() + (cfg.wait || PUB_WAIT_MS), go: false, goAt: 0, lastCd: -1 };
   rooms.set(code, room); ws.room = room; ws.pid = 0;
   send(ws, { t: 'created', code, id: 0, pub: room.pub });
   log('room', code, room.pub ? 'PUBLIC' : 'private', 'created');
@@ -72,7 +80,7 @@ function joinRoom(ws, room) {
   ws.pid = room.nextId++; ws.room = room; room.clients.set(ws.pid, ws);
   send(ws, { t: 'joined', code: room.code, id: ws.pid, pub: room.pub });
   send(room.host, { t: 'peer', id: ws.pid, on: 1 });
-  if (room.pub && room.clients.size + 1 >= MAX_PLAYERS) room.deadline = Math.min(room.deadline, Date.now() + FULL_GRACE_MS);
+  if (room.pub && room.clients.size + 1 >= room.max) room.deadline = Math.min(room.deadline, Date.now() + room.grace);
   log('room', room.code, 'player', ws.pid, 'joined; players', room.clients.size + 1);
 }
 function members(room) { return [room.host, ...room.clients.values()]; }
@@ -105,25 +113,25 @@ function attach(wss) {
       if (!m || typeof m.t !== 'string') return;
       switch (m.t) {
         case 'ping': break;
-        case 'create': if (!ws.room) createRoom(ws, false); break;
+        case 'create': if (!ws.room) createRoom(ws, false, gameId(m)); break;
         case 'quick': {
           if (ws.room) return;
           let best = null;
           for (const r of rooms.values()) {
-            if (!r.pub || !r.joinable || r.go) continue;
-            if (r.clients.size + 1 >= MAX_PLAYERS) continue;
+            if (!r.pub || !r.joinable || r.go || r.g !== gameId(m)) continue;
+            if (r.clients.size + 1 >= r.max) continue;
             if (r.deadline - now < 2500) continue;
             if (!best || r.clients.size > best.clients.size || (r.clients.size === best.clients.size && r.created < best.created)) best = r;
           }
-          if (best) joinRoom(ws, best); else createRoom(ws, true);
+          if (best) joinRoom(ws, best); else createRoom(ws, true, gameId(m));
           break;
         }
         case 'join': {
           if (ws.room) return;
           const room = rooms.get(String(m.code || '').toUpperCase());
-          if (!room) return send(ws, { t: 'error', msg: 'noroom' });
+          if (!room || room.g !== gameId(m)) return send(ws, { t: 'error', msg: 'noroom' });
           if (!room.joinable) return send(ws, { t: 'error', msg: 'busy' });
-          if (room.clients.size + 1 >= MAX_PLAYERS) return send(ws, { t: 'error', msg: 'full' });
+          if (room.clients.size + 1 >= room.max) return send(ws, { t: 'error', msg: 'full' });
           joinRoom(ws, room);
           break;
         }
