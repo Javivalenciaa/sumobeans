@@ -14,7 +14,7 @@ function paintSnd() { const m = muted() && !adOn; $('#bSnd').textContent = m ? '
 function toggleSnd() { SV.mute = !SV.mute; paintSnd(); save(); if (!SV.mute) { actx(); sfx('click'); } }
 function applyTexts() {
   document.documentElement.lang = LANG; $('#bSolo').textContent = t('solo'); $('#bQuick').textContent = t('quick'); $('#bCreate').textContent = t('create'); $('#bJoin').textContent = t('join'); $('#bSkins').textContent = t('skins'); $('#bHow').textContent = t('how');
-  $('#bLang').textContent = '🌐 ' + (LANG === 'es' ? 'Español' : 'English'); $('#bResume').textContent = t('resume'); $('#bQuit').textContent = t('quit'); $('#pauseT').textContent = t('pause'); $('#bLang2').textContent = $('#bLang').textContent;
+  $('#bLang').textContent = '🌐 ' + (LANG === 'es' ? 'Español' : 'English'); $('#bDiff').textContent = '🤖 ' + t('bots') + ': ' + t(['easy', 'normal', 'hard'][SV.diff | 0]); $('#bResume').textContent = t('resume'); $('#bQuit').textContent = t('quit'); $('#pauseT').textContent = t('pause'); $('#bLang2').textContent = $('#bLang').textContent;
   $('#joinT').textContent = t('joinT'); $('#bJoinGo').textContent = t('go'); $('#bJoinX').textContent = t('cancel'); $('#codeIn').placeholder = '····'; $('#lobT').textContent = t('lobT'); $('#bStart').textContent = t('start'); $('#bCopy').textContent = t('copy'); $('#bLeave').textContent = t('leave');
   $('#skT').textContent = t('skT'); $('#bSkinsX').textContent = t('close'); $('#howT').textContent = t('howT'); $('#howTxt').innerHTML = t('howTxt'); $('#bHowX').textContent = t('close'); $('#bX2').textContent = t('x2'); $('#bAgain').textContent = t('again'); $('#bMenu').textContent = t('menu');
   paintSnd(); menuStats(); paintMenuOrb(); if (!$('#sSkins').hidden) renderSkins(); if (!$('#sLobby').hidden) renderLobby();
@@ -54,7 +54,7 @@ function readInput() {
 /* ------------------------------ match flow ------------------------------ */
 function fillBots(s, total) { const used = new Set(s.orbs.map((o) => o.name)); let n = 0; while (s.orbs.length < total) { let nm; do { nm = pick(BOT_NAMES) + (Math.random() < .3 ? irnd(2, 9) : ''); } while (used.has(nm)); used.add(nm); s.addOrb(100 + n++, nm, irnd(0, SKINS.length - 1), false); } }
 function startSolo() {
-  actx(); sim = new Sim(); myId = 0; mode = 'solo'; sim.addOrb(0, SV.name, SV.skin, true); fillBots(sim, MAXP); beginPlay();
+  actx(); sim = new Sim(); sim.diff = SV.diff | 0; myId = 0; mode = 'solo'; sim.addOrb(0, SV.name, SV.skin, true); fillBots(sim, MAXP); beginPlay();
 }
 function beginPlay() { hideAll(); show('#topbtns', true); state = 'playing'; resultsShown = false; lastPhase = 0; parts = []; texts = []; sim.startMatch(); gameplay(true); musicOn = true; musicT = 0; sfx('click'); }
 function handleEvents(evs, view) {
@@ -62,7 +62,8 @@ function handleEvents(evs, view) {
     switch (e[0]) {
       case 'bump': sfx('bump', e[3]); spark(e[1], e[2], 6 + Math.round(e[3] * 8), '#fff6a8', 260, .45); shake = Math.max(shake, 4 + e[3] * 12); break;
       case 'dash': sfx('dash'); spark(e[2], e[3], 6, '#ffffff', 160, .35); break;
-      case 'fall': sfx('fall'); spark(e[2], e[3], 10, '#ffd0e8', 200, .8); shake = Math.max(shake, 5); break;
+      case 'fall': { sfx('fall'); spark(e[2], e[3], 10, '#ffd0e8', 200, .8); shake = Math.max(shake, 5); const vo = view && view.orbs.find((q) => q.id === e[1]), ko = e[4] >= 0 && view && view.orbs.find((q) => q.id === e[4]); if (vo) pushFeed(ko ? ko.name + ' ➜ ' + vo.name : vo.name + ' 💨'); if (e[4] === myId && myId >= 0) { floatText(e[2], e[3], 'KO!', '#ffd23a'); } break; }
+      case 'round': mapBanner = { txt: L2((MAPS[e[2]] || MAPS[0]).n), life: 3 }; break;
       case 'pick': { sfx('pick'); const o = view && view.orbs.find((q) => q.id === e[1]); spark(e[3], e[4], 12, PICK_COL[e[2]], 240, .6); if (o && o.id === myId) floatText(o.x, o.y - 40, t(['pickShield', 'pickHeavy', 'pickBoost', 'pickPulse'][e[2]]), PICK_COL[e[2]]); break; }
       case 'pulse': sfx('pulse'); spark(e[1], e[2], 24, '#ff9a6a', 380, .7); shake = Math.max(shake, 9); break;
       case 'tick': sfx('tick'); break;
@@ -72,14 +73,14 @@ function handleEvents(evs, view) {
     }
   }
 }
-let curView = null;
+let curView = null, mapBanner = null;
 function currentView() {
-  if (mode === 'solo' || mode === 'host') return { p: sim.phase, cd: sim.cd, t: sim.t, R: sim.R, rd: sim.round, winner: sim.winner, mw: sim.matchWinner, orbs: sim.orbs, picks: sim.picks, meId: myId };
+  if (mode === 'solo' || mode === 'host') return { p: sim.phase, cd: sim.cd, t: sim.t, R: sim.R, map: sim.map, hole: sim.hole, rd: sim.round, winner: sim.winner, mw: sim.matchWinner, orbs: sim.orbs, picks: sim.picks, meId: myId };
   if (mode === 'client' && NET.snaps.length) {
     const cur = NET.snaps[NET.snaps.length - 1], prev = NET.snaps.length > 1 ? NET.snaps[NET.snaps.length - 2] : cur, now = performance.now(); const a = prev === cur ? 1 : clamp((now - cur.at) / Math.max(30, cur.at - prev.at), 0, 1.2);
     const orbs = []; for (const row of cur.o) { const pr = prev.o.find((q) => q[0] === row[0]) || row, info = NET.roster.find((r) => r[0] === row[0]); if (!info) continue; const k = Math.min(1, a);
       orbs.push({ id: row[0], name: info[1], skin: info[2], human: !!info[3], x: lerp(pr[1], row[1], k), y: lerp(pr[2], row[2], k), vx: row[3], vy: row[4], fall: row[5], alive: !!row[6], shield: row[7], heavy: row[8], boost: row[9], dashCd: row[10], dash: row[11], score: row[12], kills: row[13] }); }
-    return { p: cur.p, cd: cur.cd, t: cur.t, R: lerp(prev.R, cur.R, Math.min(1, a)), rd: cur.rd, winner: cur.w, mw: cur.mw, orbs, picks: cur.pk.map((q) => ({ id: q[0], k: q[1], x: q[2], y: q[3], age: q[4] })), meId: myId };
+    return { p: cur.p, cd: cur.cd, t: cur.t, R: lerp(prev.R, cur.R, Math.min(1, a)), map: cur.mp || 0, hole: cur.h || 0, rd: cur.rd, winner: cur.w, mw: cur.mw, orbs, picks: cur.pk.map((q) => ({ id: q[0], k: q[1], x: q[2], y: q[3], age: q[4] })), meId: myId };
   }
   return null;
 }
@@ -129,7 +130,7 @@ function openLobby() { hideAll(); show('#sLobby', true); renderLobby(); }
 function netStartHost(code, pub) {
   NET.code = code; NET.pub = pub; mode = 'host'; sim = new Sim(); myId = NET.pid = 0; sim.addOrb(0, SV.name, SV.skin, true); NET.roster = roomList(); openLobby(); if (!pub) cgRoom(code);
 }
-function hostStartMatch() { if (mode !== 'host' || !sim || sim.phase) return; fillBots(sim, MAXP); sendRaw({ t: 'joinable', v: false }); broadcastRoster(true); beginPlay(); NET.live = true; }
+function hostStartMatch() { if (mode !== 'host' || !sim || sim.phase) return; sim.setDiff(SV.diff | 0); fillBots(sim, MAXP); sendRaw({ t: 'joinable', v: false }); broadcastRoster(true); beginPlay(); NET.live = true; }
 function netMsg(m) {
   switch (m.t) {
     case 'created': netStartHost(m.code, !!m.pub); break;
@@ -181,6 +182,7 @@ function loop(tm) {
   curView = v;
   if (v) {
     drawGame(v, tm, dt); const me = myOrb(v); if (window.__nohud) { requestAnimationFrame(loop); return; } drawScores(v);
+    drawFeed(dt); if (mapBanner && mapBanner.life > 0) { mapBanner.life -= dt; const u = Math.min(cv.width, cv.height) / 600; cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); cx.globalAlpha = Math.min(1, mapBanner.life); cx.textAlign = 'center'; cx.font = `900 ${Math.round(26 * u)}px "Trebuchet MS",sans-serif`; cx.lineWidth = 6 * u; cx.strokeStyle = OL; cx.lineJoin = 'round'; cx.strokeText('🗺 ' + mapBanner.txt, cv.width / 2, cv.height * .14); cx.fillStyle = '#fff'; cx.fillText('🗺 ' + mapBanner.txt, cv.width / 2, cv.height * .14); cx.restore(); }
     if (v.p === 1) drawHudBig(String(Math.max(1, Math.ceil(v.cd))), t('round') + ' ' + v.rd, '#ffd23a', 1 + (v.cd % 1) * .25);
     else if (v.p === 2 && v.t < .8) drawHudBig(t('go2'), '', '#7aff8a', 1);
     else if (v.p === 3 && v.winner >= 0) { const w = v.orbs.find((o) => o.id === v.winner); if (w) drawHudBig(w.name, t('winner'), '#ffd23a', .55); }
@@ -190,7 +192,7 @@ function loop(tm) {
     // menu background: a calm demo arena with bouncing bots
     bgTime += dt; if (!window.__demo) { window.__demo = new Sim(); fillBots(window.__demo, 5); window.__demo.startMatch(); window.__demo.cd = .1; }
     const d = window.__demo; if (d.phase === 3 || d.phase === 4) d.startMatch(); d.step(dt); d.events = []; if (d.phase === 2 && d.t > 20) d.startMatch();
-    drawGame({ p: d.phase, cd: 0, t: Math.min(d.t, 10), R: d.R, rd: 1, winner: -1, orbs: d.orbs, picks: d.picks, meId: -1 }, tm, dt);
+    drawGame({ p: d.phase, cd: 0, t: Math.min(d.t, 10), R: d.R, map: d.map, hole: d.hole, rd: 1, winner: -1, orbs: d.orbs, picks: d.picks, meId: -1 }, tm, dt);
   }
   requestAnimationFrame(loop);
 }
@@ -207,7 +209,7 @@ async function main() {
   $('#bCopy').onclick = () => { let link = location.origin + location.pathname + '?room=' + NET.code; try { const k = sdk(); if (k && k.game.inviteLink) link = k.game.inviteLink({ roomId: NET.code }) || link; } catch (e) {} try { navigator.clipboard.writeText(link); toast(t('copied')); } catch (e) { toast(link); } };
   $('#bSkins').onclick = () => { sfx('click'); renderSkins(); show('#sSkins', true); }; $('#bSkinsX').onclick = () => { show('#sSkins', false); sfx('click'); };
   $('#bHow').onclick = () => { sfx('click'); show('#sHow', true); }; $('#bHowX').onclick = () => { show('#sHow', false); sfx('click'); };
-  $('#bLang').onclick = () => setLang(LANG === 'es' ? 'en' : 'es'); $('#bLang2').onclick = () => setLang(LANG === 'es' ? 'en' : 'es');
+  $('#bLang').onclick = () => setLang(LANG === 'es' ? 'en' : 'es'); $('#bDiff').onclick = () => { SV.diff = ((SV.diff | 0) + 1) % 3; save(); sfx('click'); applyTexts(); }; $('#bLang2').onclick = () => setLang(LANG === 'es' ? 'en' : 'es');
   $('#bSnd').onclick = toggleSnd; $('#bSnd2').onclick = toggleSnd; $('#bPause').onclick = pauseGame; $('#bResume').onclick = resumeGame; $('#bQuit').onclick = () => { show('#sPause', false); afterMatch(leaveToMenu); };
   $('#bX2').onclick = () => { $('#bX2').disabled = true; showAd('rewarded', () => { SV.coins += window.__lastCoins || 0; save(); menuStats(); $('#resCoins').textContent = '+' + (window.__lastCoins * 2) + ' 🪙'; sfx('coin'); }, () => { $('#bX2').disabled = false; }); };
   $('#bAgain').onclick = () => afterMatch(() => { if (mode === 'solo') { hideAll(); startSolo(); } else leaveToMenu(); });

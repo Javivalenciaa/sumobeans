@@ -41,23 +41,41 @@ function drawOrb(c, x, y, r, skinIdx, o) {
 function orbIcon(canvas, skinIdx, sz) { sz = sz || 44; const k = window.devicePixelRatio || 1; canvas.width = canvas.height = Math.round(sz * 2); const c = canvas.getContext('2d'); c.clearRect(0, 0, canvas.width, canvas.height); drawOrb(c, sz, sz, sz * .8, skinIdx, { look: [0, .2] }); }
 /* world -> screen */
 function layout() { const w = cv.width, h = cv.height, s = Math.min(w, h) * .5 * .9 / (R0 + 34) * (window.__zoom || 1); return { s, cx: w / 2 + (window.__ox || 0), cy: h / 2 + h * .015 + (window.__oy || 0) }; }
+const THEMES = [
+  { sky: ['#3a2aa0', '#7a62e0', '#ffb0d8'], top: ['#fff0d0', '#ffd29a'], band: 'rgba(255,150,60,.16)', line: 'rgba(180,90,30,.22)', wall: '#3a2a7a' },
+  { sky: ['#1f6fb0', '#6ac0f0', '#e0fbff'], top: ['#f4feff', '#b8e8ff'], band: 'rgba(80,170,230,.18)', line: 'rgba(60,140,200,.25)', wall: '#2a5a9a' },
+  { sky: ['#1f7a5a', '#6ad8a0', '#fff6b0'], top: ['#f4ffe4', '#bff0a8'], band: 'rgba(60,170,90,.16)', line: 'rgba(40,130,70,.22)', wall: '#2a6a4a' },
+  { sky: ['#a02a5a', '#ff7a6a', '#ffe0a0'], top: ['#fff0d8', '#ffc08a'], band: 'rgba(255,110,60,.18)', line: 'rgba(190,80,40,.24)', wall: '#7a2a4a' },
+  { sky: ['#2a2a8a', '#5a6ae0', '#a8d0ff'], top: ['#f0f2ff', '#c4cdf8'], band: 'rgba(90,100,220,.14)', line: 'rgba(70,80,190,.22)', wall: '#2a2a7a' },
+  { sky: ['#6a1a8a', '#d04ac0', '#ffc0e0'], top: ['#ffe8f8', '#ffb4e0'], band: 'rgba(220,60,170,.15)', line: 'rgba(170,40,140,.22)', wall: '#5a1a7a' },
+];
+let curTheme = THEMES[0];
 function drawSky(tm, w, h) {
-  const g = cx.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#3a2aa0'); g.addColorStop(.45, '#7a62e0'); g.addColorStop(1, '#ffb0d8'); cx.fillStyle = g; cx.fillRect(0, 0, w, h);
+  const g = cx.createLinearGradient(0, 0, 0, h); const sk = curTheme.sky; g.addColorStop(0, sk[0]); g.addColorStop(.45, sk[1]); g.addColorStop(1, sk[2]); cx.fillStyle = g; cx.fillRect(0, 0, w, h);
   if (!clouds.length) for (let i = 0; i < 9; i++) clouds.push({ x: Math.random(), y: Math.random(), s: rnd(.6, 1.6), v: rnd(.004, .012) });
   for (const c of clouds) { const x = ((c.x + tm * .00001 * c.v * 100) % 1.3 - .15) * w, y = c.y * h, u = c.s * Math.min(w, h) * .08; cx.fillStyle = 'rgba(255,255,255,.35)'; cx.beginPath(); cx.arc(x, y, u, 0, TAU); cx.arc(x + u * 1.1, y + u * .15, u * .8, 0, TAU); cx.arc(x - u * 1.0, y + u * .2, u * .7, 0, TAU); cx.arc(x + u * .2, y - u * .4, u * .75, 0, TAU); cx.fill(); }
 }
+function platPath(c, L, st, R, shape) { // outline of the standing surface
+  if (shape === 'square') { const H = R * .86; c.beginPath(); c.roundRect ? c.roundRect(L.cx - H, L.cy - H, H * 2, H * 2, 22 * L.s) : c.rect(L.cx - H, L.cy - H, H * 2, H * 2); } else { c.beginPath(); c.arc(L.cx, L.cy, R, 0, TAU); }
+}
 function drawArena(L, st, tm) {
-  const R = st.R * L.s, c = cx; const depth = 16 * L.s;
+  const M = MAPS[st.map] || MAPS[0], T = curTheme = THEMES[st.map] || THEMES[0], c = cx, R = st.R * L.s, depth = 16 * L.s, shape = M.shape; const hole = (st.hole || 0) * L.s;
   c.fillStyle = 'rgba(30,10,80,.28)'; c.beginPath(); c.ellipse(L.cx, L.cy + depth * 2.4, R * 1.02, R * .98, 0, 0, TAU); c.fill();
-  c.fillStyle = '#3a2a7a'; c.strokeStyle = OL; c.lineWidth = 3 * L.s * 2; c.beginPath(); c.arc(L.cx, L.cy + depth, R, 0, TAU); c.fill(); c.stroke();
-  const g = c.createRadialGradient(L.cx - R * .2, L.cy - R * .25, R * .1, L.cx, L.cy, R); g.addColorStop(0, '#fff0d0'); g.addColorStop(1, '#ffd29a');
-  c.beginPath(); c.arc(L.cx, L.cy, R, 0, TAU); c.fillStyle = g; c.fill();
-  c.save(); c.clip(); const bands = 7; for (let i = bands; i >= 1; i--) { if (i & 1) { c.fillStyle = 'rgba(255,150,60,.16)'; c.beginPath(); c.arc(L.cx, L.cy, R * i / bands, 0, TAU); c.arc(L.cx, L.cy, R * (i - 1) / bands, 0, TAU, true); c.fill(); } }
-  c.strokeStyle = 'rgba(180,90,30,.22)'; c.lineWidth = 2 * L.s * 2; for (let i = 0; i < 12; i++) { const a = i * TAU / 12; c.beginPath(); c.moveTo(L.cx + Math.cos(a) * R * .12, L.cy + Math.sin(a) * R * .12); c.lineTo(L.cx + Math.cos(a) * R, L.cy + Math.sin(a) * R); c.stroke(); }
-  c.fillStyle = 'rgba(255,255,255,.5)'; c.beginPath(); c.arc(L.cx, L.cy, R * .06, 0, TAU); c.fill(); c.restore();
-  // dashed danger rim (pulses once the platform starts to shrink)
-  const warn = st.p === 2 && st.t > 11 ? .55 + Math.sin(tm / 130) * .35 : .35; c.strokeStyle = `rgba(255,70,60,${warn})`; c.lineWidth = 12 * L.s; c.setLineDash([22 * L.s, 14 * L.s]); c.lineDashOffset = -tm * .02; c.beginPath(); c.arc(L.cx, L.cy, R - 9 * L.s, 0, TAU); c.stroke(); c.setLineDash([]);
-  c.beginPath(); c.arc(L.cx, L.cy, R, 0, TAU); c.lineWidth = 3 * L.s * 2; c.strokeStyle = OL; c.stroke();
+  c.save(); c.translate(0, depth); platPath(c, L, st, R, shape); if (shape === 'donut') c.arc(L.cx, L.cy, hole, 0, TAU, true); c.fillStyle = T.wall; c.strokeStyle = OL; c.lineWidth = 3 * L.s * 2; c.fill(shape === 'donut' ? 'evenodd' : 'nonzero'); c.stroke(); c.restore();
+  const g = c.createRadialGradient(L.cx - R * .2, L.cy - R * .25, R * .1, L.cx, L.cy, R * 1.05); g.addColorStop(0, T.top[0]); g.addColorStop(1, T.top[1]);
+  c.save(); platPath(c, L, st, R, shape); if (shape === 'donut') { c.arc(L.cx, L.cy, hole, 0, TAU, true); }
+  c.fillStyle = g; c.fill(shape === 'donut' ? 'evenodd' : 'nonzero'); c.clip(shape === 'donut' ? 'evenodd' : 'nonzero');
+  if (shape === 'square') { const H = R * .86, q = H / 4; for (let i = -4; i < 4; i++) for (let j = -4; j < 4; j++) if ((i + j) & 1) { c.fillStyle = T.band; c.fillRect(L.cx + i * q, L.cy + j * q, q, q); } }
+  else { const bands = 7; for (let i = bands; i >= 1; i--) { if (i & 1) { c.fillStyle = T.band; c.beginPath(); c.arc(L.cx, L.cy, R * i / bands, 0, TAU); c.arc(L.cx, L.cy, R * (i - 1) / bands, 0, TAU, true); c.fill(); } }
+    c.strokeStyle = T.line; c.lineWidth = 2 * L.s * 2; for (let i = 0; i < 12; i++) { const a = i * TAU / 12; c.beginPath(); c.moveTo(L.cx + Math.cos(a) * R * .12, L.cy + Math.sin(a) * R * .12); c.lineTo(L.cx + Math.cos(a) * R, L.cy + Math.sin(a) * R); c.stroke(); } }
+  if (M.id === 'ice') { c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = 2 * L.s * 1.5; for (let i = 0; i < 9; i++) { const a = i * 0.7 + 0.3; c.beginPath(); c.moveTo(L.cx + Math.cos(a) * R * .2, L.cy + Math.sin(a) * R * .2); c.lineTo(L.cx + Math.cos(a + .15) * R * .6, L.cy + Math.sin(a + .15) * R * .6); c.lineTo(L.cx + Math.cos(a - .1) * R * .95, L.cy + Math.sin(a - .1) * R * .95); c.stroke(); } c.fillStyle = 'rgba(255,255,255,.55)'; for (let i = 0; i < 14; i++) { const a = i * 2.4, r = ((i * 37) % 90) / 100 * R; c.beginPath(); c.arc(L.cx + Math.cos(a) * r, L.cy + Math.sin(a) * r, 3 * L.s * (1 + Math.sin(tm / 300 + i) * .5), 0, TAU); c.fill(); } }
+  if (M.spin) { c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = 7 * L.s; c.lineCap = 'round'; c.lineJoin = 'round'; const rot = tm * .0007; for (let i = 0; i < 14; i++) { const a = rot + i * TAU / 14, r = Math.max(R * .6, 115 * L.s * 1.1) ; for (const rr of [r, Math.min(R - 22 * L.s, r + 70 * L.s)]) { if (rr < 125 * L.s || rr > R - 18 * L.s) continue; const x = L.cx + Math.cos(a) * rr, y = L.cy + Math.sin(a) * rr, tx = -Math.sin(a), ty = Math.cos(a), nx = Math.cos(a), ny = Math.sin(a), k = 11 * L.s; c.beginPath(); c.moveTo(x - tx * k - nx * k, y - ty * k - ny * k); c.lineTo(x + tx * k, y + ty * k); c.lineTo(x - tx * k + nx * k, y - ty * k + ny * k); c.stroke(); } } c.strokeStyle = 'rgba(255,255,255,.4)'; c.lineWidth = 3 * L.s; c.beginPath(); c.arc(L.cx, L.cy, 115 * L.s, 0, TAU); c.stroke(); }
+  c.fillStyle = 'rgba(255,255,255,.5)'; if (shape !== 'donut') { c.beginPath(); c.arc(L.cx, L.cy, R * .05, 0, TAU); c.fill(); }
+  c.restore();
+  if (shape === 'donut') { c.beginPath(); c.arc(L.cx, L.cy, hole, 0, TAU); c.lineWidth = 3 * L.s * 2; c.strokeStyle = OL; c.stroke(); c.beginPath(); c.arc(L.cx, L.cy, hole + 6 * L.s, 0, TAU); c.lineWidth = 8 * L.s; c.strokeStyle = 'rgba(255,70,60,.55)'; c.setLineDash([16 * L.s, 12 * L.s]); c.lineDashOffset = tm * .02; c.stroke(); c.setLineDash([]); }
+  const warn = st.p === 2 && st.t > 8 ? .55 + Math.sin(tm / 130) * .35 : .35; c.save(); platPath(c, L, st, R - 9 * L.s, shape); c.strokeStyle = `rgba(255,70,60,${warn})`; c.lineWidth = 12 * L.s; c.setLineDash([22 * L.s, 14 * L.s]); c.lineDashOffset = -tm * .02; c.stroke(); c.setLineDash([]); c.restore();
+  platPath(c, L, st, R, shape); c.lineWidth = 3 * L.s * 2; c.strokeStyle = OL; c.stroke();
+  if (M.pillars) for (const p of M.pillars) { const X = L.cx + p[0] * L.s, Y = L.cy + p[1] * L.s, r = p[2] * L.s; c.fillStyle = 'rgba(30,10,60,.32)'; c.beginPath(); c.ellipse(X, Y + r * .9, r * 1.05, r * .45, 0, 0, TAU); c.fill(); const gg = c.createRadialGradient(X - r * .3, Y - r * .35, r * .1, X, Y, r); gg.addColorStop(0, '#ffe27a'); gg.addColorStop(1, '#e0560a'); c.beginPath(); c.arc(X, Y, r, 0, TAU); c.fillStyle = gg; c.fill(); c.lineWidth = 3 * L.s; c.strokeStyle = OL; c.stroke(); c.beginPath(); c.arc(X, Y, r * .55, 0, TAU); c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = 3 * L.s; c.stroke(); }
 }
 function drawPick(L, p, tm) {
   const x = L.cx + p.x * L.s, y = L.cy + p.y * L.s + Math.sin(tm / 260 + p.id) * 4 * L.s, r = 19 * L.s, k = p.k; const pop = Math.min(1, p.age * 5);
@@ -104,5 +122,14 @@ function drawDashHud(me, touch) {
   const rdy = me.dashCd <= 0, k = 1 - clamp(me.dashCd / DASH_CD, 0, 1);
   if (touch) { const X = w - 90 * u, Y = h - 100 * u, R = 52 * u; cx.fillStyle = rdy ? 'rgba(255,138,26,.9)' : 'rgba(40,30,90,.7)'; cx.beginPath(); cx.arc(X, Y, R, 0, TAU); cx.fill(); cx.strokeStyle = OL; cx.lineWidth = 4 * u; cx.stroke(); cx.strokeStyle = '#fff'; cx.lineWidth = 6 * u; cx.beginPath(); cx.arc(X, Y, R - 8 * u, -Math.PI / 2, -Math.PI / 2 + k * TAU); cx.stroke(); cx.font = `900 ${Math.round(18 * u)}px "Trebuchet MS",sans-serif`; cx.textAlign = 'center'; cx.fillStyle = '#fff'; cx.fillText(t('dash'), X, Y + 6 * u); }
   else { const bw = 220 * u, X = w / 2 - bw / 2, Y = h - 44 * u; cx.fillStyle = 'rgba(28,20,36,.75)'; cx.fillRect(X - 3 * u, Y - 3 * u, bw + 6 * u, 20 * u); cx.fillStyle = rdy ? '#ffd23a' : '#ff8a1a'; cx.fillRect(X, Y, bw * k, 14 * u); cx.font = `900 ${Math.round(13 * u)}px "Trebuchet MS",sans-serif`; cx.textAlign = 'center'; cx.lineWidth = 4 * u; cx.strokeStyle = OL; cx.strokeText('SPACE — ' + t('dash'), w / 2, Y - 8 * u); cx.fillStyle = '#fff'; cx.fillText('SPACE — ' + t('dash'), w / 2, Y - 8 * u); }
+  cx.restore();
+}
+
+let feed = [];
+function pushFeed(txt) { feed.push({ txt, life: 4 }); if (feed.length > 4) feed.shift(); }
+function drawFeed(dt) {
+  const u = Math.min(cv.width, cv.height) / 600; cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); cx.textAlign = 'left'; cx.lineJoin = 'round';
+  for (let i = feed.length - 1; i >= 0; i--) feed[i].life -= dt; feed = feed.filter((f) => f.life > 0);
+  feed.forEach((f, i) => { cx.globalAlpha = Math.min(1, f.life); cx.font = `900 ${Math.round(14 * u)}px "Trebuchet MS",sans-serif`; cx.lineWidth = 4 * u; cx.strokeStyle = OL; cx.strokeText(f.txt, 14 * u, cv.height - (20 + (feed.length - 1 - i) * 20) * u); cx.fillStyle = '#fff'; cx.fillText(f.txt, 14 * u, cv.height - (20 + (feed.length - 1 - i) * 20) * u); });
   cx.restore();
 }

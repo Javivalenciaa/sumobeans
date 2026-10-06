@@ -68,7 +68,7 @@ input.in:focus{border-color:var(--go)}
   <div class="row"><div class="nm"><canvas id="meOrb" width="88" height="88"></canvas><span id="meName"></span><button class="btn sm" id="bDice" aria-label="New name">🎲</button></div></div>
   <button class="btn play" id="bSolo"></button>
   <div class="row"><button class="btn" id="bQuick"></button><button class="btn" id="bCreate"></button><button class="btn" id="bJoin"></button></div>
-  <div class="row"><button class="btn sm" id="bSkins"></button><button class="btn sm" id="bHow"></button><button class="btn sm" id="bLang"></button><button class="btn sm" id="bSnd2"></button></div>
+  <div class="row"><button class="btn sm" id="bSkins"></button><button class="btn sm" id="bHow"></button><button class="btn sm" id="bLang"></button><button class="btn sm" id="bSnd2"></button><button class="btn sm" id="bDiff"></button></div>
   <div class="stats" id="mstats"></div>
 </div>
 <div class="screen dim" id="sJoin" hidden><div class="card"><h2 id="joinT"></h2><input class="in" id="codeIn" maxlength="4" autocomplete="off" spellcheck="false"><div class="row" style="margin-top:12px"><button class="btn play" style="font-size:22px;padding:12px 36px" id="bJoinGo"></button><button class="btn sm" id="bJoinX"></button></div></div></div>
@@ -88,12 +88,12 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), TAU = Math.PI * 2, lerp 
 const TX = {
   en: { solo: '▶  PLAY', quick: '⚡ Quick match', create: '🏠 Private room', join: '🔑 Join with code', skins: '🎨 Skins', how: '❓ How to play', snd: 'Sound', coins: 'Coins', wins: 'Wins', played: 'Matches', pause: 'Paused', resume: 'Resume', quit: 'Leave match', again: '▶ Play again', menu: 'Menu', x2: '📺 Coins ×2', noad: 'No ad available right now',
     joinT: 'Join a room', codeHint: 'Enter the 4-letter code', go: 'Join', cancel: 'Cancel', lobT: 'Room', start: '▶ Start', copy: '🔗 Copy invite', leave: 'Leave', waiting: 'Waiting for players…', waitHost: 'Waiting for the host to start…', botsFill: 'Empty seats are filled with bots', findMatch: 'Finding a match…', startsIn: 'Starting in', you: 'You', host: 'Host', bot: 'Bot', noRoom: 'Room not found', busy: 'That match already started', full: 'Room is full', offline: 'Online is not available right now. You can still play vs bots!', lost: 'Connection lost', copied: 'Invite link copied!',
-    round: 'Round', ready: 'Ready?', go2: 'GO!', winner: 'wins the round!', matchWin: 'wins the match!', youWin: 'YOU WIN!', youLost: 'Match over', dash: 'DASH', skT: 'Skins', owned: 'Owned', equip: 'Equipped', buy: 'Buy', locked: 'Not enough coins', gain: 'Coins earned', kills: 'Knockouts', rank: 'Place', howT: 'How to play', close: 'Close',
-    howTxt: '<b>Push everyone off the arena!</b> The platform shrinks as the round goes on.<br>• Move: <kbd>W A S D</kbd> / arrows / drag on the left of the screen.<br>• <b>Dash</b>: <kbd>Space</kbd> or the DASH button. A dash hits much harder!<br>• Grab pickups: 🛡 shield, ⚖ heavy, ⚡ boost, 💥 pulse.<br>• Last orb standing wins the round. First to 2 round wins takes the match.', hostMoved: 'Host left, you are the new host', waitOthers: 'Waiting for others…', pickShield: 'Shield!', pickHeavy: 'Heavy!', pickBoost: 'Boost!', pickPulse: 'Pulse!' },
+    bots: 'Bots', easy: 'Easy', normal: 'Normal', hard: 'Hard', round: 'Round', ready: 'Ready?', go2: 'GO!', winner: 'wins the round!', matchWin: 'wins the match!', youWin: 'YOU WIN!', youLost: 'Match over', dash: 'DASH', skT: 'Skins', owned: 'Owned', equip: 'Equipped', buy: 'Buy', locked: 'Not enough coins', gain: 'Coins earned', kills: 'Knockouts', rank: 'Place', howT: 'How to play', close: 'Close',
+    howTxt: '<b>Push everyone off the arena!</b> The platform shrinks as the round goes on.<br>• Move: <kbd>W A S D</kbd> / arrows / drag on the left of the screen.<br>• <b>Dash</b>: <kbd>Space</kbd> or the DASH button. A dash hits much harder!<br>• Grab pickups: 🛡 shield, ⚖ heavy, ⚡ boost, 💥 pulse.<br>• Last orb standing wins the round. First to 3 round wins takes the match.', hostMoved: 'Host left, you are the new host', waitOthers: 'Waiting for others…', pickShield: 'Shield!', pickHeavy: 'Heavy!', pickBoost: 'Boost!', pickPulse: 'Pulse!' },
   es: { solo: '▶  JUGAR', quick: '⚡ Partida rápida', create: '🏠 Sala privada', join: '🔑 Unirse con código', skins: '🎨 Aspectos', how: '❓ Cómo se juega', snd: 'Sonido', coins: 'Monedas', wins: 'Victorias', played: 'Partidas', pause: 'Pausa', resume: 'Continuar', quit: 'Salir de la partida', again: '▶ Otra vez', menu: 'Menú', x2: '📺 Monedas ×2', noad: 'No hay anuncio disponible ahora',
     joinT: 'Unirse a una sala', codeHint: 'Escribe el código de 4 letras', go: 'Entrar', cancel: 'Cancelar', lobT: 'Sala', start: '▶ Empezar', copy: '🔗 Copiar invitación', leave: 'Salir', waiting: 'Esperando jugadores…', waitHost: 'Esperando a que el anfitrión empiece…', botsFill: 'Los huecos libres se rellenan con bots', findMatch: 'Buscando partida…', startsIn: 'Empieza en', you: 'Tú', host: 'Anfitrión', bot: 'Bot', noRoom: 'Sala no encontrada', busy: 'Esa partida ya ha empezado', full: 'La sala está llena', offline: 'El modo online no está disponible ahora. ¡Aún puedes jugar contra bots!', lost: 'Conexión perdida', copied: '¡Enlace de invitación copiado!',
-    round: 'Ronda', ready: '¿Listo?', go2: '¡YA!', winner: '¡gana la ronda!', matchWin: '¡gana la partida!', youWin: '¡HAS GANADO!', youLost: 'Fin de la partida', dash: 'EMBESTIDA', skT: 'Aspectos', owned: 'Tuyo', equip: 'Equipado', buy: 'Comprar', locked: 'Te faltan monedas', gain: 'Monedas ganadas', kills: 'Eliminaciones', rank: 'Puesto', howT: 'Cómo se juega', close: 'Cerrar',
-    howTxt: '<b>¡Saca a todos de la arena!</b> La plataforma se encoge con el tiempo.<br>• Mover: <kbd>W A S D</kbd> / flechas / arrastra en la parte izquierda de la pantalla.<br>• <b>Embestida</b>: <kbd>Espacio</kbd> o el botón EMBESTIDA. ¡Golpea mucho más fuerte!<br>• Recoge objetos: 🛡 escudo, ⚖ pesado, ⚡ impulso, 💥 pulso.<br>• La última bola en pie gana la ronda. Gana la partida quien consiga 2 rondas.', hostMoved: 'El anfitrión se fue: ahora eres el anfitrión', waitOthers: 'Esperando a los demás…', pickShield: '¡Escudo!', pickHeavy: '¡Pesado!', pickBoost: '¡Impulso!', pickPulse: '¡Pulso!' },
+    bots: 'Bots', easy: 'Fácil', normal: 'Normal', hard: 'Difícil', round: 'Ronda', ready: '¿Listo?', go2: '¡YA!', winner: '¡gana la ronda!', matchWin: '¡gana la partida!', youWin: '¡HAS GANADO!', youLost: 'Fin de la partida', dash: 'EMBESTIDA', skT: 'Aspectos', owned: 'Tuyo', equip: 'Equipado', buy: 'Comprar', locked: 'Te faltan monedas', gain: 'Monedas ganadas', kills: 'Eliminaciones', rank: 'Puesto', howT: 'Cómo se juega', close: 'Cerrar',
+    howTxt: '<b>¡Saca a todos de la arena!</b> La plataforma se encoge con el tiempo.<br>• Mover: <kbd>W A S D</kbd> / flechas / arrastra en la parte izquierda de la pantalla.<br>• <b>Embestida</b>: <kbd>Espacio</kbd> o el botón EMBESTIDA. ¡Golpea mucho más fuerte!<br>• Recoge objetos: 🛡 escudo, ⚖ pesado, ⚡ impulso, 💥 pulso.<br>• La última bola en pie gana la ronda. Gana la partida quien consiga 3 rondas.', hostMoved: 'El anfitrión se fue: ahora eres el anfitrión', waitOthers: 'Esperando a los demás…', pickShield: '¡Escudo!', pickHeavy: '¡Pesado!', pickBoost: '¡Impulso!', pickPulse: '¡Pulso!' },
 };
 const t = (k) => (TX[LANG][k] != null ? TX[LANG][k] : TX.en[k]) || k;
 const L2 = (a) => a[LANG === 'es' ? 1 : 0];
@@ -103,7 +103,7 @@ const store = {
   set(k, v) { try { if (cgData) cgData.setItem(k, v); } catch (e) {} try { localStorage.setItem(k, v); } catch (e) {} },
 };
 const KEY = 'bumperorbs-v1';
-let SV = { lang: 'en', coins: 0, skins: [0, 1, 2, 3], skin: 0, name: '', wins: 0, played: 0, mute: false, seen: 0 };
+let SV = { lang: 'en', coins: 0, skins: [0, 1, 2, 3], skin: 0, diff: 0, name: '', wins: 0, played: 0, mute: false, seen: 0 };
 const ADJ = [['Swift', 'Rápido'], ['Bouncy', 'Saltarín'], ['Mighty', 'Fuerte'], ['Sneaky', 'Sigiloso'], ['Jolly', 'Alegre'], ['Brave', 'Valiente'], ['Zippy', 'Veloz'], ['Lucky', 'Suertudo'], ['Fuzzy', 'Peludo'], ['Turbo', 'Turbo']];
 const NOUN = [['Panda', 'Panda'], ['Comet', 'Cometa'], ['Cookie', 'Galleta'], ['Falcon', 'Halcón'], ['Pickle', 'Pepinillo'], ['Rocket', 'Cohete'], ['Waffle', 'Gofre'], ['Otter', 'Nutria'], ['Mango', 'Mango'], ['Ninja', 'Ninja']];
 const randName = () => pick(ADJ)[0] + pick(NOUN)[0] + irnd(10, 99);
@@ -184,26 +184,45 @@ function cgRoom(code) { try { const k = sdk(); if (!k) return; if (code) k.game.
 function toast(msg) { const d = document.createElement('div'); d.textContent = msg; $('#toast').appendChild(d); setTimeout(() => d.remove(), 2800); while ($('#toast').children.length > 3) $('#toast').firstChild.remove(); }
 
 /* ============================== simulation (runs on the host / in solo) ============================== */
-const R0 = 380, RMIN = 110, ORB_R = 26, WIN_ROUNDS = 2, MAXP = 5, ACC = 820, DAMP = 2.5, DASH_V = 470, DASH_CD = 1.6;
+const R0 = 380, RMIN = 110, ORB_R = 26, WIN_ROUNDS = 3, MAXP = 5, ACC = 820, DAMP = 2.5, DASH_V = 470, DASH_CD = 1.6;
+const MAPS = [
+  { id: 'classic', n: ['Sky Disc', 'Disco del Cielo'], shape: 'circle', damp: 2.5, acc: 1, dash: 1 },
+  { id: 'ice', n: ['Frozen Rink', 'Pista de Hielo'], shape: 'circle', damp: .9, acc: .5, dash: .55 },
+  { id: 'pins', n: ['Pinball', 'Pinball'], shape: 'circle', damp: 2.5, acc: 1, dash: 1, pillars: [[0, 0, 40], [150, 0, 28], [-75, 130, 28], [-75, -130, 28]] },
+  { id: 'donut', n: ['Donut', 'Donut'], shape: 'donut', damp: 2.3, acc: 1, dash: .95 },
+  { id: 'square', n: ['Square Plaza', 'Plaza Cuadrada'], shape: 'square', damp: 2.5, acc: 1, dash: 1 },
+  { id: 'spin', n: ['Spinner', 'Giratoria'], shape: 'circle', damp: 2.5, acc: 1, dash: 1, spin: true },
+];
+const DIFFS = [ // 0 easy, 1 normal, 2 hard
+  { think: [.24, .45], sloppy: [.45, .85], dash: [.05, .13], acc: .82, wander: .16, caution: 58, react: .6 },
+  { think: [.14, .28], sloppy: [.2, .5], dash: [.12, .32], acc: .93, wander: .07, caution: 68, react: .8 },
+  { think: [.08, .18], sloppy: [.08, .3], dash: [.25, .55], acc: 1, wander: .02, caution: 78, react: 1 },
+];
 const PICK_KINDS = ['shield', 'heavy', 'boost', 'pulse'];
 const PH = ['idle', 'count', 'play', 'roundend', 'matchend']; // snapshot phase codes
 const BOT_NAMES = ['Bubbles', 'Bonk', 'Pogo', 'Nacho', 'Zorb', 'Moxie', 'Pip', 'Waffles', 'Boing', 'Tango'];
 const r1 = (v) => Math.round(v * 10) / 10, r2 = (v) => Math.round(v * 100) / 100;
 class Sim {
-  constructor() { this.orbs = []; this.picks = []; this.events = []; this.phase = 0; this.R = R0; this.t = 0; this.cd = 0; this.round = 0; this.winner = -1; this.nextPick = 6; this.pkId = 1; this.ff = 1; }
+  constructor() { this.diff = 0; this.map = 0; this.lastMap = -1; this.hole = 40; this.orbs = []; this.picks = []; this.events = []; this.phase = 0; this.R = R0; this.t = 0; this.cd = 0; this.round = 0; this.winner = -1; this.nextPick = 6; this.pkId = 1; this.ff = 1; }
   addOrb(id, name, skin, human) {
     const o = { id, name, skin, human, x: 0, y: 0, vx: 0, vy: 0, r: ORB_R, alive: true, fall: 0, shield: 0, heavy: 0, boost: 0, dashCd: 0, dash: 0, ix: 0, iy: 0, wantDash: false, score: 0, kills: 0, lastHit: -1, lastHitT: -99, rank: 0,
-      ai: { next: 0, greed: rnd(.4, .9), dashProb: rnd(.2, .55), dashRange: rnd(110, 170), sloppy: rnd(.08, .4) } };
+      ai: this.mkAi() };
     this.orbs.push(o); return o;
   }
+  mkAi() { const d = DIFFS[this.diff] || DIFFS[0]; return { next: 0, greed: rnd(.3, .7) * d.react, dashProb: rnd(d.dash[0], d.dash[1]), dashRange: rnd(100, 150), sloppy: rnd(d.sloppy[0], d.sloppy[1]), thinkMin: d.think[0], thinkMax: d.think[1], accMul: d.acc, wander: d.wander, caution: d.caution, wTo: 0, wx: 0, wy: 0 }; }
+  setDiff(n) { this.diff = clamp(n | 0, 0, 2); for (const o of this.orbs) if (!o.human) o.ai = this.mkAi(); }
+  mp() { return MAPS[this.map] || MAPS[0]; }
+  /* signed distance to the nearest place where an orb would fall (positive = safe) */
+  margin(x, y) { const m = this.mp(), d = Math.hypot(x, y); if (m.shape === 'square') return this.R * .86 - Math.max(Math.abs(x), Math.abs(y)); if (m.shape === 'donut') return Math.min(this.R - d, d - this.hole); return this.R - d; }
   get(id) { return this.orbs.find((o) => o.id === id); }
   removeOrb(id) { const o = this.get(id); if (o) { o.human = false; o.dropped = true; } }
   startMatch() { for (const o of this.orbs) { o.score = 0; o.kills = 0; } this.round = 0; this.nextRound(); }
   nextRound() {
-    this.round++; this.picks = []; this.t = 0; this.R = R0; this.cd = 3.2; this.phase = 1; this.winner = -1; this.nextPick = 6; this.lastTick = 4;
-    const n = this.orbs.length, ang0 = rnd(0, TAU);
-    this.orbs.forEach((o, i) => { const a = ang0 + i * TAU / n; o.x = Math.cos(a) * 170; o.y = Math.sin(a) * 170; o.vx = o.vy = 0; o.alive = true; o.fall = 0; o.r = ORB_R; o.shield = o.heavy = o.boost = o.dashCd = o.dash = 0; o.ix = o.iy = 0; o.wantDash = false; o.lastHit = -1; });
-    this.ev(['round', this.round]);
+    this.round++; this.picks = []; this.t = 0; this.R = R0; this.hole = 40; this.cd = 3.2; this.phase = 1; this.winner = -1; this.nextPick = 6; this.lastTick = 4;
+    let m; do { m = irnd(0, MAPS.length - 1); } while (m === this.lastMap && MAPS.length > 1); this.map = this.lastMap = this.fixedMap != null ? this.fixedMap : m;
+    const n = this.orbs.length, ang0 = rnd(0, TAU), rad = this.mp().shape === 'donut' ? 215 : 170;
+    this.orbs.forEach((o, i) => { const a = ang0 + i * TAU / n; o.x = Math.cos(a) * rad; o.y = Math.sin(a) * rad; o.vx = o.vy = 0; o.alive = true; o.fall = 0; o.r = ORB_R; o.shield = o.heavy = o.boost = o.dashCd = o.dash = 0; o.ix = o.iy = 0; o.wantDash = false; o.lastHit = -1; o.fallT = 0; o.ai.next = 0; o.ai.wTo = 0; });
+    this.ev(['round', this.round, this.map]);
   }
   ev(e) { if (this.events.length < 60) this.events.push(e); }
   input(id, ix, iy, dash) { const o = this.get(id); if (!o) return; const l = Math.hypot(ix, iy); if (l > 1) { ix /= l; iy /= l; } o.ix = ix; o.iy = iy; if (dash) o.wantDash = true; }
@@ -221,8 +240,10 @@ class Sim {
     for (let s = 0; s < sub; s++) this.sub(h, live);
     if (!live) return;
     this.t += dt;
-    // arena shrink after a grace period
-    if (this.t > 9) this.R = Math.max(70, this.t < 45 ? R0 - (R0 - RMIN) * ((this.t - 9) / 36) : RMIN - (RMIN - 70) * ((this.t - 45) / 25));
+    // arena shrink after a grace period; sudden death guarantees every round ends
+    const t = this.t, sh = this.mp().shape;
+    this.R = t <= 9 ? R0 : t < 45 ? R0 - (R0 - RMIN) * ((t - 9) / 36) : t < 70 ? RMIN - (RMIN - 70) * ((t - 45) / 25) : Math.max(18, 70 - 52 * ((t - 70) / 25));
+    if (sh === 'donut') { this.hole = t < 5 ? 40 : t < 47 ? 40 + (t - 5) * 2.6 : 150 + (t - 47) * 2.2; const band = t <= 9 ? 340 : t < 45 ? 340 - 280 * ((t - 9) / 36) : t < 70 ? 60 : Math.max(4, 60 - (t - 70) * 2.4); this.R = this.hole + band; }
     // pickups
     this.nextPick -= dt; if (this.nextPick <= 0 && this.picks.length < 3) { this.nextPick = rnd(6, 9); const a = rnd(0, TAU), d = Math.sqrt(Math.random()) * (this.R - 60); this.picks.push({ id: this.pkId++, k: irnd(0, 3), x: Math.cos(a) * d, y: Math.sin(a) * d, age: 0 }); }
     for (const p of this.picks) p.age += dt;
@@ -236,15 +257,20 @@ class Sim {
       if (!o.alive) continue;
       if (o.fall > 0) { o.fall += h / .9; o.x += o.vx * h; o.y += o.vy * h; o.vx *= 1 - .8 * h; o.vy *= 1 - .8 * h; if (o.fall >= 1) { o.alive = false; o.fall = 1; } continue; }
       o.shield = Math.max(0, o.shield - h); o.heavy = Math.max(0, o.heavy - h); o.boost = Math.max(0, o.boost - h); o.dashCd = Math.max(0, o.dashCd - h); o.dash = Math.max(0, o.dash - h);
+      const M = this.mp();
       if (live) {
         if (!o.human) this.think(o);
-        const acc = ACC * (o.boost > 0 ? 1.35 : 1) / Math.sqrt(this.mass(o) / (o.dash > 0 ? 1.7 : 1));
+        const acc = ACC * M.acc * (o.human ? 1 : (o.ai.accMul || 1)) * (o.boost > 0 ? 1.35 : 1) / Math.sqrt(this.mass(o) / (o.dash > 0 ? 1.7 : 1));
         o.vx += o.ix * acc * h; o.vy += o.iy * acc * h;
-        if (o.wantDash) { o.wantDash = false; if (o.dashCd <= 0) { let dx = o.ix, dy = o.iy; const l = Math.hypot(dx, dy); if (l < .1) { const vl = Math.hypot(o.vx, o.vy) || 1; dx = o.vx / vl; dy = o.vy / vl; } else { dx /= l; dy /= l; } o.vx += dx * DASH_V; o.vy += dy * DASH_V; o.dash = .28; o.dashCd = o.boost > 0 ? 0.9 : DASH_CD; this.ev(['dash', o.id, r1(o.x), r1(o.y)]); } }
+        if (M.spin) { const d = Math.hypot(o.x, o.y); if (d > 115) { o.vx += (-o.y / d) * 330 * h; o.vy += (o.x / d) * 330 * h; } }
+        if (o.wantDash) { o.wantDash = false; if (o.dashCd <= 0) { let dx = o.ix, dy = o.iy; const l = Math.hypot(dx, dy); if (l < .1) { const vl = Math.hypot(o.vx, o.vy) || 1; dx = o.vx / vl; dy = o.vy / vl; } else { dx /= l; dy /= l; }
+          if (o.human) { let best = null, bs = 1e9; for (const e of O) { if (e === o || !e.alive || e.fall > 0) continue; const ex = e.x - o.x, ey = e.y - o.y, ed = Math.hypot(ex, ey); if (ed > 260 || ed < 1) continue; const dot = (ex * dx + ey * dy) / ed; if (dot > .9 && ed < bs) { bs = ed; best = [ex / ed, ey / ed]; } } if (best) { dx = dx * .45 + best[0] * .55; dy = dy * .45 + best[1] * .55; const nl = Math.hypot(dx, dy) || 1; dx /= nl; dy /= nl; } }
+          const dv = DASH_V * M.dash; o.vx += dx * dv; o.vy += dy * dv; o.dash = .28; o.dashCd = o.boost > 0 ? 0.9 : DASH_CD; this.ev(['dash', o.id, r1(o.x), r1(o.y)]); } }
       }
-      const f = Math.exp(-DAMP * h); o.vx *= f; o.vy *= f; o.x += o.vx * h; o.y += o.vy * h;
-      if (live && Math.hypot(o.x, o.y) > this.R + o.r * .15) { o.fall = .001; o.fallT = this.t; this.ev(['fall', o.id, r1(o.x), r1(o.y)]); if (o.lastHit >= 0 && this.t - o.lastHitT < 3.5) { const k = this.get(o.lastHit); if (k && k !== o) k.kills++; } }
-      else if (!live && Math.hypot(o.x, o.y) > R0 + 60) { o.fall = o.fall || .001; }
+      const f = Math.exp(-M.damp * h); o.vx *= f; o.vy *= f; o.x += o.vx * h; o.y += o.vy * h;
+      if (M.pillars) for (const p of M.pillars) { let dx = o.x - p[0], dy = o.y - p[1]; const d = Math.hypot(dx, dy), md = o.r + p[2]; if (d < md && d > 1e-4) { dx /= d; dy /= d; o.x = p[0] + dx * md; o.y = p[1] + dy * md; const vn = o.vx * dx + o.vy * dy; if (vn < 0) { o.vx -= (1 + 1.25) * vn * dx; o.vy -= (1 + 1.25) * vn * dy; if (live) this.ev(['bump', r1(o.x - dx * o.r), r1(o.y - dy * o.r), r2(clamp(-vn / 600, .1, 1))]); } } }
+      if (live && this.margin(o.x, o.y) < -o.r * .15) { o.fall = .001; o.fallT = this.t; const k = o.lastHit >= 0 && this.t - o.lastHitT < 3.5 ? this.get(o.lastHit) : null; if (k && k !== o) k.kills++; this.ev(['fall', o.id, r1(o.x), r1(o.y), k && k !== o ? k.id : -1]); }
+      else if (!live && this.margin(o.x, o.y) < -o.r * .15) { o.fall = o.fall || .001; }
     }
     // orb vs orb
     for (let i = 0; i < O.length; i++) for (let j = i + 1; j < O.length; j++) {
@@ -270,24 +296,26 @@ class Sim {
   }
   /* bot AI: get behind a rival and shove him outward; keep away from the edge */
   think(o) {
-    const ai = o.ai; if (this.t < ai.next) return; ai.next = this.t + rnd(.08, .18);
-    const d = Math.hypot(o.x, o.y); let tx = 0, ty = 0;
-    if (d > this.R - 75) { tx = -o.x * .6; ty = -o.y * .6; }
+    const ai = o.ai; if (this.t < ai.next) return; ai.next = this.t + rnd(ai.thinkMin, ai.thinkMax);
+    let tx = 0, ty = 0; const m = this.margin(o.x, o.y), d = Math.hypot(o.x, o.y);
+    if (m < ai.caution) { const mid = this.mp().shape === 'donut' ? (this.hole + this.R) / 2 : 0, k = mid / (d || 1); tx = o.x * k * .9; ty = o.y * k * .9; if (mid === 0) { tx = -o.x * .6; ty = -o.y * .6; } }
+    else if (this.t < ai.wTo) { tx = ai.wx; ty = ai.wy; }
+    else if (Math.random() < ai.wander) { const a = rnd(0, TAU), r = rnd(30, Math.max(40, this.R * .6)); ai.wx = Math.cos(a) * r; ai.wy = Math.sin(a) * r; ai.wTo = this.t + rnd(.6, 1.4); tx = ai.wx; ty = ai.wy; }
     else {
-      let best = null, bs = 1e9; for (const e of this.orbs) { if (e === o || !e.alive || e.fall > 0) continue; const dd = Math.hypot(e.x - o.x, e.y - o.y); const sc = dd - (Math.hypot(e.x, e.y) / this.R) * 130; if (sc < bs) { bs = sc; best = e; } }
+      let best = null, bs = 1e9; for (const e of this.orbs) { if (e === o || !e.alive || e.fall > 0) continue; const dd = Math.hypot(e.x - o.x, e.y - o.y); const sc = dd - clamp(1 - this.margin(e.x, e.y) / this.R, 0, 1) * 130 + Math.random() * 90; if (sc < bs) { bs = sc; best = e; } }
       let pk = null, pd = 1e9; for (const p of this.picks) { const dd = Math.hypot(p.x - o.x, p.y - o.y); if (dd < pd) { pd = dd; pk = p; } }
       if (pk && pd < 260 && Math.random() < ai.greed) { tx = pk.x; ty = pk.y; }
       else if (best) {
         const el = Math.hypot(best.x, best.y) || 1, ox = best.x / el, oy = best.y / el, gx = best.x - ox * 46, gy = best.y - oy * 46, dg = Math.hypot(gx - o.x, gy - o.y);
         if (dg > 100) { tx = gx; ty = gy; } else { tx = best.x + ox * 90; ty = best.y + oy * 90; }
-        const dd = Math.hypot(best.x - o.x, best.y - o.y); if (o.dashCd <= 0 && dd < ai.dashRange && Math.random() < ai.dashProb) { const k = 1 / DAMP, ex = o.x + o.vx * k + (best.x - o.x) / (dd || 1) * DASH_V * k, ey = o.y + o.vy * k + (best.y - o.y) / (dd || 1) * DASH_V * k; if (Math.hypot(ex, ey) < this.R - 55) o.wantDash = true; }
+        const dd = Math.hypot(best.x - o.x, best.y - o.y); if (o.dashCd <= 0 && dd < ai.dashRange && Math.random() < ai.dashProb) { const k = 1 / this.mp().damp, dv = DASH_V * this.mp().dash, ex = o.x + o.vx * k + (best.x - o.x) / (dd || 1) * dv * k, ey = o.y + o.vy * k + (best.y - o.y) / (dd || 1) * dv * k; if (this.margin(ex, ey) > 50) o.wantDash = true; }
       }
     }
-    let dx = tx - o.x, dy = ty - o.y; const dl = Math.hypot(dx, dy) || 1; dx /= dl; dy /= dl; const j = rnd(-ai.sloppy, ai.sloppy), c = Math.cos(j), s = Math.sin(j);
-    o.ix = dx * c - dy * s; o.iy = dx * s + dy * c;
+    let dx = tx - o.x, dy = ty - o.y; const dl = Math.hypot(dx, dy) || 1; dx /= dl; dy /= dl; const j = rnd(-ai.sloppy, ai.sloppy), c = Math.cos(j), s2 = Math.sin(j);
+    o.ix = dx * c - dy * s2; o.iy = dx * s2 + dy * c;
   }
   snapshot() {
-    const s = { p: this.phase, cd: r2(this.cd), t: r1(this.t), R: r1(this.R), rd: this.round, w: this.winner, mw: this.matchWinner == null ? -1 : this.matchWinner,
+    const s = { p: this.phase, cd: r2(this.cd), t: r1(this.t), R: r1(this.R), mp: this.map, h: r1(this.hole), rd: this.round, w: this.winner, mw: this.matchWinner == null ? -1 : this.matchWinner,
       o: this.orbs.map((o) => [o.id, r1(o.x), r1(o.y), r1(o.vx), r1(o.vy), r2(o.fall), o.alive ? 1 : 0, r1(o.shield), r1(o.heavy), r1(o.boost), r1(o.dashCd), r1(o.dash), o.score, o.kills]),
       pk: this.picks.map((p) => [p.id, p.k, r1(p.x), r1(p.y), r1(p.age)]), ev: this.events };
     this.events = []; return s;
@@ -336,23 +364,41 @@ function drawOrb(c, x, y, r, skinIdx, o) {
 function orbIcon(canvas, skinIdx, sz) { sz = sz || 44; const k = window.devicePixelRatio || 1; canvas.width = canvas.height = Math.round(sz * 2); const c = canvas.getContext('2d'); c.clearRect(0, 0, canvas.width, canvas.height); drawOrb(c, sz, sz, sz * .8, skinIdx, { look: [0, .2] }); }
 /* world -> screen */
 function layout() { const w = cv.width, h = cv.height, s = Math.min(w, h) * .5 * .9 / (R0 + 34) * (window.__zoom || 1); return { s, cx: w / 2 + (window.__ox || 0), cy: h / 2 + h * .015 + (window.__oy || 0) }; }
+const THEMES = [
+  { sky: ['#3a2aa0', '#7a62e0', '#ffb0d8'], top: ['#fff0d0', '#ffd29a'], band: 'rgba(255,150,60,.16)', line: 'rgba(180,90,30,.22)', wall: '#3a2a7a' },
+  { sky: ['#1f6fb0', '#6ac0f0', '#e0fbff'], top: ['#f4feff', '#b8e8ff'], band: 'rgba(80,170,230,.18)', line: 'rgba(60,140,200,.25)', wall: '#2a5a9a' },
+  { sky: ['#1f7a5a', '#6ad8a0', '#fff6b0'], top: ['#f4ffe4', '#bff0a8'], band: 'rgba(60,170,90,.16)', line: 'rgba(40,130,70,.22)', wall: '#2a6a4a' },
+  { sky: ['#a02a5a', '#ff7a6a', '#ffe0a0'], top: ['#fff0d8', '#ffc08a'], band: 'rgba(255,110,60,.18)', line: 'rgba(190,80,40,.24)', wall: '#7a2a4a' },
+  { sky: ['#2a2a8a', '#5a6ae0', '#a8d0ff'], top: ['#f0f2ff', '#c4cdf8'], band: 'rgba(90,100,220,.14)', line: 'rgba(70,80,190,.22)', wall: '#2a2a7a' },
+  { sky: ['#6a1a8a', '#d04ac0', '#ffc0e0'], top: ['#ffe8f8', '#ffb4e0'], band: 'rgba(220,60,170,.15)', line: 'rgba(170,40,140,.22)', wall: '#5a1a7a' },
+];
+let curTheme = THEMES[0];
 function drawSky(tm, w, h) {
-  const g = cx.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#3a2aa0'); g.addColorStop(.45, '#7a62e0'); g.addColorStop(1, '#ffb0d8'); cx.fillStyle = g; cx.fillRect(0, 0, w, h);
+  const g = cx.createLinearGradient(0, 0, 0, h); const sk = curTheme.sky; g.addColorStop(0, sk[0]); g.addColorStop(.45, sk[1]); g.addColorStop(1, sk[2]); cx.fillStyle = g; cx.fillRect(0, 0, w, h);
   if (!clouds.length) for (let i = 0; i < 9; i++) clouds.push({ x: Math.random(), y: Math.random(), s: rnd(.6, 1.6), v: rnd(.004, .012) });
   for (const c of clouds) { const x = ((c.x + tm * .00001 * c.v * 100) % 1.3 - .15) * w, y = c.y * h, u = c.s * Math.min(w, h) * .08; cx.fillStyle = 'rgba(255,255,255,.35)'; cx.beginPath(); cx.arc(x, y, u, 0, TAU); cx.arc(x + u * 1.1, y + u * .15, u * .8, 0, TAU); cx.arc(x - u * 1.0, y + u * .2, u * .7, 0, TAU); cx.arc(x + u * .2, y - u * .4, u * .75, 0, TAU); cx.fill(); }
 }
+function platPath(c, L, st, R, shape) { // outline of the standing surface
+  if (shape === 'square') { const H = R * .86; c.beginPath(); c.roundRect ? c.roundRect(L.cx - H, L.cy - H, H * 2, H * 2, 22 * L.s) : c.rect(L.cx - H, L.cy - H, H * 2, H * 2); } else { c.beginPath(); c.arc(L.cx, L.cy, R, 0, TAU); }
+}
 function drawArena(L, st, tm) {
-  const R = st.R * L.s, c = cx; const depth = 16 * L.s;
+  const M = MAPS[st.map] || MAPS[0], T = curTheme = THEMES[st.map] || THEMES[0], c = cx, R = st.R * L.s, depth = 16 * L.s, shape = M.shape; const hole = (st.hole || 0) * L.s;
   c.fillStyle = 'rgba(30,10,80,.28)'; c.beginPath(); c.ellipse(L.cx, L.cy + depth * 2.4, R * 1.02, R * .98, 0, 0, TAU); c.fill();
-  c.fillStyle = '#3a2a7a'; c.strokeStyle = OL; c.lineWidth = 3 * L.s * 2; c.beginPath(); c.arc(L.cx, L.cy + depth, R, 0, TAU); c.fill(); c.stroke();
-  const g = c.createRadialGradient(L.cx - R * .2, L.cy - R * .25, R * .1, L.cx, L.cy, R); g.addColorStop(0, '#fff0d0'); g.addColorStop(1, '#ffd29a');
-  c.beginPath(); c.arc(L.cx, L.cy, R, 0, TAU); c.fillStyle = g; c.fill();
-  c.save(); c.clip(); const bands = 7; for (let i = bands; i >= 1; i--) { if (i & 1) { c.fillStyle = 'rgba(255,150,60,.16)'; c.beginPath(); c.arc(L.cx, L.cy, R * i / bands, 0, TAU); c.arc(L.cx, L.cy, R * (i - 1) / bands, 0, TAU, true); c.fill(); } }
-  c.strokeStyle = 'rgba(180,90,30,.22)'; c.lineWidth = 2 * L.s * 2; for (let i = 0; i < 12; i++) { const a = i * TAU / 12; c.beginPath(); c.moveTo(L.cx + Math.cos(a) * R * .12, L.cy + Math.sin(a) * R * .12); c.lineTo(L.cx + Math.cos(a) * R, L.cy + Math.sin(a) * R); c.stroke(); }
-  c.fillStyle = 'rgba(255,255,255,.5)'; c.beginPath(); c.arc(L.cx, L.cy, R * .06, 0, TAU); c.fill(); c.restore();
-  // dashed danger rim (pulses once the platform starts to shrink)
-  const warn = st.p === 2 && st.t > 11 ? .55 + Math.sin(tm / 130) * .35 : .35; c.strokeStyle = `rgba(255,70,60,${warn})`; c.lineWidth = 12 * L.s; c.setLineDash([22 * L.s, 14 * L.s]); c.lineDashOffset = -tm * .02; c.beginPath(); c.arc(L.cx, L.cy, R - 9 * L.s, 0, TAU); c.stroke(); c.setLineDash([]);
-  c.beginPath(); c.arc(L.cx, L.cy, R, 0, TAU); c.lineWidth = 3 * L.s * 2; c.strokeStyle = OL; c.stroke();
+  c.save(); c.translate(0, depth); platPath(c, L, st, R, shape); if (shape === 'donut') c.arc(L.cx, L.cy, hole, 0, TAU, true); c.fillStyle = T.wall; c.strokeStyle = OL; c.lineWidth = 3 * L.s * 2; c.fill(shape === 'donut' ? 'evenodd' : 'nonzero'); c.stroke(); c.restore();
+  const g = c.createRadialGradient(L.cx - R * .2, L.cy - R * .25, R * .1, L.cx, L.cy, R * 1.05); g.addColorStop(0, T.top[0]); g.addColorStop(1, T.top[1]);
+  c.save(); platPath(c, L, st, R, shape); if (shape === 'donut') { c.arc(L.cx, L.cy, hole, 0, TAU, true); }
+  c.fillStyle = g; c.fill(shape === 'donut' ? 'evenodd' : 'nonzero'); c.clip(shape === 'donut' ? 'evenodd' : 'nonzero');
+  if (shape === 'square') { const H = R * .86, q = H / 4; for (let i = -4; i < 4; i++) for (let j = -4; j < 4; j++) if ((i + j) & 1) { c.fillStyle = T.band; c.fillRect(L.cx + i * q, L.cy + j * q, q, q); } }
+  else { const bands = 7; for (let i = bands; i >= 1; i--) { if (i & 1) { c.fillStyle = T.band; c.beginPath(); c.arc(L.cx, L.cy, R * i / bands, 0, TAU); c.arc(L.cx, L.cy, R * (i - 1) / bands, 0, TAU, true); c.fill(); } }
+    c.strokeStyle = T.line; c.lineWidth = 2 * L.s * 2; for (let i = 0; i < 12; i++) { const a = i * TAU / 12; c.beginPath(); c.moveTo(L.cx + Math.cos(a) * R * .12, L.cy + Math.sin(a) * R * .12); c.lineTo(L.cx + Math.cos(a) * R, L.cy + Math.sin(a) * R); c.stroke(); } }
+  if (M.id === 'ice') { c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = 2 * L.s * 1.5; for (let i = 0; i < 9; i++) { const a = i * 0.7 + 0.3; c.beginPath(); c.moveTo(L.cx + Math.cos(a) * R * .2, L.cy + Math.sin(a) * R * .2); c.lineTo(L.cx + Math.cos(a + .15) * R * .6, L.cy + Math.sin(a + .15) * R * .6); c.lineTo(L.cx + Math.cos(a - .1) * R * .95, L.cy + Math.sin(a - .1) * R * .95); c.stroke(); } c.fillStyle = 'rgba(255,255,255,.55)'; for (let i = 0; i < 14; i++) { const a = i * 2.4, r = ((i * 37) % 90) / 100 * R; c.beginPath(); c.arc(L.cx + Math.cos(a) * r, L.cy + Math.sin(a) * r, 3 * L.s * (1 + Math.sin(tm / 300 + i) * .5), 0, TAU); c.fill(); } }
+  if (M.spin) { c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = 7 * L.s; c.lineCap = 'round'; c.lineJoin = 'round'; const rot = tm * .0007; for (let i = 0; i < 14; i++) { const a = rot + i * TAU / 14, r = Math.max(R * .6, 115 * L.s * 1.1) ; for (const rr of [r, Math.min(R - 22 * L.s, r + 70 * L.s)]) { if (rr < 125 * L.s || rr > R - 18 * L.s) continue; const x = L.cx + Math.cos(a) * rr, y = L.cy + Math.sin(a) * rr, tx = -Math.sin(a), ty = Math.cos(a), nx = Math.cos(a), ny = Math.sin(a), k = 11 * L.s; c.beginPath(); c.moveTo(x - tx * k - nx * k, y - ty * k - ny * k); c.lineTo(x + tx * k, y + ty * k); c.lineTo(x - tx * k + nx * k, y - ty * k + ny * k); c.stroke(); } } c.strokeStyle = 'rgba(255,255,255,.4)'; c.lineWidth = 3 * L.s; c.beginPath(); c.arc(L.cx, L.cy, 115 * L.s, 0, TAU); c.stroke(); }
+  c.fillStyle = 'rgba(255,255,255,.5)'; if (shape !== 'donut') { c.beginPath(); c.arc(L.cx, L.cy, R * .05, 0, TAU); c.fill(); }
+  c.restore();
+  if (shape === 'donut') { c.beginPath(); c.arc(L.cx, L.cy, hole, 0, TAU); c.lineWidth = 3 * L.s * 2; c.strokeStyle = OL; c.stroke(); c.beginPath(); c.arc(L.cx, L.cy, hole + 6 * L.s, 0, TAU); c.lineWidth = 8 * L.s; c.strokeStyle = 'rgba(255,70,60,.55)'; c.setLineDash([16 * L.s, 12 * L.s]); c.lineDashOffset = tm * .02; c.stroke(); c.setLineDash([]); }
+  const warn = st.p === 2 && st.t > 8 ? .55 + Math.sin(tm / 130) * .35 : .35; c.save(); platPath(c, L, st, R - 9 * L.s, shape); c.strokeStyle = `rgba(255,70,60,${warn})`; c.lineWidth = 12 * L.s; c.setLineDash([22 * L.s, 14 * L.s]); c.lineDashOffset = -tm * .02; c.stroke(); c.setLineDash([]); c.restore();
+  platPath(c, L, st, R, shape); c.lineWidth = 3 * L.s * 2; c.strokeStyle = OL; c.stroke();
+  if (M.pillars) for (const p of M.pillars) { const X = L.cx + p[0] * L.s, Y = L.cy + p[1] * L.s, r = p[2] * L.s; c.fillStyle = 'rgba(30,10,60,.32)'; c.beginPath(); c.ellipse(X, Y + r * .9, r * 1.05, r * .45, 0, 0, TAU); c.fill(); const gg = c.createRadialGradient(X - r * .3, Y - r * .35, r * .1, X, Y, r); gg.addColorStop(0, '#ffe27a'); gg.addColorStop(1, '#e0560a'); c.beginPath(); c.arc(X, Y, r, 0, TAU); c.fillStyle = gg; c.fill(); c.lineWidth = 3 * L.s; c.strokeStyle = OL; c.stroke(); c.beginPath(); c.arc(X, Y, r * .55, 0, TAU); c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = 3 * L.s; c.stroke(); }
 }
 function drawPick(L, p, tm) {
   const x = L.cx + p.x * L.s, y = L.cy + p.y * L.s + Math.sin(tm / 260 + p.id) * 4 * L.s, r = 19 * L.s, k = p.k; const pop = Math.min(1, p.age * 5);
@@ -402,6 +448,15 @@ function drawDashHud(me, touch) {
   cx.restore();
 }
 
+let feed = [];
+function pushFeed(txt) { feed.push({ txt, life: 4 }); if (feed.length > 4) feed.shift(); }
+function drawFeed(dt) {
+  const u = Math.min(cv.width, cv.height) / 600; cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); cx.textAlign = 'left'; cx.lineJoin = 'round';
+  for (let i = feed.length - 1; i >= 0; i--) feed[i].life -= dt; feed = feed.filter((f) => f.life > 0);
+  feed.forEach((f, i) => { cx.globalAlpha = Math.min(1, f.life); cx.font = `900 ${Math.round(14 * u)}px "Trebuchet MS",sans-serif`; cx.lineWidth = 4 * u; cx.strokeStyle = OL; cx.strokeText(f.txt, 14 * u, cv.height - (20 + (feed.length - 1 - i) * 20) * u); cx.fillStyle = '#fff'; cx.fillText(f.txt, 14 * u, cv.height - (20 + (feed.length - 1 - i) * 20) * u); });
+  cx.restore();
+}
+
 /* ============================== state, input, networking, UI ============================== */
 const urlParam = (k) => { const m = location.search.match(new RegExp('[?&]' + k + '=([^&]*)')); return m ? decodeURIComponent(m[1]) : ''; };
 const SERVER_URL = urlParam('server') || (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? 'ws://localhost:8080' : 'wss://34-28-108-52.sslip.io');
@@ -417,7 +472,7 @@ function paintSnd() { const m = muted() && !adOn; $('#bSnd').textContent = m ? '
 function toggleSnd() { SV.mute = !SV.mute; paintSnd(); save(); if (!SV.mute) { actx(); sfx('click'); } }
 function applyTexts() {
   document.documentElement.lang = LANG; $('#bSolo').textContent = t('solo'); $('#bQuick').textContent = t('quick'); $('#bCreate').textContent = t('create'); $('#bJoin').textContent = t('join'); $('#bSkins').textContent = t('skins'); $('#bHow').textContent = t('how');
-  $('#bLang').textContent = '🌐 ' + (LANG === 'es' ? 'Español' : 'English'); $('#bResume').textContent = t('resume'); $('#bQuit').textContent = t('quit'); $('#pauseT').textContent = t('pause'); $('#bLang2').textContent = $('#bLang').textContent;
+  $('#bLang').textContent = '🌐 ' + (LANG === 'es' ? 'Español' : 'English'); $('#bDiff').textContent = '🤖 ' + t('bots') + ': ' + t(['easy', 'normal', 'hard'][SV.diff | 0]); $('#bResume').textContent = t('resume'); $('#bQuit').textContent = t('quit'); $('#pauseT').textContent = t('pause'); $('#bLang2').textContent = $('#bLang').textContent;
   $('#joinT').textContent = t('joinT'); $('#bJoinGo').textContent = t('go'); $('#bJoinX').textContent = t('cancel'); $('#codeIn').placeholder = '····'; $('#lobT').textContent = t('lobT'); $('#bStart').textContent = t('start'); $('#bCopy').textContent = t('copy'); $('#bLeave').textContent = t('leave');
   $('#skT').textContent = t('skT'); $('#bSkinsX').textContent = t('close'); $('#howT').textContent = t('howT'); $('#howTxt').innerHTML = t('howTxt'); $('#bHowX').textContent = t('close'); $('#bX2').textContent = t('x2'); $('#bAgain').textContent = t('again'); $('#bMenu').textContent = t('menu');
   paintSnd(); menuStats(); paintMenuOrb(); if (!$('#sSkins').hidden) renderSkins(); if (!$('#sLobby').hidden) renderLobby();
@@ -457,7 +512,7 @@ function readInput() {
 /* ------------------------------ match flow ------------------------------ */
 function fillBots(s, total) { const used = new Set(s.orbs.map((o) => o.name)); let n = 0; while (s.orbs.length < total) { let nm; do { nm = pick(BOT_NAMES) + (Math.random() < .3 ? irnd(2, 9) : ''); } while (used.has(nm)); used.add(nm); s.addOrb(100 + n++, nm, irnd(0, SKINS.length - 1), false); } }
 function startSolo() {
-  actx(); sim = new Sim(); myId = 0; mode = 'solo'; sim.addOrb(0, SV.name, SV.skin, true); fillBots(sim, MAXP); beginPlay();
+  actx(); sim = new Sim(); sim.diff = SV.diff | 0; myId = 0; mode = 'solo'; sim.addOrb(0, SV.name, SV.skin, true); fillBots(sim, MAXP); beginPlay();
 }
 function beginPlay() { hideAll(); show('#topbtns', true); state = 'playing'; resultsShown = false; lastPhase = 0; parts = []; texts = []; sim.startMatch(); gameplay(true); musicOn = true; musicT = 0; sfx('click'); }
 function handleEvents(evs, view) {
@@ -465,7 +520,8 @@ function handleEvents(evs, view) {
     switch (e[0]) {
       case 'bump': sfx('bump', e[3]); spark(e[1], e[2], 6 + Math.round(e[3] * 8), '#fff6a8', 260, .45); shake = Math.max(shake, 4 + e[3] * 12); break;
       case 'dash': sfx('dash'); spark(e[2], e[3], 6, '#ffffff', 160, .35); break;
-      case 'fall': sfx('fall'); spark(e[2], e[3], 10, '#ffd0e8', 200, .8); shake = Math.max(shake, 5); break;
+      case 'fall': { sfx('fall'); spark(e[2], e[3], 10, '#ffd0e8', 200, .8); shake = Math.max(shake, 5); const vo = view && view.orbs.find((q) => q.id === e[1]), ko = e[4] >= 0 && view && view.orbs.find((q) => q.id === e[4]); if (vo) pushFeed(ko ? ko.name + ' ➜ ' + vo.name : vo.name + ' 💨'); if (e[4] === myId && myId >= 0) { floatText(e[2], e[3], 'KO!', '#ffd23a'); } break; }
+      case 'round': mapBanner = { txt: L2((MAPS[e[2]] || MAPS[0]).n), life: 3 }; break;
       case 'pick': { sfx('pick'); const o = view && view.orbs.find((q) => q.id === e[1]); spark(e[3], e[4], 12, PICK_COL[e[2]], 240, .6); if (o && o.id === myId) floatText(o.x, o.y - 40, t(['pickShield', 'pickHeavy', 'pickBoost', 'pickPulse'][e[2]]), PICK_COL[e[2]]); break; }
       case 'pulse': sfx('pulse'); spark(e[1], e[2], 24, '#ff9a6a', 380, .7); shake = Math.max(shake, 9); break;
       case 'tick': sfx('tick'); break;
@@ -475,14 +531,14 @@ function handleEvents(evs, view) {
     }
   }
 }
-let curView = null;
+let curView = null, mapBanner = null;
 function currentView() {
-  if (mode === 'solo' || mode === 'host') return { p: sim.phase, cd: sim.cd, t: sim.t, R: sim.R, rd: sim.round, winner: sim.winner, mw: sim.matchWinner, orbs: sim.orbs, picks: sim.picks, meId: myId };
+  if (mode === 'solo' || mode === 'host') return { p: sim.phase, cd: sim.cd, t: sim.t, R: sim.R, map: sim.map, hole: sim.hole, rd: sim.round, winner: sim.winner, mw: sim.matchWinner, orbs: sim.orbs, picks: sim.picks, meId: myId };
   if (mode === 'client' && NET.snaps.length) {
     const cur = NET.snaps[NET.snaps.length - 1], prev = NET.snaps.length > 1 ? NET.snaps[NET.snaps.length - 2] : cur, now = performance.now(); const a = prev === cur ? 1 : clamp((now - cur.at) / Math.max(30, cur.at - prev.at), 0, 1.2);
     const orbs = []; for (const row of cur.o) { const pr = prev.o.find((q) => q[0] === row[0]) || row, info = NET.roster.find((r) => r[0] === row[0]); if (!info) continue; const k = Math.min(1, a);
       orbs.push({ id: row[0], name: info[1], skin: info[2], human: !!info[3], x: lerp(pr[1], row[1], k), y: lerp(pr[2], row[2], k), vx: row[3], vy: row[4], fall: row[5], alive: !!row[6], shield: row[7], heavy: row[8], boost: row[9], dashCd: row[10], dash: row[11], score: row[12], kills: row[13] }); }
-    return { p: cur.p, cd: cur.cd, t: cur.t, R: lerp(prev.R, cur.R, Math.min(1, a)), rd: cur.rd, winner: cur.w, mw: cur.mw, orbs, picks: cur.pk.map((q) => ({ id: q[0], k: q[1], x: q[2], y: q[3], age: q[4] })), meId: myId };
+    return { p: cur.p, cd: cur.cd, t: cur.t, R: lerp(prev.R, cur.R, Math.min(1, a)), map: cur.mp || 0, hole: cur.h || 0, rd: cur.rd, winner: cur.w, mw: cur.mw, orbs, picks: cur.pk.map((q) => ({ id: q[0], k: q[1], x: q[2], y: q[3], age: q[4] })), meId: myId };
   }
   return null;
 }
@@ -532,7 +588,7 @@ function openLobby() { hideAll(); show('#sLobby', true); renderLobby(); }
 function netStartHost(code, pub) {
   NET.code = code; NET.pub = pub; mode = 'host'; sim = new Sim(); myId = NET.pid = 0; sim.addOrb(0, SV.name, SV.skin, true); NET.roster = roomList(); openLobby(); if (!pub) cgRoom(code);
 }
-function hostStartMatch() { if (mode !== 'host' || !sim || sim.phase) return; fillBots(sim, MAXP); sendRaw({ t: 'joinable', v: false }); broadcastRoster(true); beginPlay(); NET.live = true; }
+function hostStartMatch() { if (mode !== 'host' || !sim || sim.phase) return; sim.setDiff(SV.diff | 0); fillBots(sim, MAXP); sendRaw({ t: 'joinable', v: false }); broadcastRoster(true); beginPlay(); NET.live = true; }
 function netMsg(m) {
   switch (m.t) {
     case 'created': netStartHost(m.code, !!m.pub); break;
@@ -584,6 +640,7 @@ function loop(tm) {
   curView = v;
   if (v) {
     drawGame(v, tm, dt); const me = myOrb(v); if (window.__nohud) { requestAnimationFrame(loop); return; } drawScores(v);
+    drawFeed(dt); if (mapBanner && mapBanner.life > 0) { mapBanner.life -= dt; const u = Math.min(cv.width, cv.height) / 600; cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0); cx.globalAlpha = Math.min(1, mapBanner.life); cx.textAlign = 'center'; cx.font = `900 ${Math.round(26 * u)}px "Trebuchet MS",sans-serif`; cx.lineWidth = 6 * u; cx.strokeStyle = OL; cx.lineJoin = 'round'; cx.strokeText('🗺 ' + mapBanner.txt, cv.width / 2, cv.height * .14); cx.fillStyle = '#fff'; cx.fillText('🗺 ' + mapBanner.txt, cv.width / 2, cv.height * .14); cx.restore(); }
     if (v.p === 1) drawHudBig(String(Math.max(1, Math.ceil(v.cd))), t('round') + ' ' + v.rd, '#ffd23a', 1 + (v.cd % 1) * .25);
     else if (v.p === 2 && v.t < .8) drawHudBig(t('go2'), '', '#7aff8a', 1);
     else if (v.p === 3 && v.winner >= 0) { const w = v.orbs.find((o) => o.id === v.winner); if (w) drawHudBig(w.name, t('winner'), '#ffd23a', .55); }
@@ -593,7 +650,7 @@ function loop(tm) {
     // menu background: a calm demo arena with bouncing bots
     bgTime += dt; if (!window.__demo) { window.__demo = new Sim(); fillBots(window.__demo, 5); window.__demo.startMatch(); window.__demo.cd = .1; }
     const d = window.__demo; if (d.phase === 3 || d.phase === 4) d.startMatch(); d.step(dt); d.events = []; if (d.phase === 2 && d.t > 20) d.startMatch();
-    drawGame({ p: d.phase, cd: 0, t: Math.min(d.t, 10), R: d.R, rd: 1, winner: -1, orbs: d.orbs, picks: d.picks, meId: -1 }, tm, dt);
+    drawGame({ p: d.phase, cd: 0, t: Math.min(d.t, 10), R: d.R, map: d.map, hole: d.hole, rd: 1, winner: -1, orbs: d.orbs, picks: d.picks, meId: -1 }, tm, dt);
   }
   requestAnimationFrame(loop);
 }
@@ -610,7 +667,7 @@ async function main() {
   $('#bCopy').onclick = () => { let link = location.origin + location.pathname + '?room=' + NET.code; try { const k = sdk(); if (k && k.game.inviteLink) link = k.game.inviteLink({ roomId: NET.code }) || link; } catch (e) {} try { navigator.clipboard.writeText(link); toast(t('copied')); } catch (e) { toast(link); } };
   $('#bSkins').onclick = () => { sfx('click'); renderSkins(); show('#sSkins', true); }; $('#bSkinsX').onclick = () => { show('#sSkins', false); sfx('click'); };
   $('#bHow').onclick = () => { sfx('click'); show('#sHow', true); }; $('#bHowX').onclick = () => { show('#sHow', false); sfx('click'); };
-  $('#bLang').onclick = () => setLang(LANG === 'es' ? 'en' : 'es'); $('#bLang2').onclick = () => setLang(LANG === 'es' ? 'en' : 'es');
+  $('#bLang').onclick = () => setLang(LANG === 'es' ? 'en' : 'es'); $('#bDiff').onclick = () => { SV.diff = ((SV.diff | 0) + 1) % 3; save(); sfx('click'); applyTexts(); }; $('#bLang2').onclick = () => setLang(LANG === 'es' ? 'en' : 'es');
   $('#bSnd').onclick = toggleSnd; $('#bSnd2').onclick = toggleSnd; $('#bPause').onclick = pauseGame; $('#bResume').onclick = resumeGame; $('#bQuit').onclick = () => { show('#sPause', false); afterMatch(leaveToMenu); };
   $('#bX2').onclick = () => { $('#bX2').disabled = true; showAd('rewarded', () => { SV.coins += window.__lastCoins || 0; save(); menuStats(); $('#resCoins').textContent = '+' + (window.__lastCoins * 2) + ' 🪙'; sfx('coin'); }, () => { $('#bX2').disabled = false; }); };
   $('#bAgain').onclick = () => afterMatch(() => { if (mode === 'solo') { hideAll(); startSolo(); } else leaveToMenu(); });
