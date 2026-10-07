@@ -1990,11 +1990,20 @@ canvas.addEventListener('contextmenu',e=>e.preventDefault());
 function tryLock(){try{const p=canvas.requestPointerLock&&canvas.requestPointerLock();if(p&&p.catch)p.catch(()=>{})}catch(e){}}
 document.addEventListener('pointerlockchange',()=>{
   locked=document.pointerLockElement===canvas;
+  lookDX=lookDY=0;lockSkip=3;
   if(IS_TOUCH)return;
   if(locked){G.paused=false;$('pause').classList.add('hide');$('lockp').classList.add('hide');if(G.state==='play')gp.start()}
   else if(inMatch()&&!adBusy)requestPause();
 });
-document.addEventListener('mousemove',e=>{if(locked){lookDX+=e.movementX;lookDY+=e.movementY}});
+let lockSkip=0;
+// Pointer-lock deltas: the first events after the lock engages (and rare spikes) can carry a huge bogus delta that whips the view around, so they are dropped.
+document.addEventListener('mousemove',e=>{
+  if(!locked)return;
+  if(lockSkip>0){lockSkip--;return}
+  const dx=e.movementX||0,dy=e.movementY||0;
+  if(Math.abs(dx)>200||Math.abs(dy)>200)return;
+  lookDX+=dx;lookDY+=dy;
+});
 function applyLook(){
   if(!lookDX&&!lookDY)return;
   look.yaw-=lookDX*sens();look.pitch=clamp(look.pitch-lookDY*sens()*(S.set.inv?-1:1),-1.45,1.45);lookDX=lookDY=0;
