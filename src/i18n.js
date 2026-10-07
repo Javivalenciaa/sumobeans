@@ -1,7 +1,7 @@
 /* ================= Translations (English is the base language) ================= */
 const T={
 en:{
- loading:'Loading...',sitelock:'Play Banderazo on CrazyGames.com',tagline:'CAPTURE THE FLAG 3v3',
+ loading:'Loading...',sitelock:'Play Flag Fury on CrazyGames.com',tagline:'3v3 CAPTURE THE FLAG ARENA',tagline2:'Swords, spears & crossbows - 4 wild maps',
  ui_shop:'Shop',ui_missions:'Missions',ui_profile:'Profile',ui_settings:'Settings',ui_friends:'Play with friends',ui_video:'Free coins',ui_play:'PLAY',ui_menu:'Menu',play_again:'Play again',
  carry_lbl:'You carry the flag',tut_skip:'Press H to hide',click_play:'Click to play',paused:'Paused',resume:'Resume',quit:'Leave match',
  ad_title:'Advertisement',ad_sim:'(simulated - real ads run through the CrazyGames SDK)',
@@ -45,7 +45,7 @@ en:{
  m_play2:'Play 2 matches',m_ret1:'Return a flag',m_coin30:'Collect 30 map coins',m_win1:'Win a match',m_as3:'Get 3 assists',m_carry90:'Carry the flag for 90 seconds',m_loot2:'Pick up 2 rare items',m_cap1:'Capture a flag'
 },
 es:{
- loading:'Cargando...',sitelock:'Juega a Banderazo en CrazyGames.com',tagline:'CAPTURA LA BANDERA 3v3',
+ loading:'Cargando...',sitelock:'Juega a Flag Fury en CrazyGames.com',tagline:'ARENA 3v3 DE CAPTURA LA BANDERA',tagline2:'Espadas, lanzas y ballestas - 4 mapas locos',
  ui_shop:'Tienda',ui_missions:'Misiones',ui_profile:'Perfil',ui_settings:'Ajustes',ui_friends:'Jugar con amigos',ui_video:'Monedas gratis',ui_play:'JUGAR',ui_menu:'Menú',play_again:'Otra partida',
  carry_lbl:'Llevas la bandera',tut_skip:'Pulsa H para ocultar',click_play:'Haz clic para jugar',paused:'Pausa',resume:'Continuar',quit:'Salir de la partida',
  ad_title:'Anuncio',ad_sim:'(simulado - los anuncios reales van por el SDK de CrazyGames)',

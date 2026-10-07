@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>Banderazo - Capture the Flag</title>
+<title>Flag Fury - 3v3 Capture the Flag Arena</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;-webkit-touch-callout:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#12304f;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;font-weight:800;color:#fff;font-size:10px}
@@ -25,13 +25,16 @@ button{font-family:inherit}
 .coin{display:inline-block;width:2.8rem;height:2.8rem;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff7b0,#ffd23f 45%,#e0a000);border:.3rem solid #b87800}
 .vid{display:inline-block;width:0;height:0;border-left:1.1rem solid currentColor;border-top:.7rem solid transparent;border-bottom:.7rem solid transparent;margin-right:.6rem}
 #loading,#sitelock{position:fixed;inset:0;background:radial-gradient(#2a5a9a,#0e2038);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;font-size:3rem;text-align:center;padding:4rem}
-#loading b{font-size:7rem;-webkit-text-stroke:.3rem #1d6fd1;paint-order:stroke fill;text-shadow:0 .5rem 0 #1a5fb0}
+#loading b{font-size:8rem;line-height:1}
 #ldbar{width:36rem;height:1.2rem;background:rgba(255,255,255,.2);border-radius:1rem;margin-top:2.4rem;overflow:hidden}#ldbar i{display:block;height:100%;width:40%;background:#7dff8a;border-radius:1rem;animation:ld 1.1s ease-in-out infinite}
 @keyframes ld{0%{margin-left:-40%}100%{margin-left:100%}}
 #lobby{position:absolute;inset:0}
-#lobby .logo{position:absolute;left:3rem;top:2.2rem;font-size:6.4rem;line-height:1;text-shadow:0 .5rem 0 #1a5fb0,0 .8rem 0 rgba(0,0,0,.2);-webkit-text-stroke:.35rem #1d6fd1;paint-order:stroke fill}
-#lobby .logo small{display:block;font-size:2.2rem;-webkit-text-stroke:0;letter-spacing:.3rem;text-shadow:0 .2rem 0 rgba(0,0,0,.4)}
-#prof{position:absolute;left:3rem;top:13rem;width:34rem;padding:1.2rem 1.6rem;background:rgba(10,20,50,.55);border-radius:2rem;border:.3rem solid rgba(255,255,255,.2);pointer-events:auto}
+@keyframes shine{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+.gl{background:linear-gradient(100deg,#ffe45a 0%,#ff9d2e 35%,#ff5a3a 55%,#ff9d2e 75%,#ffe45a 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(.22rem 0 0 #1b2a57) drop-shadow(-.22rem 0 0 #1b2a57) drop-shadow(0 .22rem 0 #1b2a57) drop-shadow(0 -.22rem 0 #1b2a57) drop-shadow(0 .6rem 0 #0e1a40) drop-shadow(0 0 1.4rem rgba(255,160,40,.55));animation:shine 3.5s linear infinite;letter-spacing:.2rem}
+#lobby .logo em{display:inline-block;margin-top:.4rem;font-style:normal;font-size:2rem;background:rgba(10,20,50,.7);border:.25rem solid rgba(255,255,255,.35);border-radius:2rem;padding:.2rem 1.4rem;-webkit-text-stroke:0;text-shadow:none;letter-spacing:.1rem}
+#lobby .logo{position:absolute;left:3rem;top:1.6rem;font-size:7.2rem;line-height:1}
+#lobby .logo small{display:block;font-size:2.4rem;-webkit-text-stroke:0;letter-spacing:.25rem;text-shadow:0 .25rem 0 rgba(0,0,0,.55);color:#fff;margin-top:.2rem}
+#prof{position:absolute;left:3rem;top:19rem;width:34rem;padding:1.2rem 1.6rem;background:rgba(10,20,50,.55);border-radius:2rem;border:.3rem solid rgba(255,255,255,.2);pointer-events:auto}
 #prof .row{display:flex;align-items:center;justify-content:space-between;font-size:2.2rem}
 .bar{height:1.4rem;border-radius:1rem;background:rgba(255,255,255,.2);overflow:hidden;margin:.7rem 0}
 .bar>div{height:100%;background:linear-gradient(#8cf06b,#3fbf3a);width:0}
@@ -151,11 +154,11 @@ button{font-family:inherit}
 </head>
 <body>
 <canvas id="gl"></canvas>
-<div id="loading"><b>BANDERAZO</b><div data-i18n="loading">Loading...</div><div id="ldbar"><i></i></div></div>
-<div id="sitelock" class="hide"><b style="font-size:5rem">BANDERAZO</b><div style="margin-top:2rem" data-i18n="sitelock">Play Banderazo on CrazyGames.com</div></div>
+<div id="loading"><b class="gl">FLAG FURY</b><div style="font-size:2.4rem;opacity:.9;margin-top:.6rem" data-i18n="tagline2">Swords, spears &amp; crossbows</div><div data-i18n="loading" style="margin-top:1.6rem">Loading...</div><div id="ldbar"><i></i></div></div>
+<div id="sitelock" class="hide"><b class="gl" style="font-size:6rem">FLAG FURY</b><div style="margin-top:2rem" data-i18n="sitelock">Play Banderazo on CrazyGames.com</div></div>
 <div id="ui">
   <div id="lobby" class="hide">
-    <div class="logo">BANDERAZO<small data-i18n="tagline">CAPTURE THE FLAG 3v3</small></div>
+    <div class="logo"><span class="gl">FLAG FURY</span><small data-i18n="tagline">3v3 CAPTURE THE FLAG ARENA</small><em data-i18n="tagline2">Swords, spears &amp; crossbows - 4 wild maps</em></div>
     <div id="prof">
       <div class="row"><span id="pLvl"></span><span id="pRank"></span></div>
       <div class="bar"><div id="pXp"></div></div>
