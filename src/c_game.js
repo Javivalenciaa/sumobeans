@@ -357,7 +357,7 @@ function animEnt(e,dt,alpha){
   if(P.wk.userData.bolt)P.wk.userData.bolt.visible=e.ammo>0&&e.reload<=0;
   P.bubble.visible=e.shield>0||e.prot>0;if(P.bubble.visible)P.bubble.scale.setScalar(1+Math.sin(performance.now()*.01)*.04);
   P.bubble.material.color.setHex(e.shield>0?0x7fd8ff:0xffffff);
-  const dx=x-camera.position.x,dz=z-camera.position.z;P.tag.visible=dx*dx+dz*dz<45*45;
+  const dx=x-camera.position.x,dz=z-camera.position.z,dd=dx*dx+dz*dz;P.tag.visible=dd<45*45;const k=clamp(Math.sqrt(dd)/14,.4,1.5);P.tag.scale.set(2.5*k,.7*k,1);
 }
 
 /* ---------- coins & chest ---------- */

@@ -334,14 +334,18 @@ function renderSettings(){
    <div class="mrow"><div class="tx">${t('s_music')}</div><button class="btn sm ${S.set.mus?'g':'r'}" id="sMus">${S.set.mus?t('on'):t('off')}</button></div>
    <div class="mrow"><div class="tx">${t('s_sens')}</div><input type="range" id="sSens" min="0.3" max="2.5" step="0.1" value="${S.set.sens}" style="width:22rem"></div>
    <div class="mrow"><div class="tx">${t('s_inv')}</div><button class="btn sm ${S.set.inv?'g':''}" id="sInv">${S.set.inv?t('on'):t('off')}</button></div>
+   <div class="mrow"><div class="tx"></div><button class="btn sm" id="sPP">${t('s_privacy')}</button><button class="btn sm" id="sTOS">${t('s_terms')}</button></div>
    <div class="mrow"><div class="tx">${t('s_q')}</div>${['auto','high','low'].map(q=>`<button class="btn sm ${S.set.q===q?'g':''}" data-q="${q}">${t('q_'+q)}</button>`).join('')}</div>`;
   $('setBody').querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{L=b.dataset.l;S.lang=L;save();applyLang();renderSettings();sfx.ui()});
   $('sSnd').onclick=()=>{S.set.snd=S.set.snd?0:1;save();applyVolume();renderSettings();if(S.set.snd){audioInit();sfx.ui()}};
   $('sMus').onclick=()=>{S.set.mus=S.set.mus?0:1;save();applyVolume();renderSettings()};
+  $('sPP').onclick=()=>openLegal('s_privacy','pp_body');$('sTOS').onclick=()=>openLegal('s_terms','tos_body');
   $('sSens').oninput=e=>{S.set.sens=+e.target.value;save()};
   $('sInv').onclick=()=>{S.set.inv=S.set.inv?0:1;save();renderSettings()};
   $('setBody').querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{S.set.q=b.dataset.q;save();applyQuality();renderSettings()});
 }
+function openLegal(tk,bk){$('lgTitle').textContent=t(tk);$('lgBody').innerHTML=t(bk);$('legal').classList.remove('hide');sfx.ui()}
+$('lgClose').onclick=()=>{$('legal').classList.add('hide');sfx.ui()};
 function applyQuality(){const q=S.set.q;setQuality(q==='low'?'low':'high')}
 $('bShop').onclick=()=>{renderShop();openModal('shop')};
 $('bMis').onclick=()=>{renderMissions();openModal('mis')};
@@ -590,4 +594,5 @@ async function boot(){
   else{let inst=false;try{inst=!!(sdkOK&&CG&&CG.game.isInstantMultiplayer)}catch(e){}if(inst)setTimeout(startSearch,400)}
 }
 boot();
-window.__dbg={startLocal,NET,hostStart,joinPrivate,hostPrivate,netConnect,buildRoster,applySnap,buildSnap,tick:(n)=>{for(let i=0;i<n;i++){readPlayerInput(STEP);updateGame(STEP);for(const e of G.ents)animEnt(e,STEP,1);fx.update(STEP);updateCamera(STEP,1)}},G,S,MAP,NAV,startMatch,showLobby,startSearch,look,keys,camera,navPath,loadMap};
+if(/[?&]poster/.test(location.search))window.__poster={THREE,scene,camera,renderer,vmScene,vmCam,makeChar,setWeaponGfx,applyCosmetics,TEAMC,MAP,loadMap,mkEnt,startMatch,buildRoster,G,fx,M,look,STEP,updateGame,readPlayerInput,updateCamera,animEnt,updateViewmodel,VM,setViewmodel,placeSun,hemi,sun,skyMat,newAI,thinkBot,resize,NET,skyDome,updatePickups,MAPDEFS,lobbyHero,flagsGfx:()=>MAP.flagsGfx,canvas};
+if(/[?&](debug|poster)/.test(location.search))window.__dbg={startLocal,NET,hostStart,joinPrivate,hostPrivate,netConnect,buildRoster,applySnap,buildSnap,tick:(n)=>{for(let i=0;i<n;i++){readPlayerInput(STEP);updateGame(STEP);for(const e of G.ents)animEnt(e,STEP,1);fx.update(STEP);updateCamera(STEP,1)}},G,S,MAP,NAV,startMatch,showLobby,startSearch,look,keys,camera,navPath,loadMap};

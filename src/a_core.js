@@ -12,8 +12,8 @@ const yesterdayKey=()=>new Date(Date.now()-864e5).toISOString().slice(0,10);
 let IS_TOUCH=('ontouchstart' in window)||navigator.maxTouchPoints>0;
 
 /* ================= Sitelock ================= */
-// TEMP: *.github.io is whitelisted so the game can be tested on GitHub Pages. Remove it before the final upload.
-const SITE_ALLOW=[/(^|\.)crazygames\.com$/,/(^|\.)crazygames\.games$/,/^localhost$/,/^127\.0\.0\.1$/,/\.github\.io$/];
+// Sitelock (CrazyGames docs): the game only runs on CrazyGames domains (crazygames.com, regional crazygames.* domains, app.crazygames.com). localhost is allowed for development.
+const SITE_ALLOW=[/(^|\.)crazygames\.[a-z]{2,3}(\.[a-z]{2})?$/,/^localhost$/,/^127\.0\.0\.1$/];
 function siteOK(){
   try{
     if(location.protocol==='file:')return true;

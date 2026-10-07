@@ -209,7 +209,8 @@ for(let i=0;i<NP;i++)pPos[i*3+1]=-999;
 const slashes=[];
 function slashFx(x,y,z,yaw,range,half,col){
   const geo=new THREE.RingGeometry(range*.45,range,20,1,-half,half*2);
-  const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.7,side:THREE.DoubleSide,depthWrite:false}));
-  m.rotation.x=-Math.PI/2;const g=new THREE.Group();g.add(m);g.position.set(x,y,z);g.rotation.y=yaw-Math.PI/2;scene.add(g);slashes.push({g,m,t:.18});
+  const own=typeof G!=='undefined'&&G.player&&(x-G.player.x)*(x-G.player.x)+(z-G.player.z)*(z-G.player.z)<.3,o=own?.16:.7; // your own swing stays subtle so it never blocks the view
+  const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:o,side:THREE.DoubleSide,depthWrite:false}));
+  m.rotation.x=-Math.PI/2;const g=new THREE.Group();g.add(m);g.position.set(x,y,z);g.rotation.y=yaw-Math.PI/2;scene.add(g);slashes.push({g,m,t:.18,o});
 }
-function updateSlashes(dt){for(let i=slashes.length-1;i>=0;i--){const s=slashes[i];s.t-=dt;s.m.material.opacity=Math.max(0,s.t/.18)*.7;if(s.t<=0){scene.remove(s.g);s.m.geometry.dispose();s.m.material.dispose();slashes.splice(i,1)}}}
+function updateSlashes(dt){for(let i=slashes.length-1;i>=0;i--){const s=slashes[i];s.t-=dt;s.m.material.opacity=Math.max(0,s.t/.18)*s.o;if(s.t<=0){scene.remove(s.g);s.m.geometry.dispose();s.m.material.dispose();slashes.splice(i,1)}}}
