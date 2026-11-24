@@ -56,7 +56,7 @@ const DEF = {hmin:23, hmax:33, smin:140, vmin:215, area:0.6};   // area en ‰ d
 const MIN_TRAVEL = 0.15;     // recorrido horizontal mínimo (fracción del ancho)
 const END_GAP_MS = 250;      // tiempo sin caras para cerrar una pasada
 const SHOW_MS = 5000;        // cuánto tiempo se muestra el resultado
-const PW = 320;              // ancho de procesado
+const PW = 480;              // ancho de procesado
 
 let P = {...DEF};
 try { Object.assign(P, JSON.parse(localStorage.getItem('cc_params')||'{}')); } catch(e){}
@@ -129,9 +129,9 @@ function components(){ // componentes conexas (4-vecinos); devuelve [{area,cx,cy
 const pass={hist:[],cx:[],lastSeen:0};
 function estimate(h){
   if(!h.length) return 0;
-  if(h.length<3) return Math.max(...h);
+  if(h.length<5) return Math.max(...h);
   let best=0;
-  for(let i=0;i<=h.length-3;i++){ const m=[h[i],h[i+1],h[i+2]].sort((a,b)=>a-b)[1]; if(m>best)best=m; }
+  for(let i=0;i<=h.length-5;i++){ const m=h.slice(i,i+5).sort((a,b)=>a-b)[2]; if(m>best)best=m; }
   return best;
 }
 function finishPass(){
@@ -175,13 +175,29 @@ function step(now){
   requestAnimationFrame(step);
 }
 
+// ---- Calibrar: toca una cara superior amarilla ----
+document.addEventListener('click',e=>{
+  if(!v.videoWidth||e.target.closest('button,#panel,#start')) return;
+  const sc=Math.max(innerWidth/v.videoWidth,innerHeight/v.videoHeight);
+  const vx=(e.clientX-(innerWidth-v.videoWidth*sc)/2)/sc, vy=(e.clientY-(innerHeight-v.videoHeight*sc)/2)/sc;
+  const c=document.createElement('canvas'); c.width=c.height=9; const x=c.getContext('2d',{willReadFrequently:true});
+  x.drawImage(v,vx-6,vy-6,12,12,0,0,9,9);
+  const d=x.getImageData(0,0,9,9).data; let H=[],S=[],V=[];
+  for(let i=0;i<d.length;i+=4){const [h,s,val]=rgb2hsv(d[i],d[i+1],d[i+2]);H.push(h);S.push(s);V.push(val);}
+  const med=a=>a.sort((p,q)=>p-q)[a.length>>1], h=med(H), s=med(S), val=med(V);
+  P.hmin=Math.max(0,Math.round(h-7)); P.hmax=Math.min(90,Math.round(h+7));
+  P.smin=Math.max(0,Math.round(s*0.7)); P.vmin=Math.max(0,Math.round(val*0.8));
+  syncUI(); try{localStorage.setItem('cc_params',JSON.stringify(P));}catch(_){}
+  live.textContent='Calibrado: H'+Math.round(h)+' S'+Math.round(s)+' V'+Math.round(val);
+});
+
 // ---- Cámara ----
 $('go').onclick=async()=>{
   try{
     const stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720},frameRate:{ideal:60,min:30}}});
     v.srcObject=stream; await v.play();
     $('start').style.display='none';
-    live.textContent='Esperando plataforma…';
+    live.textContent='Esperando… (toca una cara amarilla para calibrar)';
     requestAnimationFrame(step);
   }catch(e){ $('err').textContent='No se pudo abrir la cámara: '+e.message+' (hace falta HTTPS y dar permiso en Safari)'; }
 };
