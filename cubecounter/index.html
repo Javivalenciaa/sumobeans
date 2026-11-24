@@ -33,6 +33,7 @@
 <video id="v" playsinline muted autoplay></video>
 <canvas id="dbg"></canvas>
 <div id="big"></div>
+<div id="diag" style="position:fixed;left:14px;right:14px;bottom:max(14px,env(safe-area-inset-bottom));font:13px ui-monospace,Menlo,monospace;color:#fff;background:rgba(0,0,0,.45);padding:8px 12px;border-radius:12px;display:none;word-break:break-all"></div>
 <div id="live">Esperando…</div>
 <div id="btns"><button id="bdbg">Debug</button><button id="bset">Ajustes</button></div>
 <div id="panel">
@@ -161,6 +162,8 @@ function estimate(h){
 function finishPass(){
   const cx=pass.cx, moved=cx.length>1&&(Math.max(...cx)-Math.min(...cx))>MIN_TRAVEL;
   const r=moved?estimate(pass.hist):null;
+  const dg=$('diag'); dg.style.display='block';
+  dg.textContent=(moved?'Resultado '+r:'IGNORADA (recorrido '+(cx.length>1?(Math.max(...cx)-Math.min(...cx)).toFixed(2):'0')+')')+' · '+pass.hist.length+' fotogramas · '+fps+' fps · zona '+(roi?Math.round(roi.w)+'x'+Math.round(roi.h):'completa')+' · cuentas: '+pass.hist.join(',');
   pass.hist=[];pass.cx=[];
   return r;
 }
