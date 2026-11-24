@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Cube Counter</title>
+<style>
+  html,body{margin:0;height:100%;background:#000;overflow:hidden;font-family:-apple-system,system-ui,sans-serif;color:#fff;-webkit-user-select:none;user-select:none}
+  video,#dbg{position:fixed;inset:0;width:100%;height:100%;object-fit:cover}
+  #dbg{display:none;opacity:.6;pointer-events:none}
+  #big{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;
+       font-size:42vmin;font-weight:800;color:rgba(255,255,255,.55);text-shadow:0 0 40px rgba(0,0,0,.45);
+       opacity:0;transition:opacity .35s}
+  #big.on{opacity:1}
+  #live{position:fixed;top:max(12px,env(safe-area-inset-top));left:14px;padding:8px 14px;border-radius:14px;
+        background:rgba(0,0,0,.35);font-size:18px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  #btns{position:fixed;top:max(12px,env(safe-area-inset-top));right:14px;display:flex;gap:8px}
+  button{font:inherit;color:#fff;background:rgba(0,0,0,.35);border:0;border-radius:14px;padding:8px 14px;font-size:16px;
+         backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  #panel{position:fixed;left:14px;bottom:max(14px,env(safe-area-inset-bottom));padding:12px 16px;border-radius:16px;display:none;
+         background:rgba(0,0,0,.5);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-size:14px;width:300px}
+  #panel label{display:flex;justify-content:space-between;align-items:center;margin:6px 0;gap:10px}
+  #panel input{width:170px}
+  #start{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:#111;text-align:center;padding:30px}
+  #start button{font-size:24px;padding:16px 34px;background:#2f7cf6}
+  #start p{max-width:480px;opacity:.7;margin:0}
+</style>
+</head>
+<body>
+<video id="v" playsinline muted autoplay></video>
+<canvas id="dbg"></canvas>
+<div id="big"></div>
+<div id="live">Esperando…</div>
+<div id="btns"><button id="bdbg">Debug</button><button id="bset">Ajustes</button></div>
+<div id="panel">
+  <label>Tono mín <input type="range" id="hmin" min="0" max="90" step="1"><b></b></label>
+  <label>Tono máx <input type="range" id="hmax" min="0" max="90" step="1"><b></b></label>
+  <label>Satur. mín <input type="range" id="smin" min="0" max="255" step="1"><b></b></label>
+  <label>Brillo mín <input type="range" id="vmin" min="0" max="255" step="1"><b></b></label>
+  <label>Área mín ‰ <input type="range" id="area" min="1" max="30" step="0.5"><b></b></label>
+  <button id="reset" style="width:100%;margin-top:6px">Valores por defecto</button>
+</div>
+<div id="start">
+  <h1 style="margin:0">Cube Counter</h1>
+  <p>Apunta la cámara al sitio por donde pasa la plataforma. Al cruzar, se mostrará el número de cubos.</p>
+  <button id="go">Abrir cámara</button>
+  <p id="err" style="color:#ff8a80"></p>
+</div>
+
+<script>
+// ---- Parámetros (equivalentes a tu script Python, H en escala OpenCV 0-180) ----
+const DEF = {hmin:23, hmax:33, smin:140, vmin:215, area:0.6};   // area en ‰ del fotograma
+const MIN_TRAVEL = 0.15;     // recorrido horizontal mínimo (fracción del ancho)
+const END_GAP_MS = 250;      // tiempo sin caras para cerrar una pasada
+const SHOW_MS = 5000;        // cuánto tiempo se muestra el resultado
+const PW = 320;              // ancho de procesado
+
+let P = {...DEF};
+try { Object.assign(P, JSON.parse(localStorage.getItem('cc_params')||'{}')); } catch(e){}
+
+const $ = id => document.getElementById(id);
+const v = $('v'), dbg = $('dbg'), big = $('big'), live = $('live');
+const work = document.createElement('canvas'), wctx = work.getContext('2d', {willReadFrequently:true});
+let W, H, mask, tmp, labels, queue;
+
+// ---- Sliders ----
+const sliders = ['hmin','hmax','smin','vmin','area'];
+function syncUI(){ sliders.forEach(k=>{ const el=$(k); el.value=P[k]; el.nextElementSibling.textContent=P[k]; }); }
+sliders.forEach(k=>$(k).addEventListener('input',e=>{
+  P[k]=parseFloat(e.target.value); e.target.nextElementSibling.textContent=P[k];
+  try{localStorage.setItem('cc_params',JSON.stringify(P));}catch(_){}
+}));
+$('reset').onclick=()=>{P={...DEF};syncUI();try{localStorage.removeItem('cc_params');}catch(_){}};
+$('bset').onclick=()=>{const p=$('panel');p.style.display=p.style.display==='block'?'none':'block';};
+let debugOn=false;
+$('bdbg').onclick=()=>{debugOn=!debugOn;dbg.style.display=debugOn?'block':'none';};
+syncUI();
+
+// ---- Detección ----
+function rgb2hsv(r,g,b){ // devuelve H 0-180, S 0-255, V 0-255 (como OpenCV)
+  const mx=Math.max(r,g,b), mn=Math.min(r,g,b), d=mx-mn; let h=0;
+  if(d){ if(mx===r) h=((g-b)/d)%6; else if(mx===g) h=(b-r)/d+2; else h=(r-g)/d+4; h*=30; if(h<0)h+=180; }
+  return [h, mx?d*255/mx:0, mx];
+}
+
+function buildMask(data){
+  const n=W*H;
+  for(let i=0,j=0;i<n;i++,j+=4){
+    const [h,s,val]=rgb2hsv(data[j],data[j+1],data[j+2]);
+    mask[i]=(h>=P.hmin&&h<=P.hmax&&s>=P.smin&&val>=P.vmin)?1:0;
+  }
+  // apertura 3x3 (erosión + dilatación) para quitar ruido
+  tmp.fill(0);
+  for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){
+    const i=y*W+x;
+    if(mask[i]&&mask[i-1]&&mask[i+1]&&mask[i-W]&&mask[i+W]&&mask[i-W-1]&&mask[i-W+1]&&mask[i+W-1]&&mask[i+W+1]) tmp[i]=1;
+  }
+  mask.fill(0);
+  for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){
+    const i=y*W+x;
+    if(tmp[i]||tmp[i-1]||tmp[i+1]||tmp[i-W]||tmp[i+W]||tmp[i-W-1]||tmp[i-W+1]||tmp[i+W-1]||tmp[i+W+1]) mask[i]=1;
+  }
+}
+
+function components(){ // componentes conexas (4-vecinos); devuelve [{area,cx,cy,x0,y0,x1,y1}]
+  labels.fill(0); const out=[]; const minA=P.area/1000*W*H;
+  for(let s=0;s<W*H;s++){
+    if(!mask[s]||labels[s]) continue;
+    let qh=0,qt=0,area=0,sx=0,sy=0,x0=W,y0=H,x1=0,y1=0;
+    queue[qt++]=s; labels[s]=1;
+    while(qh<qt){
+      const i=queue[qh++], x=i%W, y=(i/W)|0;
+      area++; sx+=x; sy+=y;
+      if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y;
+      if(x>0&&mask[i-1]&&!labels[i-1]){labels[i-1]=1;queue[qt++]=i-1;}
+      if(x<W-1&&mask[i+1]&&!labels[i+1]){labels[i+1]=1;queue[qt++]=i+1;}
+      if(y>0&&mask[i-W]&&!labels[i-W]){labels[i-W]=1;queue[qt++]=i-W;}
+      if(y<H-1&&mask[i+W]&&!labels[i+W]){labels[i+W]=1;queue[qt++]=i+W;}
+    }
+    if(area>=minA) out.push({area,cx:sx/area,cy:sy/area,x0,y0,x1,y1});
+  }
+  return out;
+}
+
+// ---- Contador de pasadas (misma lógica que PassCounter) ----
+const pass={hist:[],cx:[],lastSeen:0};
+function estimate(h){
+  if(!h.length) return 0;
+  if(h.length<3) return Math.max(...h);
+  let best=0;
+  for(let i=0;i<=h.length-3;i++){ const m=[h[i],h[i+1],h[i+2]].sort((a,b)=>a-b)[1]; if(m>best)best=m; }
+  return best;
+}
+function finishPass(){
+  const cx=pass.cx, moved=cx.length>1&&(Math.max(...cx)-Math.min(...cx))>MIN_TRAVEL;
+  const r=moved?estimate(pass.hist):null;
+  pass.hist=[];pass.cx=[];
+  return r;
+}
+let hideTimer=null;
+function showResult(n){
+  big.textContent=n; big.classList.add('on');
+  live.textContent='Última pasada: '+n+' cubos';
+  clearTimeout(hideTimer); hideTimer=setTimeout(()=>big.classList.remove('on'),SHOW_MS);
+}
+
+function step(now){
+  if(v.videoWidth){
+    if(!W){
+      W=PW; H=Math.round(PW*v.videoHeight/v.videoWidth);
+      work.width=W; work.height=H; dbg.width=W; dbg.height=H;
+      mask=new Uint8Array(W*H); tmp=new Uint8Array(W*H); labels=new Uint8Array(W*H); queue=new Int32Array(W*H);
+    }
+    wctx.drawImage(v,0,0,W,H);
+    const img=wctx.getImageData(0,0,W,H);
+    buildMask(img.data);
+    const faces=components();
+    if(faces.length){
+      pass.hist.push(faces.length); pass.lastSeen=now;
+      pass.cx.push(faces.reduce((a,f)=>a+f.cx,0)/faces.length/W);
+      if(big.classList.contains('on')===false) live.textContent='Viendo '+faces.length+' caras…';
+    } else if(pass.hist.length && now-pass.lastSeen>=END_GAP_MS){
+      const r=finishPass(); if(r!==null) showResult(r);
+    }
+    if(debugOn){
+      const dctx=dbg.getContext('2d'), out=dctx.createImageData(W,H);
+      for(let i=0;i<W*H;i++){ out.data[i*4]=mask[i]?255:0; out.data[i*4+1]=0; out.data[i*4+2]=mask[i]?255:0; out.data[i*4+3]=mask[i]?255:0; }
+      dctx.putImageData(out,0,0); dctx.strokeStyle='#0f0'; dctx.lineWidth=1;
+      faces.forEach(f=>dctx.strokeRect(f.x0,f.y0,f.x1-f.x0,f.y1-f.y0));
+    }
+  }
+  requestAnimationFrame(step);
+}
+
+// ---- Cámara ----
+$('go').onclick=async()=>{
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720},frameRate:{ideal:60,min:30}}});
+    v.srcObject=stream; await v.play();
+    $('start').style.display='none';
+    live.textContent='Esperando plataforma…';
+    requestAnimationFrame(step);
+  }catch(e){ $('err').textContent='No se pudo abrir la cámara: '+e.message+' (hace falta HTTPS y dar permiso en Safari)'; }
+};
+</script>
+</body>
+</html>
