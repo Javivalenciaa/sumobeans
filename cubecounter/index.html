@@ -56,7 +56,7 @@ const DEF = {hmin:23, hmax:33, smin:140, vmin:215, area:0.6};   // area en ‰ d
 const MIN_TRAVEL = 0.15;     // recorrido horizontal mínimo (fracción del ancho)
 const END_GAP_MS = 250;      // tiempo sin caras para cerrar una pasada
 const SHOW_MS = 5000;        // cuánto tiempo se muestra el resultado
-const PW = 640;              // ancho de procesado
+const PW = 480;              // ancho de procesado
 
 let P = {...DEF};
 try { Object.assign(P, JSON.parse(localStorage.getItem('cc_params')||'{}')); } catch(e){}
@@ -109,8 +109,14 @@ function rgb2hsv(r,g,b){ // devuelve H 0-180, S 0-255, V 0-255 (como OpenCV)
 function buildMask(data){
   const n=W*H;
   for(let i=0,j=0;i<n;i++,j+=4){
-    const [h,s,val]=rgb2hsv(data[j],data[j+1],data[j+2]);
-    mask[i]=(h>=P.hmin&&h<=P.hmax&&s>=P.smin&&val>=P.vmin)?1:0;
+    const r=data[j], g=data[j+1], b=data[j+2];
+    const mx=r>g?(r>b?r:b):(g>b?g:b);
+    if(mx<P.vmin){mask[i]=0;continue;}
+    const mn=r<g?(r<b?r:b):(g<b?g:b), d=mx-mn;
+    if(d*255<P.smin*mx){mask[i]=0;continue;}
+    let h; if(mx===r) h=((g-b)/d)%6; else if(mx===g) h=(b-r)/d+2; else h=(r-g)/d+4;
+    h*=30; if(h<0)h+=180;
+    mask[i]=(h>=P.hmin&&h<=P.hmax)?1:0;
   }
   // apertura 3x3 (erosión + dilatación) para quitar ruido
   tmp.fill(0);
@@ -149,10 +155,8 @@ function components(){ // componentes conexas (4-vecinos); devuelve [{area,cx,cy
 const pass={hist:[],cx:[],lastSeen:0};
 function estimate(h){
   if(!h.length) return 0;
-  if(h.length<5) return Math.max(...h);
-  let best=0;
-  for(let i=0;i<=h.length-5;i++){ const m=h.slice(i,i+5).sort((a,b)=>a-b)[2]; if(m>best)best=m; }
-  return best;
+  const d=[...h].sort((x,y)=>y-x);
+  return h.length<4 ? d[0] : d[1];   // 2.º valor más alto: vale con 2 fotogramas y descarta picos sueltos
 }
 function finishPass(){
   const cx=pass.cx, moved=cx.length>1&&(Math.max(...cx)-Math.min(...cx))>MIN_TRAVEL;
@@ -167,7 +171,10 @@ function showResult(n){
   clearTimeout(hideTimer); hideTimer=setTimeout(()=>big.classList.remove('on'),SHOW_MS);
 }
 
+let fpsN=0,fpsT=0,fps=0;
 function step(now){
+  now=now||performance.now();
+  if(++fpsN>=15){fps=Math.round(fpsN*1000/(now-fpsT));fpsN=0;fpsT=now;}
   if(v.videoWidth){
     if(!mask){
       const MAXH=PW*2; mask=new Uint8Array(PW*MAXH); tmp=new Uint8Array(PW*MAXH); labels=new Uint8Array(PW*MAXH); queue=new Int32Array(PW*MAXH);
@@ -184,7 +191,7 @@ function step(now){
     if(faces.length){
       pass.hist.push(faces.length); pass.lastSeen=now;
       pass.cx.push(faces.reduce((a,f)=>a+f.cx,0)/faces.length/W);
-      if(big.classList.contains('on')===false) live.textContent='Viendo '+faces.length+' caras…';
+      if(big.classList.contains('on')===false) live.textContent='Viendo '+faces.length+' caras · '+fps+' fps';
     } else if(pass.hist.length && now-pass.lastSeen>=END_GAP_MS){
       const r=finishPass(); if(r!==null) showResult(r);
     }
@@ -201,8 +208,9 @@ function step(now){
       faces.forEach(f=>dctx.strokeRect(r.x*k+f.x0*sx,r.y*k+f.y0*sy,(f.x1-f.x0)*sx,(f.y1-f.y0)*sy));
     }
   }
-  requestAnimationFrame(step);
+  loop();
 }
+function loop(){ if(v.requestVideoFrameCallback) v.requestVideoFrameCallback(step); else requestAnimationFrame(step); }
 
 // ---- Calibrar: toca una cara superior amarilla ----
 document.addEventListener('click',e=>{
@@ -227,7 +235,7 @@ $('go').onclick=async()=>{
     v.srcObject=stream; await v.play();
     $('start').style.display='none';
     live.textContent='Esperando… (toca una cara amarilla para calibrar)';
-    requestAnimationFrame(step);
+    loop();
   }catch(e){ $('err').textContent='No se pudo abrir la cámara: '+e.message+' (hace falta HTTPS y dar permiso en Safari)'; }
 };
 </script>
