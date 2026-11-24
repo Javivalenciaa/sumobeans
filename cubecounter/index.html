@@ -35,7 +35,7 @@
 <div id="big"></div>
 <div id="diag" style="position:fixed;left:14px;right:14px;bottom:max(14px,env(safe-area-inset-bottom));font:13px ui-monospace,Menlo,monospace;color:#fff;background:rgba(0,0,0,.45);padding:8px 12px;border-radius:12px;display:none;word-break:break-all"></div>
 <div id="live">Esperando…</div>
-<div id="btns"><button id="bdbg">Debug</button><button id="bset">Ajustes</button></div>
+<div id="btns"><button id="brec">Grabar</button><button id="bdbg">Debug</button><button id="bset">Ajustes</button></div>
 <div id="panel">
   <label>Tono mín <input type="range" id="hmin" min="0" max="90" step="1"><b></b></label>
   <label>Tono máx <input type="range" id="hmax" min="0" max="90" step="1"><b></b></label>
@@ -230,6 +230,26 @@ document.addEventListener('click',e=>{
   syncUI(); try{localStorage.setItem('cc_params',JSON.stringify(P));}catch(_){}
   live.textContent='Calibrado: H'+Math.round(h)+' S'+Math.round(s)+' V'+Math.round(val);
 });
+
+// ---- Grabar la cámara para poder revisar pasadas que fallen ----
+let rec=null, chunks=[];
+$('brec').onclick=async()=>{
+  const b=$('brec');
+  if(rec){ rec.stop(); return; }
+  if(!v.srcObject||!window.MediaRecorder){ live.textContent='Grabación no disponible'; return; }
+  const mt=['video/mp4','video/webm'].find(t=>MediaRecorder.isTypeSupported(t))||'';
+  chunks=[]; rec=new MediaRecorder(v.srcObject,mt?{mimeType:mt,videoBitsPerSecond:12e6}:{videoBitsPerSecond:12e6});
+  rec.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
+  rec.onstop=async()=>{
+    const type=rec.mimeType||mt||'video/mp4', ext=type.includes('mp4')?'mp4':'webm';
+    const file=new File(chunks,'pasadas.'+ext,{type}); rec=null; b.textContent='Grabar'; b.style.background='';
+    try{
+      if(navigator.canShare&&navigator.canShare({files:[file]})) await navigator.share({files:[file],title:'Pasadas'});
+      else { const a=document.createElement('a'); a.href=URL.createObjectURL(file); a.download=file.name; a.click(); }
+    }catch(_){}
+  };
+  rec.start(1000); b.textContent='Parar'; b.style.background='rgba(220,40,40,.8)';
+};
 
 // ---- Cámara ----
 $('go').onclick=async()=>{
